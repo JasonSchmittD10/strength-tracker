@@ -304,7 +304,7 @@ async function sbFetch(path, opts={}) {
     body: opts.body || undefined
   });
   if (!res.ok) { const e = await res.text(); throw new Error(e); }
-  return res.status === 204 ? null : res.json();
+  return (res.status === 204 || res.status === 201 || res.headers.get('content-length') === '0') ? null : res.json();
 }
 
 async function loadSessions() {
