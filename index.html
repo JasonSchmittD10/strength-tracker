@@ -119,6 +119,11 @@
     justify-content: space-between;
   }
 
+  /* ── SCREEN HEADERS ── */
+  .screen-header { margin-bottom: 18px; }
+  .screen-title { font-family: var(--head); font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .screen-subtitle { font-size: 13px; color: var(--muted); }
+
   /* ── SESSION CARDS (selector view) ── */
   .session-card {
     background: var(--card);
@@ -657,6 +662,12 @@
   .mt8 { margin-top: 8px; }
   .mt16 { margin-top: 16px; }
 </style>
+<link rel="icon" type="image/jpeg" href="data:image/jpeg;base64,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">
+<link rel="apple-touch-icon" href="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCADyAPIDASIAAhEBAxEB/8QAHQABAAIDAAMBAAAAAAAAAAAAAAQHBQYIAgMJAf/EAD8QAAEDBAADAwgEDQUAAAAAAAABAgMEBQYRBxIhCDFRExVBVmFxlNEUGDKBFhciIyUzNlJidaGy0jQ1QlPB/8QAFwEBAQEBAAAAAAAAAAAAAAAAAAEDAv/EABsRAQEBAQEBAQEAAAAAAAAAAAABAgMRQTEh/9oADAMBAAIRAxEAPwDl0AGzgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEyntF6qoWz0ljulVC/7EsNK97He5UTSkaWOWGRY54pIZG9HMkarXJ70UDwAJlPaL1UwtnpbHdKmF32ZYaV72O9yomlAhgnMsl+em48fu70TovLRvXX9D0VlFcKFWpcLdWUSv+wlTC6Pm92+8D0A8oo5ZpWQwRSTTSLysjjbzOevgiJ3qTXWPIGNc9+O3ljWptznUT0RqeKrrogEAE9lkyB7EfHj14exyba5tG9Ucnii66ofvmLIvVu9fBSfIDHgnrYshTvxy8/BP+REkhqI6j6NNTzRVG0TyL2Kkm17k5e8D1gyC2HI078avSL7aGT5DzFkXq3evgpPkBjwZDzFkXq3evgpPkQpoZ4J/o9TTzU86a/NSsVr+vd0XqB4AnpZMgVvOmO3hWa3zJRP1rx3o9VLbLtVtc+itFxq2NXTnQUzno1fBVROigRQZDzFkXq3evgpPkPMWRerd6+Ck+QGPBKqrZd6SJZqyz3KliTvkmpnMan3qhFaqORFaqKi9yoAAAAAAAAAAAAL3AL3AfQHslzui7P2KLvokb9pr0cxS/Ers4ZrkOc3O9UdzoPIVcqyMRWLtNr3Fy9k5vP2f8UYq62x6f1QrHPO0/e8ay+4WKDFrdPHSSKxsj5HIrtL6ehZ+I0Z3ZXz9WqnnO39U/cU6p4I49ccL4Y2TGLhNHJVUMSskcxvTv9pzo7td5CjVX8D7V0T/ALXfI6P4RZVPnHD20ZXU0sdJNXxK98MaqrWL7NlngoOj4xVfD7tF3uz3eZ02OV8rGvaut0z+qI5vToniXBx34fW7ingjo4J4Vr4Y3T2ysTq1V0vTovp7kON+0i1HcaL813VFVqL/AFLv7GXE65XLymAXtz6pIG89BUqqq5E3+rd/Cm+hBK7KPBesx+tlzDMrasNzierKCmmTfk0Tm/Op7e4kdsTjQtis1VguO1jZLtUxKlwmj5VSnYu9sXp3qiFjdobiE/hvw9ku1PE6SvrJFpKNUTpHIqJ+Uvs0p8+L5V1VwdW19dM+eqqOaSV7nKqqq7XvX3irH0x4fVE0fDbHXI5Xq20wu1pNuVGd3v6GuT8Ub9FPJEnDPIZEY7SPa5mne1OhsGAbXhvjiNXTltMKNXwXl6GvVFh4kunkdFlUbI1dtrdN6IXxGw4fldyyKOZ1ZjFwsaRrpEq+Vef3aQobtcUWMU2bYLU0sEEN/lukSyLEicz2o/8A5/8AhduJWvL6K4Olv99bXU/IqNjbroviVr2qMbxmOhx/JHwxxZAl6pWU7+deaViyLzdPYL+C8cku/mihq7jK174qdOZzGN25U16OhXH49LH1/RN06Lr9Sv8Aib3m16oscstxvtxjklo6NnPKyNvM5U16E9JSX1qeFm1/Qd36Lr/Qs/xJ+EWVh/FG25TektNHQ1sErmK/mmi03SfcVx2vsQx2fC4cs+hwU96o62BI5mJp06K/XK7r1RDaeFvG7BeIeR+YMfoqylr/ACTpWpUUzY+Zre/SohovbYtt1facdukF0lS3R17G1FCq6Z9ro5PFVL8F82meX8CoPyk/29fQn7ilOdiqV7MIyHlXX6VkXu/jUt+1fsXB/L1/sUp3sW/sRkP81k/vUeDc+IPHLEcGymXG75PI2uiiZK5G61yu7vQYBO0/w6VURaqVE8enyIvGHs+2ziPnlRllVkFXQyzQRwrDExqtRGJre1NRTsiWPfXLrjr2Rt+Y/ovDGcowripj1RLQPpL5QMckVVDIzaRuVN8qnHHal4eUOAZ8xbQiR2m5NV9NB13Eqb5k93Todb8E+Ftq4X2SstVnrqm4OrZkmmmnRGu2ia10Oc+1Xc28QuJkNhx6eGoZYo1bJNv8hXO3tEXxQ51qZntacuW+u5jnPbfjnoGXyPHbjYPJfT/JfnV03kXZiCZ1NT2L149OO7jpPLPlAAVmAAAAAAAAsbDuN/EzEMdo8ex+80tPbaNFbBG+lR6tRV3pV31NHv12r77d6i73SVs1bUuV8r2t5UVfcQQAVNppSxsR448TcTx6kx+w3ump7bRt5II30qPVqe1d9SuQBksnvt0ya+1F8vU7ai4VOvKyNbyov3feTMGzDIcIvPnjGquOlreXl53x86a9xgQBu/ELixnmf2mC1ZXdIKyjgmSeNsdOkao9O5dopo8jGyMcxyba5NKfoAtO2doXi3bbbS26iv8ASR01LE2GFq0aKqMamkRV316Ej6yXGT1jpPgk+ZUgAtp3aR4yKmlyOk+DT5mk5RneWZPfqW+327Pqq6jlbLTrpUjY9q7RUbvXea2ALOyHj5xVyCz1Vout8pJaKrZyTMbRo1Vb4Iu+hWPj7V2ABm8Hyu+4TkTMhxqpjpbkyJ0TZJI0enI7vTRsWb8YeIea2yK25Jd6eqpYpUlY1lMjFRyLtF3s0IAWrF2iOL0VC2iZkFIkDY/JIi0ab5da79+BhMG4u8QMIoamhxm7QUtPUzLPK19Oj1V6rtVRd9DRQBbf1kuMnrHSfBJ8x9ZLjJ6x0nwSfMqQAWJkvG/ijkVukt9zyRUgk6O+jxeSd9yopptivl0sk8k9tqeSWT7b3pzK72r7TGgmpNTyu+fTfLU3i+WfYyt/yG731IkulQ2byS7ZpnLoxQAzmZnki9eu+2rvpbbftAAVmAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/2Q==">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hybrid">
+<meta name="theme-color" content="#1a1d27">
 </head>
 <body>
 
@@ -686,9 +697,9 @@
 <!-- ══════════════════════ SCREEN: LOG (session selector) ══════════════════════ -->
 <div class="screen active" id="log-screen">
   <div class="main">
-    <div style="margin-bottom:18px;">
-      <div style="font-family:var(--head);font-size:20px;font-weight:800;margin-bottom:4px;">Select Session</div>
-      <div style="font-size:13px;color:var(--muted);">Choose a workout to preview and start</div>
+    <div class="screen-header">
+      <div class="screen-title">Select Session</div>
+      <div class="screen-subtitle">Choose a workout to preview and start</div>
     </div>
     <div id="sessionList"></div>
   </div>
@@ -741,7 +752,9 @@
 <!-- ══════════════════════ SCREEN: HISTORY ══════════════════════ -->
 <div class="screen" id="history-screen">
   <div class="main">
-    <div style="font-family:var(--head);font-size:20px;font-weight:800;margin-bottom:16px;">Session History</div>
+    <div class="screen-header">
+      <div class="screen-title">Session History</div>
+    </div>
     <div id="historyList"></div>
   </div>
 </div>
@@ -749,7 +762,9 @@
 <!-- ══════════════════════ SCREEN: PROGRESS ══════════════════════ -->
 <div class="screen" id="progress-screen">
   <div class="main">
-    <div style="font-family:var(--head);font-size:20px;font-weight:800;margin-bottom:16px;">Lift Progress</div>
+    <div class="screen-header">
+      <div class="screen-title">Lift Progress</div>
+    </div>
     <div class="card">
       <div class="section-label">Select Exercise</div>
       <div class="lift-select-wrap">
@@ -878,7 +893,7 @@ const PROGRAM = [
       { name: 'Cable Row (Neutral Grip)', sets: 4, reps: '10–12', rest: 90, restLabel: '90 sec' },
       { name: 'Single-Arm DB Row', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
       { name: 'Straight-Arm Pulldown', sets: 3, reps: '12–15', rest: 90, restLabel: '90 sec' },
-      { name: 'Incline DB Curl', sets: 3, reps: '10–12', rest: 75, restLabel: '75 sec' },
+      { name: 'Incline DB Curl', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
       { name: 'Cable Curl (Rope)', sets: 3, reps: '12–15', rest: 60, restLabel: '1 min' },
     ]
   },
@@ -901,15 +916,15 @@ const PROGRAM = [
 // ══════════════════════════════════════════════════════════════
 let selectedSession = null;
 let activeSession = null;
+let lastSessionData = {}; // { exName: [{weight, reps, rpe}] }
+let setData = {};         // { exIdx: [{weight, reps, rpe, done, prefilled}] }
 let workoutStartTime = null;
-let workoutTimerInterval = null;
 let navTimerInterval = null;
 let restTimerInterval = null;
 let restTotal = 0;
 let restRemaining = 0;
-let pendingRestMeta = null;
 let sessionToDelete = null;
-let setData = {}; // { exIdx: [ { weight, reps, rpe, done } ] }
+let sessionCache = null;  // cached Supabase response, cleared on save/delete
 
 // ══════════════════════════════════════════════════════════════
 // SUPABASE
@@ -924,14 +939,16 @@ const sbHeaders = {
   'Prefer': 'return=representation'
 };
 
-async function loadSessions() {
+async function loadSessions(force = false) {
+  if (sessionCache && !force) return sessionCache;
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/sessions?select=id,data,created_at&order=created_at.desc`, {
       headers: sbHeaders
     });
     const rows = await res.json();
     if (!Array.isArray(rows)) return [];
-    return rows.map(r => normalizeSession(r));
+    sessionCache = rows.map(r => normalizeSession(r));
+    return sessionCache;
   } catch (e) { console.error('loadSessions error', e); return []; }
 }
 
@@ -971,6 +988,7 @@ async function saveSession(session) {
       headers: sbHeaders,
       body: JSON.stringify({ id: session.id, data: session })
     });
+    sessionCache = null; // invalidate cache
     return await res.json();
   } catch (e) { console.error('saveSession error', e); }
 }
@@ -981,22 +999,25 @@ async function deleteSession(supabaseId) {
       method: 'DELETE',
       headers: sbHeaders
     });
+    sessionCache = null; // invalidate cache
   } catch (e) { console.error('deleteSession error', e); }
 }
 
 // ══════════════════════════════════════════════════════════════
 // TABS / ROUTING
 // ══════════════════════════════════════════════════════════════
-function switchTab(tab) {
-  // Don't allow tab switch during active workout
-  if (activeSession) return;
-
+function navigateToLog() {
+  showScreen('log-screen', 'left');
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelector('.tab[onclick="switchTab(\'log\')"]').classList.add('active');
+  renderSessionList();
+}
 
+function switchTab(tab) {
+  if (activeSession) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
-  document.getElementById(`${tab}-screen`).classList.add('active');
-
+  showScreen(`${tab}-screen`, tab === 'log' ? 'left' : 'right');
   if (tab === 'history') renderHistory();
   if (tab === 'progress') renderProgressSelect();
 }
@@ -1005,12 +1026,10 @@ function showScreen(id, direction = 'right') {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active', 'slide-in-right', 'slide-in-left'));
   const screen = document.getElementById(id);
   screen.classList.add('active');
-  // Trigger animation on next frame so it actually plays
   requestAnimationFrame(() => {
     screen.classList.add(direction === 'right' ? 'slide-in-right' : 'slide-in-left');
   });
-  const showTabs = id !== 'workout-screen';
-  document.getElementById('mainTabs').style.display = showTabs ? 'flex' : 'none';
+  document.getElementById('mainTabs').style.display = id !== 'workout-screen' ? 'flex' : 'none';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1060,15 +1079,12 @@ function showPreview(session) {
 }
 
 function backToLog() {
-  showScreen('log-screen', 'left');
-  document.querySelector('.tab[onclick="switchTab(\'log\')"]').classList.add('active');
+  navigateToLog();
 }
 
 // ══════════════════════════════════════════════════════════════
 // START WORKOUT
 // ══════════════════════════════════════════════════════════════
-let lastSessionData = {}; // { exName: [ {weight, reps, rpe} ] }
-
 async function startWorkout() {
   activeSession = selectedSession;
   setData = {};
@@ -1128,7 +1144,6 @@ function renderWorkoutExercises() {
 
 function renderSetRow(exIdx, sIdx, ex) {
   const set = setData[exIdx][sIdx];
-  const totalSets = activeSession.exercises[exIdx].sets;
   return `
     <div class="set-row ${set.done ? 'completed' : ''}" id="setRow_${exIdx}_${sIdx}">
       <div class="set-num">${sIdx + 1}</div>
@@ -1293,13 +1308,7 @@ async function finishWorkout() {
 
   activeSession = null;
   setData = {};
-
-  // Go back to log screen
-  showScreen('log-screen', 'left');
-  document.getElementById('mainTabs').style.display = 'flex';
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector('.tab[onclick="switchTab(\'log\')"]').classList.add('active');
-  renderSessionList();
+  navigateToLog();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1404,13 +1413,11 @@ function confirmCancelWorkout() {
   activeSession = null;
   setData = {};
   document.getElementById('cancelWorkoutOverlay').classList.add('hidden');
-  showScreen('log-screen', 'left');
-  document.getElementById('mainTabs').style.display = 'flex';
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector('.tab[onclick="switchTab(\'log\')"]').classList.add('active');
-  renderSessionList();
+  navigateToLog();
 }
 
+// ══════════════════════════════════════════════════════════════
+// DELETE SESSION
 // ══════════════════════════════════════════════════════════════
 function promptDelete(id) {
   sessionToDelete = id;
@@ -1525,49 +1532,28 @@ function closeLiftModal(e) {
     const dt = Date.now() - touchStartTime;
     const fromEdge = touchStartX <= EDGE_ZONE;
 
-    // Must be: rightward, mostly horizontal, fast enough, and from edge OR long enough swipe
     const isSwipeBack = dx > SWIPE_MIN_X && dy < SWIPE_MAX_Y && dt < SWIPE_MAX_MS && (fromEdge || dx > 120);
-
     if (!isSwipeBack) return;
 
-    // Don't allow swipe navigation if a modal is open
-    const modalsOpen = [
-      'liftModalOverlay', 'cancelWorkoutOverlay', 'confirmOverlay', 'restOverlay'
-    ].some(id => !document.getElementById(id).classList.contains('hidden') &&
-                  document.getElementById(id).classList.contains('active') ||
-                  (!document.getElementById(id).classList.contains('hidden') &&
-                   document.getElementById(id).id !== 'restOverlay'));
+    // Block swipe if any modal is open
+    const liftModalOpen = !document.getElementById('liftModalOverlay').classList.contains('hidden');
+    const cancelModalOpen = !document.getElementById('cancelWorkoutOverlay').classList.contains('hidden');
+    const confirmModalOpen = !document.getElementById('confirmOverlay').classList.contains('hidden');
+    const restOpen = document.getElementById('restOverlay').classList.contains('active');
 
-    // Check which screen is active
-    const activeScreenId = [...document.querySelectorAll('.screen.active')].map(s => s.id)[0];
+    if (liftModalOpen) { document.getElementById('liftModalOverlay').classList.add('hidden'); return; }
+    if (cancelModalOpen || confirmModalOpen || restOpen) return;
 
-    if (activeScreenId === 'workout-screen') {
-      // Swipe blocked on active workout — do nothing
-      return;
-    }
+    const activeScreenId = document.querySelector('.screen.active')?.id;
 
-    if (activeScreenId === 'preview-screen') {
-      backToLog();
-      return;
-    }
-
-    // On history/progress tabs, swipe back to log
-    if (activeScreenId === 'history-screen' || activeScreenId === 'progress-screen') {
-      switchTab('log');
-      return;
-    }
-
-    // Lift history modal — swipe to close
-    if (!document.getElementById('liftModalOverlay').classList.contains('hidden')) {
-      document.getElementById('liftModalOverlay').classList.add('hidden');
-      return;
-    }
+    if (activeScreenId === 'workout-screen') return; // locked during workout
+    if (activeScreenId === 'preview-screen') { backToLog(); return; }
+    if (activeScreenId === 'history-screen' || activeScreenId === 'progress-screen') { switchTab('log'); return; }
   }, { passive: true });
 })();
 
 // ══════════════════════════════════════════════════════════════
-// SCREEN TRANSITIONS
-// ══════════════════════════════════════════════════════════════
+// UTILS
 // ══════════════════════════════════════════════════════════════
 function formatDate(dateStr, short = false) {
   const d = new Date(dateStr + 'T00:00:00');
