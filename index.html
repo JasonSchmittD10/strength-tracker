@@ -828,20 +828,15 @@ function normalizeSession(row) {
   // New format — already has sessionName + exercises
   if (d.sessionName && d.exercises) return { ...d, ...base };
 
-  // Old format — had day, type, focus, lifts
-  const exercises = [];
-  if (d.lifts) {
-    Object.entries(d.lifts).forEach(([name, sets]) => {
-      exercises.push({
-        name,
-        sets: Array.isArray(sets) ? sets.map(s => ({
-          weight: s.weight || s.lbs || '',
-          reps: s.reps || '',
-          rpe: s.rpe || ''
-        })) : []
-      });
-    });
-  }
+  // Old format — had day, type, focus, lifts (array of {name, sets})
+  const exercises = (d.lifts || []).map(lift => ({
+    name: lift.name,
+    sets: (lift.sets || []).map(s => ({
+      weight: s.weight ?? '',
+      reps: s.reps ?? '',
+      rpe: s.rpe ?? ''
+    }))
+  }));
 
   return {
     ...base,
