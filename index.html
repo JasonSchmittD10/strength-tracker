@@ -798,16 +798,47 @@ let sessionToDelete = null;
 let setData = {}; // { exIdx: [ { weight, reps, rpe, done } ] }
 
 // ══════════════════════════════════════════════════════════════
-// STORAGE
+// SUPABASE
 // ══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://yawoliebqdxrmkygawqj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlhd29saWVicWR4cm1reWdhd3FqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODU1NDUsImV4cCI6MjA4OTg2MTU0NX0.VYiuBLZVn_sr0mRfwbY5AZVw3Ozu2SBKcH0Qo9me1vk';
+
+const sbHeaders = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': `Bearer ${SUPABASE_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
 async function loadSessions() {
   try {
-    const r = await window.storage.get('sessions');
-    return r ? JSON.parse(r.value) : [];
-  } catch { return []; }
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sessions?select=id,data,created_at&order=created_at.desc`, {
+      headers: sbHeaders
+    });
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return [];
+    return rows.map(r => ({ ...r.data, _supabase_id: r.id }));
+  } catch (e) { console.error('loadSessions error', e); return []; }
 }
-async function saveSessions(arr) {
-  try { await window.storage.set('sessions', JSON.stringify(arr)); } catch {}
+
+async function saveSession(session) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/sessions`, {
+      method: 'POST',
+      headers: sbHeaders,
+      body: JSON.stringify({ id: session.id, data: session })
+    });
+    return await res.json();
+  } catch (e) { console.error('saveSession error', e); }
+}
+
+async function deleteSession(supabaseId) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/sessions?id=eq.${supabaseId}`, {
+      method: 'DELETE',
+      headers: sbHeaders
+    });
+  } catch (e) { console.error('deleteSession error', e); }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1080,9 +1111,7 @@ async function finishWorkout() {
     exercises
   };
 
-  const sessions = await loadSessions();
-  sessions.unshift(session);
-  await saveSessions(sessions);
+  await saveSession(session);
 
   activeSession = null;
   setData = {};
@@ -1127,7 +1156,7 @@ async function renderHistory() {
           `).join('')}
         </div>
         ${s.notes ? `<div style="font-size:12px;color:var(--muted2);margin-top:10px;font-style:italic;">"${s.notes}"</div>` : ''}
-        <button class="btn-delete-session" onclick="promptDelete(${s.id})">Delete session</button>
+        <button class="btn-delete-session" onclick="promptDelete(${s._supabase_id})">Delete session</button>
       </div>
     `;
   }).join('');
@@ -1217,8 +1246,7 @@ function closeConfirm() {
 }
 async function confirmDelete() {
   if (!sessionToDelete) return;
-  const sessions = await loadSessions();
-  await saveSessions(sessions.filter(s => s.id !== sessionToDelete));
+  await deleteSession(sessionToDelete);
   sessionToDelete = null;
   closeConfirm();
   renderHistory();
