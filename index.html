@@ -817,8 +817,42 @@ async function loadSessions() {
     });
     const rows = await res.json();
     if (!Array.isArray(rows)) return [];
-    return rows.map(r => ({ ...r.data, _supabase_id: r.id }));
+    return rows.map(r => normalizeSession(r));
   } catch (e) { console.error('loadSessions error', e); return []; }
+}
+
+function normalizeSession(row) {
+  const d = row.data;
+  const base = { _supabase_id: row.id };
+
+  // New format — already has sessionName + exercises
+  if (d.sessionName && d.exercises) return { ...d, ...base };
+
+  // Old format — had day, type, focus, lifts
+  const exercises = [];
+  if (d.lifts) {
+    Object.entries(d.lifts).forEach(([name, sets]) => {
+      exercises.push({
+        name,
+        sets: Array.isArray(sets) ? sets.map(s => ({
+          weight: s.weight || s.lbs || '',
+          reps: s.reps || '',
+          rpe: s.rpe || ''
+        })) : []
+      });
+    });
+  }
+
+  return {
+    ...base,
+    id: d.id,
+    sessionId: (d.type || 'push') + '-a',
+    sessionName: d.day || d.sessionName || 'Session',
+    date: d.date || new Date().toISOString().split('T')[0],
+    duration: d.duration || null,
+    notes: d.notes || '',
+    exercises
+  };
 }
 
 async function saveSession(session) {
