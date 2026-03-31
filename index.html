@@ -59,7 +59,10 @@
     border-radius: 8px;
     padding: 6px 12px;
   }
-  .nav-timer.active { display: flex; }
+  .nav-timer.active { display: flex; cursor: pointer; }
+  .nav-timer.paused { background: var(--gold-dim); border-color: rgba(245,166,35,0.3); }
+  .nav-timer.paused .nav-timer-dot { background: var(--gold); animation: none; }
+  .nav-timer.paused .nav-timer-time { color: var(--gold); }
   .nav-timer-dot {
     width: 7px; height: 7px;
     border-radius: 50%;
@@ -678,10 +681,10 @@
       <div class="header-logo">HYBRID<span>.</span></div>
     </div>
   </div>
-  <div class="nav-timer" id="navTimer">
-    <div class="nav-timer-dot"></div>
+  <div class="nav-timer" id="navTimer" onclick="toggleWorkoutTimer()" title="Tap to pause">
+    <div class="nav-timer-dot" id="navTimerDot"></div>
     <div>
-      <div class="nav-timer-label">WORKOUT</div>
+      <div class="nav-timer-label" id="navTimerLabel">WORKOUT</div>
       <div class="nav-timer-time" id="navTimerDisplay">0:00</div>
     </div>
   </div>
@@ -918,7 +921,6 @@ let selectedSession = null;
 let activeSession = null;
 let lastSessionData = {}; // { exName: [{weight, reps, rpe}] }
 let setData = {};         // { exIdx: [{weight, reps, rpe, done, prefilled}] }
-let workoutStartTime = null;
 let navTimerInterval = null;
 let restTimerInterval = null;
 let restTotal = 0;
@@ -1217,24 +1219,51 @@ function completeSet(exIdx, sIdx) {
 // ══════════════════════════════════════════════════════════════
 // WORKOUT TIMER (nav)
 // ══════════════════════════════════════════════════════════════
+let workoutElapsedSeconds = 0;
+let workoutTimerPaused = false;
+
 function startWorkoutTimer() {
   workoutStartTime = Date.now();
+  workoutElapsedSeconds = 0;
+  workoutTimerPaused = false;
   const navTimer = document.getElementById('navTimer');
-  const display = document.getElementById('navTimerDisplay');
   navTimer.classList.add('active');
+  navTimer.classList.remove('paused');
+  document.getElementById('navTimerLabel').textContent = 'WORKOUT';
+  _tickWorkoutTimer();
+}
 
+function _tickWorkoutTimer() {
   navTimerInterval = setInterval(() => {
-    const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
-    const m = Math.floor(elapsed / 60);
-    const s = elapsed % 60;
-    display.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    if (!workoutTimerPaused) {
+      workoutElapsedSeconds++;
+      const m = Math.floor(workoutElapsedSeconds / 60);
+      const s = workoutElapsedSeconds % 60;
+      document.getElementById('navTimerDisplay').textContent = `${m}:${String(s).padStart(2,'0')}`;
+    }
   }, 1000);
+}
+
+function toggleWorkoutTimer() {
+  if (!activeSession) return;
+  workoutTimerPaused = !workoutTimerPaused;
+  const navTimer = document.getElementById('navTimer');
+  const label = document.getElementById('navTimerLabel');
+  if (workoutTimerPaused) {
+    navTimer.classList.add('paused');
+    label.textContent = 'PAUSED';
+  } else {
+    navTimer.classList.remove('paused');
+    label.textContent = 'WORKOUT';
+  }
 }
 
 function stopWorkoutTimer() {
   clearInterval(navTimerInterval);
-  document.getElementById('navTimer').classList.remove('active');
-  const elapsed = workoutStartTime ? Math.floor((Date.now() - workoutStartTime) / 1000) : 0;
+  document.getElementById('navTimer').classList.remove('active', 'paused');
+  const elapsed = workoutElapsedSeconds;
+  workoutElapsedSeconds = 0;
+  workoutTimerPaused = false;
   workoutStartTime = null;
   return elapsed;
 }
