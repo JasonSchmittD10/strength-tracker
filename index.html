@@ -495,6 +495,90 @@
   .chart-val { font-family: var(--mono); font-size: 11px; color: white; font-weight: 500; }
   .chart-rpe { font-family: var(--mono); font-size: 10px; color: var(--muted); width: 36px; flex-shrink: 0; text-align: right; }
 
+  /* ── LIFT HISTORY MODAL ── */
+  .lift-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(4px);
+    z-index: 250;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .lift-modal-overlay.hidden { display: none; }
+  .lift-modal {
+    background: var(--card);
+    border: 1px solid var(--border-strong);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 680px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .lift-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--card);
+    z-index: 1;
+  }
+  .lift-modal-title { font-family: var(--head); font-size: 16px; font-weight: 800; }
+  .lift-modal-close {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted2); border-radius: 50%; width: 30px; height: 30px;
+    cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center;
+  }
+  .lift-modal-body { padding: 16px 20px 32px; }
+  .lift-modal-section { margin-bottom: 20px; }
+  .lift-modal-section-label {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 1.2px; color: var(--muted); margin-bottom: 10px;
+  }
+  .lift-modal-last-sets { display: flex; flex-direction: column; gap: 6px; }
+  .lift-modal-set-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border-radius: 8px; padding: 9px 12px;
+  }
+  .lift-modal-set-num { font-family: var(--mono); font-size: 11px; color: var(--muted); width: 24px; }
+  .lift-modal-set-detail { font-family: var(--mono); font-size: 13px; color: var(--text); }
+  .lift-modal-set-rpe { font-family: var(--mono); font-size: 11px; color: var(--gold); }
+
+  /* ── EXERCISE BLOCK HISTORY BTN ── */
+  .btn-lift-history {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--mono);
+    letter-spacing: 0.3px;
+  }
+  .btn-lift-history:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ── PRE-FILL BADGE ── */
+  .prefill-badge {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--gold);
+    background: var(--gold-dim);
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: 8px;
+  }
+
   /* ── CONFIRM MODAL ── */
   .confirm-overlay {
     position: fixed; inset: 0;
@@ -679,6 +763,17 @@
   <button class="btn-skip-rest" onclick="skipRest()">Skip Rest</button>
 </div>
 
+<!-- ══════════════════════ LIFT HISTORY MODAL ══════════════════════ -->
+<div class="lift-modal-overlay hidden" id="liftModalOverlay" onclick="closeLiftModal(event)">
+  <div class="lift-modal" id="liftModal">
+    <div class="lift-modal-header">
+      <div class="lift-modal-title" id="liftModalTitle"></div>
+      <button class="lift-modal-close" onclick="closeLiftModal()">✕</button>
+    </div>
+    <div class="lift-modal-body" id="liftModalBody"></div>
+  </div>
+</div>
+
 <!-- ══════════════════════ CANCEL WORKOUT MODAL ══════════════════════ -->
 <div class="confirm-overlay hidden" id="cancelWorkoutOverlay">
   <div class="confirm-box">
@@ -750,7 +845,7 @@ const PROGRAM = [
     exercises: [
       { name: 'Incline Barbell Press', sets: 4, reps: '8–10', rest: 120, restLabel: '2 min' },
       { name: 'Dumbbell Shoulder Press', sets: 4, reps: '8–10', rest: 120, restLabel: '2 min' },
-      { name: 'Cable Fly (Low-to-High)', sets: 3, reps: '12–15', rest: 75, restLabel: '75 sec' },
+      { name: 'Cable Fly (Low-to-High)', sets: 3, reps: '12–15', rest: 90, restLabel: '90 sec' },
       { name: 'Lateral Raise (DB)', sets: 4, reps: '15–20', rest: 60, restLabel: '1 min' },
       { name: 'Close-Grip Bench Press', sets: 3, reps: '8–10', rest: 120, restLabel: '2 min' },
       { name: 'Skull Crusher (EZ Bar)', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
@@ -763,7 +858,7 @@ const PROGRAM = [
       { name: 'Lat Pulldown (Wide Grip)', sets: 4, reps: '8–10', rest: 120, restLabel: '2 min' },
       { name: 'Cable Row (Neutral Grip)', sets: 4, reps: '10–12', rest: 90, restLabel: '90 sec' },
       { name: 'Single-Arm DB Row', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
-      { name: 'Straight-Arm Pulldown', sets: 3, reps: '12–15', rest: 60, restLabel: '1 min' },
+      { name: 'Straight-Arm Pulldown', sets: 3, reps: '12–15', rest: 90, restLabel: '90 sec' },
       { name: 'Incline DB Curl', sets: 3, reps: '10–12', rest: 75, restLabel: '75 sec' },
       { name: 'Cable Curl (Rope)', sets: 3, reps: '12–15', rest: 60, restLabel: '1 min' },
     ]
@@ -772,11 +867,11 @@ const PROGRAM = [
     id: 'legs-b', name: 'Legs B', tag: 'legs', tagLabel: 'LEGS',
     focus: 'Hypertrophy · Quad-Dominant + Posterior',
     exercises: [
-      { name: 'Bulgarian Split Squat (DB)', sets: 4, reps: '8–10 each', rest: 120, restLabel: '2 min' },
-      { name: 'Trap Bar Deadlift', sets: 4, reps: '6–8', rest: 180, restLabel: '3 min' },
+      { name: 'Bulgarian Split Squat (DB)', sets: 4, reps: '8–10 each', rest: 180, restLabel: '3 min' },
+      { name: 'Trap Bar Deadlift', sets: 4, reps: '6–8', rest: 210, restLabel: '3.5 min' },
       { name: 'Hack Squat / Leg Press', sets: 3, reps: '12–15', rest: 90, restLabel: '90 sec' },
       { name: 'Nordic Curl / Lying Leg Curl', sets: 3, reps: '8–10', rest: 90, restLabel: '90 sec' },
-      { name: 'Goblet Squat (Tempo)', sets: 3, reps: '12', rest: 75, restLabel: '75 sec' },
+      { name: 'Goblet Squat (Tempo)', sets: 3, reps: '12', rest: 90, restLabel: '90 sec' },
       { name: 'Seated Calf Raise', sets: 4, reps: '15–20', rest: 60, restLabel: '1 min' },
     ]
   }
@@ -949,11 +1044,33 @@ function backToLog() {
 // ══════════════════════════════════════════════════════════════
 // START WORKOUT
 // ══════════════════════════════════════════════════════════════
-function startWorkout() {
+let lastSessionData = {}; // { exName: [ {weight, reps, rpe} ] }
+
+async function startWorkout() {
   activeSession = selectedSession;
   setData = {};
+  lastSessionData = {};
+
+  // Load all sessions and find the most recent one matching this session type
+  const allSessions = await loadSessions();
+  const lastMatch = allSessions.find(s => s.sessionName === activeSession.name || s.sessionId === activeSession.id);
+
+  if (lastMatch) {
+    lastMatch.exercises.forEach(ex => {
+      lastSessionData[ex.name] = ex.sets;
+    });
+  }
+
+  // Pre-fill setData from last session where available
   activeSession.exercises.forEach((ex, i) => {
-    setData[i] = Array.from({length: ex.sets}, () => ({ weight: '', reps: '', rpe: '', done: false }));
+    const prev = lastSessionData[ex.name] || [];
+    setData[i] = Array.from({length: ex.sets}, (_, sIdx) => ({
+      weight: prev[sIdx]?.weight ?? '',
+      reps: prev[sIdx]?.reps ?? '',
+      rpe: '',  // RPE always starts blank — effort may differ
+      done: false,
+      prefilled: !!(prev[sIdx]?.weight)
+    }));
   });
 
   document.getElementById('workoutTitle').textContent = activeSession.name;
@@ -966,15 +1083,24 @@ function startWorkout() {
 
 function renderWorkoutExercises() {
   const el = document.getElementById('workoutExercises');
-  el.innerHTML = activeSession.exercises.map((ex, exIdx) => `
-    <div class="ex-block" id="exBlock_${exIdx}">
-      <div class="ex-block-header">
-        <div class="ex-block-name">${ex.name}</div>
-        <div class="ex-block-meta">${ex.sets} sets · ${ex.reps} reps · ${ex.restLabel} rest</div>
+  el.innerHTML = activeSession.exercises.map((ex, exIdx) => {
+    const hasPrev = lastSessionData[ex.name]?.length > 0;
+    return `
+      <div class="ex-block" id="exBlock_${exIdx}">
+        <div class="ex-block-header">
+          <div>
+            <div class="ex-block-name">
+              ${ex.name}
+              ${hasPrev ? '<span class="prefill-badge">↑ last session</span>' : ''}
+            </div>
+            <div class="ex-block-meta">${ex.sets} sets · ${ex.reps} reps · ${ex.restLabel} rest</div>
+          </div>
+          <button class="btn-lift-history" onclick="openLiftModal('${ex.name.replace(/'/g, "\\'")}')">History</button>
+        </div>
+        ${setData[exIdx].map((set, sIdx) => renderSetRow(exIdx, sIdx, ex)).join('')}
       </div>
-      ${setData[exIdx].map((set, sIdx) => renderSetRow(exIdx, sIdx, ex)).join('')}
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function renderSetRow(exIdx, sIdx, ex) {
@@ -1279,6 +1405,78 @@ async function confirmDelete() {
   sessionToDelete = null;
   closeConfirm();
   renderHistory();
+}
+
+// ══════════════════════════════════════════════════════════════
+// LIFT HISTORY MODAL
+// ══════════════════════════════════════════════════════════════
+async function openLiftModal(liftName) {
+  document.getElementById('liftModalTitle').textContent = liftName;
+  document.getElementById('liftModalBody').innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0;">Loading...</div>';
+  document.getElementById('liftModalOverlay').classList.remove('hidden');
+
+  const allSessions = await loadSessions();
+  const entries = []; // { date, sessionName, sets: [{weight,reps,rpe}] }
+
+  allSessions.forEach(s => {
+    const ex = s.exercises?.find(e => e.name === liftName);
+    if (ex && ex.sets?.length) {
+      entries.push({ date: s.date, sessionName: s.sessionName, sets: ex.sets });
+    }
+  });
+
+  entries.sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!entries.length) {
+    document.getElementById('liftModalBody').innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;">No history for this lift yet.</div>`;
+    return;
+  }
+
+  // Last session sets
+  const last = entries[entries.length - 1];
+  const lastSetsHtml = last.sets.map((s, i) => `
+    <div class="lift-modal-set-row">
+      <div class="lift-modal-set-num">S${i+1}</div>
+      <div class="lift-modal-set-detail">${s.weight} lbs × ${s.reps} reps</div>
+      <div class="lift-modal-set-rpe">${s.rpe ? `RPE ${s.rpe}` : ''}</div>
+    </div>
+  `).join('');
+
+  // Progress chart — top set weight per session
+  const maxW = Math.max(...entries.map(e => Math.max(...e.sets.map(s => parseFloat(s.weight) || 0))));
+  const chartHtml = entries.map(e => {
+    const top = Math.max(...e.sets.map(s => parseFloat(s.weight) || 0));
+    const pct = Math.max(10, (top / maxW) * 100);
+    const topSet = e.sets.reduce((a, b) => (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a, e.sets[0]);
+    return `
+      <div class="chart-bar-row">
+        <div class="chart-date">${formatDate(e.date, true)}</div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar" style="width:${pct}%"><span class="chart-val">${top}</span></div>
+        </div>
+        <div class="chart-rpe">${topSet.rpe ? `@${topSet.rpe}` : ''}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('liftModalBody').innerHTML = `
+    <div class="lift-modal-section">
+      <div class="lift-modal-section-label">Last Session · ${formatDate(last.date)} · ${last.sessionName}</div>
+      <div class="lift-modal-last-sets">${lastSetsHtml}</div>
+    </div>
+    <div class="lift-modal-section">
+      <div class="lift-modal-section-label">Top Set Over Time</div>
+      ${chartHtml}
+      <div style="margin-top:10px;padding:8px 10px;background:var(--surface);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--muted);">
+        Peak <span style="color:var(--accent)">${maxW} lbs</span> · ${entries.length} session${entries.length > 1 ? 's' : ''} logged
+      </div>
+    </div>
+  `;
+}
+
+function closeLiftModal(e) {
+  if (e && e.target !== document.getElementById('liftModalOverlay')) return;
+  document.getElementById('liftModalOverlay').classList.add('hidden');
 }
 
 // ══════════════════════════════════════════════════════════════
