@@ -495,6 +495,25 @@
   .chart-val { font-family: var(--mono); font-size: 11px; color: white; font-weight: 500; }
   .chart-rpe { font-family: var(--mono); font-size: 10px; color: var(--muted); width: 36px; flex-shrink: 0; text-align: right; }
 
+  /* ── SCREEN TRANSITIONS ── */
+  .screen {
+    animation: none;
+  }
+  .screen.slide-in-right {
+    animation: slideInRight 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  .screen.slide-in-left {
+    animation: slideInLeft 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  @keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideInLeft {
+    from { transform: translateX(-30%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
   /* ── LIFT HISTORY MODAL ── */
   .lift-modal-overlay {
     position: fixed; inset: 0;
@@ -982,10 +1001,14 @@ function switchTab(tab) {
   if (tab === 'progress') renderProgressSelect();
 }
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-
+function showScreen(id, direction = 'right') {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active', 'slide-in-right', 'slide-in-left'));
+  const screen = document.getElementById(id);
+  screen.classList.add('active');
+  // Trigger animation on next frame so it actually plays
+  requestAnimationFrame(() => {
+    screen.classList.add(direction === 'right' ? 'slide-in-right' : 'slide-in-left');
+  });
   const showTabs = id !== 'workout-screen';
   document.getElementById('mainTabs').style.display = showTabs ? 'flex' : 'none';
 }
@@ -1033,11 +1056,11 @@ function showPreview(session) {
     </div>
   `).join('');
 
-  showScreen('preview-screen');
+  showScreen('preview-screen', 'right');
 }
 
 function backToLog() {
-  showScreen('log-screen');
+  showScreen('log-screen', 'left');
   document.querySelector('.tab[onclick="switchTab(\'log\')"]').classList.add('active');
 }
 
@@ -1077,7 +1100,7 @@ async function startWorkout() {
   document.getElementById('workoutNotes').value = '';
   renderWorkoutExercises();
 
-  showScreen('workout-screen');
+  showScreen('workout-screen', 'right');
   startWorkoutTimer();
 }
 
@@ -1272,7 +1295,7 @@ async function finishWorkout() {
   setData = {};
 
   // Go back to log screen
-  showScreen('log-screen');
+  showScreen('log-screen', 'left');
   document.getElementById('mainTabs').style.display = 'flex';
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelector('.tab[onclick="switchTab(\'log\')"]').classList.add('active');
@@ -1381,15 +1404,13 @@ function confirmCancelWorkout() {
   activeSession = null;
   setData = {};
   document.getElementById('cancelWorkoutOverlay').classList.add('hidden');
-  showScreen('log-screen');
+  showScreen('log-screen', 'left');
   document.getElementById('mainTabs').style.display = 'flex';
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelector('.tab[onclick="switchTab(\'log\')"]').classList.add('active');
   renderSessionList();
 }
 
-// ══════════════════════════════════════════════════════════════
-// DELETE
 // ══════════════════════════════════════════════════════════════
 function promptDelete(id) {
   sessionToDelete = id;
@@ -1480,7 +1501,73 @@ function closeLiftModal(e) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// UTILS
+// SWIPE NAVIGATION
+// ══════════════════════════════════════════════════════════════
+(function initSwipe() {
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+
+  const SWIPE_MIN_X = 60;      // minimum horizontal distance px
+  const SWIPE_MAX_Y = 80;      // maximum vertical drift px
+  const SWIPE_MAX_MS = 400;    // must complete within ms
+  const EDGE_ZONE = 40;        // px from left edge to count as edge swipe
+
+  document.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+    const dt = Date.now() - touchStartTime;
+    const fromEdge = touchStartX <= EDGE_ZONE;
+
+    // Must be: rightward, mostly horizontal, fast enough, and from edge OR long enough swipe
+    const isSwipeBack = dx > SWIPE_MIN_X && dy < SWIPE_MAX_Y && dt < SWIPE_MAX_MS && (fromEdge || dx > 120);
+
+    if (!isSwipeBack) return;
+
+    // Don't allow swipe navigation if a modal is open
+    const modalsOpen = [
+      'liftModalOverlay', 'cancelWorkoutOverlay', 'confirmOverlay', 'restOverlay'
+    ].some(id => !document.getElementById(id).classList.contains('hidden') &&
+                  document.getElementById(id).classList.contains('active') ||
+                  (!document.getElementById(id).classList.contains('hidden') &&
+                   document.getElementById(id).id !== 'restOverlay'));
+
+    // Check which screen is active
+    const activeScreenId = [...document.querySelectorAll('.screen.active')].map(s => s.id)[0];
+
+    if (activeScreenId === 'workout-screen') {
+      // Swipe blocked on active workout — do nothing
+      return;
+    }
+
+    if (activeScreenId === 'preview-screen') {
+      backToLog();
+      return;
+    }
+
+    // On history/progress tabs, swipe back to log
+    if (activeScreenId === 'history-screen' || activeScreenId === 'progress-screen') {
+      switchTab('log');
+      return;
+    }
+
+    // Lift history modal — swipe to close
+    if (!document.getElementById('liftModalOverlay').classList.contains('hidden')) {
+      document.getElementById('liftModalOverlay').classList.add('hidden');
+      return;
+    }
+  }, { passive: true });
+})();
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN TRANSITIONS
+// ══════════════════════════════════════════════════════════════
 // ══════════════════════════════════════════════════════════════
 function formatDate(dateStr, short = false) {
   const d = new Date(dateStr + 'T00:00:00');
