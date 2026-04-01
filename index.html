@@ -122,6 +122,59 @@
     justify-content: space-between;
   }
 
+  /* ── PHASE BAR ── */
+  .phase-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .phase-bar-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .phase-bar-phase {
+    font-family: var(--head);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .phase-bar-phase.deload { color: var(--gold); }
+  .phase-dots { text-align: right; flex-shrink: 0; }
+  .phase-dots-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    text-align: right;
+  }
+  .phase-dots-track { display: flex; gap: 6px; justify-content: flex-end; }
+  .phase-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .phase-dot.done { background: var(--muted); border-color: var(--muted); }
+  .phase-dot.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 6px rgba(232,69,90,0.5); }
+  .phase-dot.active.deload { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 6px rgba(245,166,35,0.5); }
+  .next-up-deload {
+    font-size: 11px;
+    color: var(--gold);
+    font-family: var(--mono);
+    margin-top: 5px;
+  }
+
   /* ── NEXT UP CARD ── */
   .next-up-card {
     background: linear-gradient(135deg, var(--surface) 0%, var(--card) 100%);
@@ -169,27 +222,6 @@
     opacity: 0.6;
     flex-shrink: 0;
   }
-
-  /* ── SOUND TOGGLE ── */
-  .sound-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 18px;
-    z-index: 40;
-    transition: all 0.2s;
-  }
-  .sound-toggle.visible { display: flex; }
-  .sound-toggle:hover { border-color: var(--border-strong); }
 
   /* ── SCREEN HEADERS ── */
   .screen-header { margin-bottom: 18px; }
@@ -871,9 +903,6 @@
   <button class="btn-skip-rest" onclick="skipRest()">Skip Rest</button>
 </div>
 
-<!-- ══════════════════════ SOUND TOGGLE ══════════════════════ -->
-<div class="sound-toggle visible" id="soundToggle" onclick="toggleSound()" title="Toggle sound"></div>
-
 <!-- ══════════════════════ LIFT HISTORY MODAL ══════════════════════ -->
 <div class="lift-modal-overlay hidden" id="liftModalOverlay" onclick="closeLiftModal(event)">
   <div class="lift-modal" id="liftModal">
@@ -911,82 +940,145 @@
 
 <script>
 // ══════════════════════════════════════════════════════════════
-// PROGRAM DATA
+// PROGRAM REGISTRY
 // ══════════════════════════════════════════════════════════════
-const PROGRAM = [
-  {
-    id: 'push-a', name: 'Push A', tag: 'push', tagLabel: 'PUSH',
-    focus: 'Strength · Chest, Shoulders, Triceps',
-    exercises: [
-      { name: 'Barbell Bench Press', sets: 4, reps: '4–6', rest: 180, restLabel: '3 min' },
-      { name: 'Overhead Press (Barbell)', sets: 4, reps: '4–6', rest: 180, restLabel: '3 min' },
-      { name: 'Incline Dumbbell Press', sets: 3, reps: '8–10', rest: 120, restLabel: '2 min' },
-      { name: 'Cable Lateral Raise', sets: 3, reps: '12–15', rest: 60, restLabel: '1 min' },
-      { name: 'Tricep Pushdown (Cable)', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
-      { name: 'Overhead Tricep Extension', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
-    ]
-  },
-  {
-    id: 'pull-a', name: 'Pull A', tag: 'pull', tagLabel: 'PULL',
-    focus: 'Strength · Back, Biceps',
-    exercises: [
-      { name: 'Weighted Pull-Up', sets: 4, reps: '4–6', rest: 180, restLabel: '3 min' },
-      { name: 'Barbell Row (Pronated)', sets: 4, reps: '4–6', rest: 180, restLabel: '3 min' },
-      { name: 'Chest-Supported Row (DB)', sets: 3, reps: '8–10', rest: 120, restLabel: '2 min' },
-      { name: 'Face Pull (Cable)', sets: 3, reps: '15–20', rest: 60, restLabel: '1 min' },
-      { name: 'Barbell Curl', sets: 3, reps: '8–10', rest: 90, restLabel: '90 sec' },
-      { name: 'Hammer Curl (DB)', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
-    ]
-  },
-  {
-    id: 'legs-a', name: 'Legs A', tag: 'legs', tagLabel: 'LEGS',
-    focus: 'Strength · Quads, Hamstrings, Glutes',
-    exercises: [
-      { name: 'Back Squat (Barbell)', sets: 4, reps: '4–6', rest: 240, restLabel: '4 min' },
-      { name: 'Romanian Deadlift', sets: 4, reps: '6–8', rest: 180, restLabel: '3 min' },
-      { name: 'Leg Press', sets: 3, reps: '10–12', rest: 120, restLabel: '2 min' },
-      { name: 'Leg Curl (Machine)', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
-      { name: 'Walking Lunge (DB)', sets: 3, reps: '12 each', rest: 90, restLabel: '90 sec' },
-      { name: 'Standing Calf Raise', sets: 4, reps: '15–20', rest: 60, restLabel: '1 min' },
-    ]
-  },
-  {
-    id: 'push-b', name: 'Push B', tag: 'push', tagLabel: 'PUSH',
-    focus: 'Hypertrophy · Chest, Shoulders, Triceps',
-    exercises: [
-      { name: 'Incline Barbell Press', sets: 4, reps: '8–10', rest: 120, restLabel: '2 min' },
-      { name: 'Dumbbell Shoulder Press', sets: 4, reps: '8–10', rest: 120, restLabel: '2 min' },
-      { name: 'Cable Fly (Low-to-High)', sets: 3, reps: '12–15', rest: 90, restLabel: '90 sec' },
-      { name: 'Lateral Raise (DB)', sets: 4, reps: '15–20', rest: 60, restLabel: '1 min' },
-      { name: 'Close-Grip Bench Press', sets: 3, reps: '8–10', rest: 120, restLabel: '2 min' },
-      { name: 'Skull Crusher (EZ Bar)', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
-    ]
-  },
-  {
-    id: 'pull-b', name: 'Pull B', tag: 'pull', tagLabel: 'PULL',
-    focus: 'Hypertrophy · Back, Biceps',
-    exercises: [
-      { name: 'Lat Pulldown (Wide Grip)', sets: 4, reps: '8–10', rest: 120, restLabel: '2 min' },
-      { name: 'Cable Row (Neutral Grip)', sets: 4, reps: '10–12', rest: 90, restLabel: '90 sec' },
-      { name: 'Single-Arm DB Row', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
-      { name: 'Straight-Arm Pulldown', sets: 3, reps: '12–15', rest: 90, restLabel: '90 sec' },
-      { name: 'Incline DB Curl', sets: 3, reps: '10–12', rest: 90, restLabel: '90 sec' },
-      { name: 'Cable Curl (Rope)', sets: 3, reps: '12–15', rest: 60, restLabel: '1 min' },
-    ]
-  },
-  {
-    id: 'legs-b', name: 'Legs B', tag: 'legs', tagLabel: 'LEGS',
-    focus: 'Hypertrophy · Quad-Dominant + Posterior',
-    exercises: [
-      { name: 'Bulgarian Split Squat (DB)', sets: 4, reps: '8–10 each', rest: 180, restLabel: '3 min' },
-      { name: 'Trap Bar Deadlift', sets: 4, reps: '6–8', rest: 210, restLabel: '3.5 min' },
-      { name: 'Hack Squat / Leg Press', sets: 3, reps: '12–15', rest: 90, restLabel: '90 sec' },
-      { name: 'Nordic Curl / Lying Leg Curl', sets: 3, reps: '8–10', rest: 90, restLabel: '90 sec' },
-      { name: 'Goblet Squat (Tempo)', sets: 3, reps: '12', rest: 90, restLabel: '90 sec' },
-      { name: 'Seated Calf Raise', sets: 4, reps: '15–20', rest: 60, restLabel: '1 min' },
+// Each program defines its own structure. To add a new program:
+// 1. Add an entry to PROGRAMS with a unique id
+// 2. Define blockStructure, sessionOrder, and sessions
+// Everything else (block/week calc, what's next, UI) is automatic.
+
+const PROGRAMS = {
+  'ppl-x2': {
+    id: 'ppl-x2',
+    name: 'PPL × 2',
+    description: 'Push / Pull / Legs twice per week — strength & hypertrophy',
+    blockStructure: {
+      weeksPerBlock: 4,
+      deloadWeek: 4,       // week 4 of each block is deload
+      blockNames: ['Strength & Size', 'Strength & Size', 'Strength & Size'],
+      phaseByWeek: {       // week within block → phase label
+        1: 'Foundation',
+        2: 'Accumulation',
+        3: 'Intensification',
+        4: 'Deload'
+      }
+    },
+    sessionOrder: ['push-a', 'pull-a', 'legs-a', 'push-b', 'pull-b', 'legs-b'],
+    sessions: [
+      {
+        id: 'push-a', name: 'Push A', tag: 'push', tagLabel: 'PUSH',
+        focus: 'Strength · Chest, Shoulders, Triceps',
+        exercises: [
+          { name: 'Barbell Bench Press',        sets: 4, reps: '4–6',   rest: 180, restLabel: '3 min' },
+          { name: 'Overhead Press (Barbell)',    sets: 4, reps: '4–6',   rest: 180, restLabel: '3 min' },
+          { name: 'Incline Dumbbell Press',      sets: 3, reps: '8–10',  rest: 120, restLabel: '2 min' },
+          { name: 'Cable Lateral Raise',         sets: 3, reps: '12–15', rest: 60,  restLabel: '1 min' },
+          { name: 'Tricep Pushdown (Cable)',     sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Overhead Tricep Extension',   sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+        ]
+      },
+      {
+        id: 'pull-a', name: 'Pull A', tag: 'pull', tagLabel: 'PULL',
+        focus: 'Strength · Back, Biceps',
+        exercises: [
+          { name: 'Weighted Pull-Up',            sets: 4, reps: '4–6',   rest: 180, restLabel: '3 min' },
+          { name: 'Barbell Row (Pronated)',       sets: 4, reps: '4–6',   rest: 180, restLabel: '3 min' },
+          { name: 'Chest-Supported Row (DB)',     sets: 3, reps: '8–10',  rest: 120, restLabel: '2 min' },
+          { name: 'Face Pull (Cable)',            sets: 3, reps: '15–20', rest: 60,  restLabel: '1 min' },
+          { name: 'Barbell Curl',                sets: 3, reps: '8–10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Hammer Curl (DB)',             sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+        ]
+      },
+      {
+        id: 'legs-a', name: 'Legs A', tag: 'legs', tagLabel: 'LEGS',
+        focus: 'Strength · Quads, Hamstrings, Glutes',
+        exercises: [
+          { name: 'Back Squat (Barbell)',         sets: 4, reps: '4–6',    rest: 240, restLabel: '4 min' },
+          { name: 'Romanian Deadlift',            sets: 4, reps: '6–8',    rest: 180, restLabel: '3 min' },
+          { name: 'Leg Press',                   sets: 3, reps: '10–12',  rest: 120, restLabel: '2 min' },
+          { name: 'Leg Curl (Machine)',           sets: 3, reps: '10–12',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Walking Lunge (DB)',           sets: 3, reps: '12 each',rest: 90,  restLabel: '90 sec' },
+          { name: 'Standing Calf Raise',          sets: 4, reps: '15–20',  rest: 60,  restLabel: '1 min' },
+        ]
+      },
+      {
+        id: 'push-b', name: 'Push B', tag: 'push', tagLabel: 'PUSH',
+        focus: 'Hypertrophy · Chest, Shoulders, Triceps',
+        exercises: [
+          { name: 'Incline Barbell Press',        sets: 4, reps: '8–10',  rest: 120, restLabel: '2 min' },
+          { name: 'Dumbbell Shoulder Press',      sets: 4, reps: '8–10',  rest: 120, restLabel: '2 min' },
+          { name: 'Cable Fly (Low-to-High)',      sets: 3, reps: '12–15', rest: 90,  restLabel: '90 sec' },
+          { name: 'Lateral Raise (DB)',           sets: 4, reps: '15–20', rest: 60,  restLabel: '1 min' },
+          { name: 'Close-Grip Bench Press',       sets: 3, reps: '8–10',  rest: 120, restLabel: '2 min' },
+          { name: 'Skull Crusher (EZ Bar)',       sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+        ]
+      },
+      {
+        id: 'pull-b', name: 'Pull B', tag: 'pull', tagLabel: 'PULL',
+        focus: 'Hypertrophy · Back, Biceps',
+        exercises: [
+          { name: 'Lat Pulldown (Wide Grip)',     sets: 4, reps: '8–10',  rest: 120, restLabel: '2 min' },
+          { name: 'Cable Row (Neutral Grip)',     sets: 4, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Single-Arm DB Row',            sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Straight-Arm Pulldown',        sets: 3, reps: '12–15', rest: 90,  restLabel: '90 sec' },
+          { name: 'Incline DB Curl',              sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Cable Curl (Rope)',            sets: 3, reps: '12–15', rest: 60,  restLabel: '1 min' },
+        ]
+      },
+      {
+        id: 'legs-b', name: 'Legs B', tag: 'legs', tagLabel: 'LEGS',
+        focus: 'Hypertrophy · Quad-Dominant + Posterior',
+        exercises: [
+          { name: 'Bulgarian Split Squat (DB)',   sets: 4, reps: '8–10 each', rest: 180, restLabel: '3 min' },
+          { name: 'Trap Bar Deadlift',            sets: 4, reps: '6–8',       rest: 210, restLabel: '3.5 min' },
+          { name: 'Hack Squat / Leg Press',       sets: 3, reps: '12–15',     rest: 90,  restLabel: '90 sec' },
+          { name: 'Nordic Curl / Lying Leg Curl', sets: 3, reps: '8–10',      rest: 90,  restLabel: '90 sec' },
+          { name: 'Goblet Squat (Tempo)',         sets: 3, reps: '12',         rest: 90,  restLabel: '90 sec' },
+          { name: 'Seated Calf Raise',            sets: 4, reps: '15–20',     rest: 60,  restLabel: '1 min' },
+        ]
+      }
     ]
   }
-];
+  // Future programs go here:
+  // 'phul': { ... },
+  // '531': { ... },
+};
+
+// ── Active program helpers ─────────────────────────────────────
+// userConfig is loaded from Supabase on init and cached here
+let userConfig = null;
+
+function getActiveProgram() {
+  const id = userConfig?.activeProgramId || 'ppl-x2';
+  return PROGRAMS[id] || PROGRAMS['ppl-x2'];
+}
+
+// Convenience — flat sessions array for active program
+// Replaces all previous references to PROGRAM
+function getProgramSessions() {
+  return getActiveProgram().sessions;
+}
+
+// ── Block / week calculation ───────────────────────────────────
+function getProgramPhase() {
+  const config = userConfig;
+  if (!config?.programStartDate) return null;
+
+  const program = getActiveProgram();
+  const { weeksPerBlock, deloadWeek, phaseByWeek } = program.blockStructure;
+
+  const start = new Date(config.programStartDate + 'T00:00:00');
+  const today = new Date();
+  const daysSinceStart = Math.floor((today - start) / 86400000);
+  const weeksElapsed = Math.floor(daysSinceStart / 7);
+
+  const weekInBlock = (weeksElapsed % weeksPerBlock) + 1;
+  const blockNumber = Math.floor(weeksElapsed / weeksPerBlock) + 1;
+  const isDeload = weekInBlock === deloadWeek;
+  const phaseName = phaseByWeek[weekInBlock] || `Week ${weekInBlock}`;
+
+  return { blockNumber, weekInBlock, weeksPerBlock, isDeload, phaseName };
+}
 
 // ══════════════════════════════════════════════════════════════
 // STATE
@@ -1079,44 +1171,112 @@ async function deleteSession(supabaseId) {
   } catch (e) { console.error('deleteSession error', e); }
 }
 
+// ── User config (active program, start date) ──────────────────
+async function loadConfig() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_config?select=data&limit=1`, {
+      headers: sbHeaders
+    });
+    const rows = await res.json();
+    if (Array.isArray(rows) && rows.length) {
+      userConfig = rows[0].data;
+    } else {
+      // First run — seed default config with March 30 start date
+      userConfig = {
+        activeProgramId: 'ppl-x2',
+        programStartDate: '2026-03-30'
+      };
+      await saveConfig(userConfig);
+    }
+  } catch (e) {
+    console.error('loadConfig error', e);
+    userConfig = { activeProgramId: 'ppl-x2', programStartDate: '2026-03-30' };
+  }
+}
+
+async function saveConfig(config) {
+  try {
+    // Upsert — delete existing and insert fresh (single-row config pattern)
+    await fetch(`${SUPABASE_URL}/rest/v1/user_config`, {
+      method: 'DELETE',
+      headers: sbHeaders
+    });
+    await fetch(`${SUPABASE_URL}/rest/v1/user_config`, {
+      method: 'POST',
+      headers: sbHeaders,
+      body: JSON.stringify({ data: config })
+    });
+    userConfig = config;
+  } catch (e) { console.error('saveConfig error', e); }
+}
+
 // ══════════════════════════════════════════════════════════════
 // WHAT'S NEXT CARD
 // ══════════════════════════════════════════════════════════════
 
-// PPL rotation order
-const SESSION_ORDER = ['push-a', 'pull-a', 'legs-a', 'push-b', 'pull-b', 'legs-b'];
-
 async function renderNextUpCard() {
   const el = document.getElementById('nextUpCard');
   const sessions = await loadSessions();
+  const program = getActiveProgram();
+  const phase = getProgramPhase();
+
+  // Phase status bar
+  let phaseHtml = '';
+  if (phase) {
+    const { blockNumber, weekInBlock, weeksPerBlock, isDeload, phaseName } = phase;
+    const dots = Array.from({ length: weeksPerBlock }, (_, i) => {
+      const active = i + 1 === weekInBlock;
+      const done = i + 1 < weekInBlock;
+      const isDeloadDot = i + 1 === weeksPerBlock;
+      return `<div class="phase-dot ${active ? 'active' : ''} ${done ? 'done' : ''} ${isDeloadDot ? 'deload' : ''}"></div>`;
+    }).join('');
+
+    phaseHtml = `
+      <div class="phase-bar">
+        <div class="phase-bar-left">
+          <div class="phase-bar-label">Block ${blockNumber} · ${program.name}</div>
+          <div class="phase-bar-phase ${isDeload ? 'deload' : ''}">${phaseName}</div>
+        </div>
+        <div class="phase-dots">
+          <div class="phase-dots-label">Week ${weekInBlock} of ${weeksPerBlock}</div>
+          <div class="phase-dots-track">${dots}</div>
+        </div>
+      </div>
+    `;
+  }
 
   if (!sessions.length) {
-    el.innerHTML = '';
+    el.innerHTML = phaseHtml;
     return;
   }
 
-  // Find the most recent logged session
-  const last = sessions[0]; // already sorted desc
-  const lastId = last.sessionId || 'push-a';
-  const lastIdx = SESSION_ORDER.indexOf(lastId);
-  const nextIdx = (lastIdx + 1) % SESSION_ORDER.length;
-  const nextId = SESSION_ORDER[nextIdx !== -1 ? nextIdx : 0];
-  const nextSession = PROGRAM.find(p => p.id === nextId) || PROGRAM[0];
+  // Next session in rotation
+  const last = sessions[0];
+  const order = program.sessionOrder;
+  const lastIdx = order.indexOf(last.sessionId || 'push-a');
+  const nextId = order[(lastIdx + 1) % order.length];
+  const nextSession = getProgramSessions().find(p => p.id === nextId) || getProgramSessions()[0];
 
-  // How long ago was last session
   const daysSince = last.date ? Math.floor((Date.now() - new Date(last.date + 'T00:00:00')) / 86400000) : null;
-  const lastLabel = daysSince === 0 ? 'Last trained today'
+  const lastLabel = daysSince === 0 ? 'Trained today'
     : daysSince === 1 ? 'Last trained yesterday'
     : daysSince ? `Last trained ${daysSince} days ago`
     : '';
 
+  // Deload nudge
+  const deloadNote = phase?.isDeload
+    ? '<div class="next-up-deload">↓ Deload week — reduce loads ~10%</div>'
+    : '';
+
   el.innerHTML = `
+    ${phaseHtml}
     <div class="next-up-card" onclick="selectSession('${nextSession.id}')">
       <div>
         <div class="next-up-label">Up Next</div>
         <div class="next-up-name">${nextSession.name}</div>
         <div class="next-up-meta">${nextSession.focus}</div>
         ${lastLabel ? `<div class="next-up-last">${lastLabel} · ${last.sessionName}</div>` : ''}
+        ${deloadNote}
       </div>
       <div class="next-up-arrow">›</div>
     </div>
@@ -1140,7 +1300,7 @@ function haptic(type = 'light') {
 // ══════════════════════════════════════════════════════════════
 // SOUND
 // ══════════════════════════════════════════════════════════════
-let soundEnabled = localStorage.getItem('hybrid_sound') !== 'off';
+let soundEnabled = true;
 let audioCtx = null;
 
 function getAudioCtx() {
@@ -1174,22 +1334,6 @@ function playRestDone() {
   // Two-tone "go" chime
   playTone(523, 0.15, 'sine', 0.3);
   setTimeout(() => playTone(784, 0.25, 'sine', 0.3), 160);
-}
-
-function toggleSound() {
-  soundEnabled = !soundEnabled;
-  localStorage.setItem('hybrid_sound', soundEnabled ? 'on' : 'off');
-  updateSoundToggle();
-  // Unlock audio context on first interaction
-  if (soundEnabled) {
-    try { getAudioCtx().resume(); } catch(e) {}
-    playTone(440, 0.1, 'sine', 0.15);
-  }
-}
-
-function updateSoundToggle() {
-  const el = document.getElementById('soundToggle');
-  if (el) el.textContent = soundEnabled ? '🔔' : '🔕';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1226,7 +1370,7 @@ function showScreen(id, direction = 'right') {
 // ══════════════════════════════════════════════════════════════
 function renderSessionList() {
   const el = document.getElementById('sessionList');
-  el.innerHTML = PROGRAM.map(s => `
+  el.innerHTML = getProgramSessions().map(s => `
     <div class="session-card ${selectedSession?.id === s.id ? 'selected' : ''}" onclick="selectSession('${s.id}')">
       <div style="display:flex;align-items:center;">
         <span class="session-tag tag-${s.tag}">${s.tagLabel}</span>
@@ -1241,7 +1385,7 @@ function renderSessionList() {
 }
 
 function selectSession(id) {
-  selectedSession = PROGRAM.find(s => s.id === id);
+  selectedSession = getProgramSessions().find(s => s.id === id);
   showPreview(selectedSession);
 }
 
@@ -1786,10 +1930,10 @@ function formatDate(dateStr, short = false) {
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
-function init() {
+async function init() {
+  await loadConfig();   // load user config first — everything depends on active program
   renderSessionList();
   renderNextUpCard();
-  updateSoundToggle();
 
   // Register service worker for PWA
   if ('serviceWorker' in navigator) {
