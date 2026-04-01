@@ -862,6 +862,41 @@
     margin-top: 4px;
   }
 
+  /* ── MINI REST TIMER ── */
+  .mini-timer {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid rgba(232,69,90,0.3);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .mini-timer.visible { display: flex; }
+  .mini-timer:hover { border-color: var(--accent); }
+  .mini-timer-left { display: flex; align-items: baseline; gap: 4px; flex-shrink: 0; }
+  .mini-timer-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-right: 4px; }
+  .mini-timer-count { font-family: var(--mono); font-size: 20px; font-weight: 500; color: var(--accent); }
+  .mini-timer-unit { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .mini-timer-bar-wrap { flex: 1; height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden; }
+  .mini-timer-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s linear; }
+  .mini-timer-tap { font-size: 10px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
+
+  /* ── EXERCISE NAME LINK ── */
+  .ex-name-link {
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(255,255,255,0.2);
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .ex-name-link:hover { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ── EDIT SET BUTTON ── */
+  .btn-done-set.checked { background: var(--green-dim); border-color: rgba(61,214,140,0.4); color: var(--green); }
+  .btn-done-set.checked:hover { background: var(--gold-dim); border-color: rgba(245,166,35,0.4); color: var(--gold); }
+
   .mt16 { margin-top: 16px; }
 </style>
 <link rel="icon" type="image/png" href="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCADIAMgDASIAAhEBAxEB/8QAHQAAAQUBAQEBAAAAAAAAAAAAAgABAwUHBAYICf/EAEwQAAEDAwEDCAUHCAUNAAAAAAEAAgMEBREGBxIhCBMiMUFRUmEzQnGBoRQWIzJi0dMVGFVWgpSVwRdDkbHhOEVYY3J1dpajs8LD0v/EABoBAAMBAQEBAAAAAAAAAAAAAAECAwQGAAX/xAAkEQADAQABBAICAwEAAAAAAAAAAQIRAwQSITEiQQVxMlGxE//aAAwDAQACEQMRAD8A+MkkldaN01c9VXllttsYz9aWV31ImdrnH+XajMuniPN4VlBR1VfVx0dDTS1NRKcMiiYXOcfIBarpjYzO6JlVqm4iiaRk0tMQ6T2F5y0H2By0DT1jsOhbYYLexslY5uJ6t4+klP8A4t+yPfk8VQag1S9znBj/AIr7XS/i982Zr5v6LKj09oWxNAprJSTPb/WVQ55xPf0sge4BdJ1PR0o3KaKGFo7I2Bo+CzasvE8zj0yq+SrlceLivsR0cQvCIPkbNTdrP7fxQ/PPj9b4rKjPJ4kufk8RRfBIO5mqfPP7fxSOs/t/FZVz8niKXPyeIpHwyHuZqvzz+38U3zz+38VlXPyeIpc/J4ipvhkbuZqvzz+38Uvnp9v4rKefk8RTc/J4ipvikPczVvnp9v4pfPT7fxWU8/J4ilz8niKm+KQ6zVvnofH8Uvnp9v4rKOfk8RS5+TxFTfHIdNX+en2/io5tV01QN2oihmHdI0O/vWV8/J4inFRL4ipvjkKbPe19v0Xd2uFTZqWF7v6ynHNOB7+jgH3gryV+2a5a6fTleKpvX8mqCGye53UffhcbKuVp4OKsaC9TwvHTKz8nTxQ6tozqtpamiqX01XBJBNGcPY9uCCoVsFxZatU0Yp7i0MqGjENS0dOM/wAx5H4LMNQ2asslwdSVbQeG9HI36sje8L5/JxOCqrSuSSSUhjot1HU3CugoaOJ01RO8RxsaOLnE8F9Kaas1BoXS7aCAsdWSAPq5x1yP+4ZwB/MlZ9yebCx1VW6pqmZZSAwUuRw5xw6Tvc0gftFei1veHOke0OX2/wAZ0u/Nmbmv6KrU99fNI5rX8PavKTTPkcSSUqiV0khcSoSujlKV4MnsRSTJJXQcEkmTEqToKQ6bKYlMSpOhsHyllCSllSdBSHykhyllTdDYPlLKHKbKk6DgWUsocpZU3QcCykhyllI6GwLKQPchyllTdBOukqHxvBBwrqshp9RWh1BUFomaN6nlPWx33HqP+AXnGnirC3zujkBBUbyljGXg8HUwS01RJTzsLJY3Fr2nsISXq9olG17qe7xNA536Kb/aA6J94BH7KS+dU9rwqnpsGk6Zti2Y2qmDQ2SWnFRJ3l0nS4+YBA9yz7UFUZal3HtWla0d8lt8dK3gIo2sHsAwsmr3b07vauw6OFEJGDkes5yUySS1NiJDJFIlCSo1QyQ5KElIlCSougpDkpspiUJKjVjYESmJ80JKYlSdjYEXJsocpsqToOB5SygyllTdDYHlNlBvJZSOg4SZTZQZSypug4SZSygynBSOghjrXXTniCuNpXTAeIykbDh33SL5Xp2sgIyWx8432t4/yI96S6KBu+DGep7S0j2pLNyLWPJo20Rx6SyipOZnLVdonrLKan0zl1vA/iYK9kaYpJinqjyQxKYlIoSVCqGSGJTEpiULioVQyQ5KEuQkoSVCrGSCymyhJQlyk7GwPeTbyAuTZU3YcJN5NlR5Sypug4SbyWVHlLKR0HCTKfKjBT5Sug4SAp8qMFOCldBwlBXXTAkhcTOK76RvEKdUNM6XVsH0jUkdtb9I1JRdF1B7zaJ6yyqp9M72rVdovrLKan0rl1nC/ifLr2RFCU5QlGqAkMShJTkoHFQqh0hnFASkSgJWaqGSEShJTEoCVCqHSHLkxKElDlSdBwMuTZQ5TZU3Q2BZSyhymykdBwPKfKjyUspXR7CTKfKjyllK6CSgo28VE1TMCV0FLSaIdSsKQcQuGIcVY0g4hSdGiJLu2D6RqSO2D6RqSTS6k9rtE9ZZRU+lctW2i+usoqfTO9q6vifxPiUvJEUJTla1p/YBrK+aGg1hSXOwMoJqR1W2OWeYShjQSQQIiM8D2ocnIp9sKWmRFRuKJystI2Gs1Rqe3aet8sEVVcJ2wRPncRGHHqLiATj2AqF0MkVDio3LY9VcnzVWmq20Ut61HpWl/K1UaSmldUz82Jd0kNceZ4ZxgHvx1Lg2obBdc6A02dQXOS119CyQMmdQTSPMOeAc4PY3ok4GRniRlZa5E/sdIydxQkq+0JpO9a31TSacsEDZaypJwXndjiaBlz3nBw0D7hkkBaFrDk86r0tNaKe7aj0q2ovFfFb6GBlTOXyyyPa3OOZ+q3eBcewd5IBjVDJGOEpsr6CPJJ2j/pvSf71UfgJvzSNpH6b0n+9VH4Cm6CfPuUsrUdo2wTaJoeyy3q5UVHW26AZnqKGo5wRDqy5rg12PMAgduF6LTvJc2gXzT9uvVJeNMMp7hSxVUTZamcPayRgcA4CEgHBGcEpGwmF5SX0F+aPtI/Tek/3qo/AUFbyTdptPA6SK4aaq3AZEcVZKHHyG/E0fFLoTBMpZXvNG7JNX6k2h1mg+ZpbRe6OF808dxe5jWtaW9RY12c74II4Eccq9uWwHWVBtKtWgZrlYXXO50b6yGVk8pgaxm9kOJi3gegepp7OKU8ZNlE3ivoAckfaR+m9J/vVR+AjHJJ2jj/PWlP3qo/AQ8hWGAMU8YWr6z5O20vS1uluD6Cju1LA0vlfbZzIWNHWdxwa4j2ArKowpvS0JMniHEKyoxxCr4QrKkHEJGzTEl5bB02pI7YPpGpJdLqT1u0X1llNV6V3tWrbRfWWU1Ppne1dTxP4nPteSEr7+2HR0suwDT8Vc4NpH2otnJdugMO9vcezhnivgAr6A0lyiaKxbLqXRj9LVE8kFvfSGpFYGglwcN7d3PPqys/VS7SSGh4e1OiOS52321fx1/wD9q30RpHk70WrrXV6avFumvMVQ11Exl4fI50nZhu9x9i+LXK82e6gZpTXFn1HJSuqmW6qbOYWv3S/HZnBwoXxvP5MZM+oOXmSNDaeI4H8pu/7TkfJf2uUuuLK7Z5rR8dTc207ooH1GCLhBu4cx2et4bnPibx6wSsg5Qe22l2o2C22yDT01rNHVGcvfVCXfywtxgNGOtZhoC/t0trezajfTOqW22sjqXQtfumQNOd3ODjPsUO344xj7e07pLQXJ/wBK6g1M6aUxzSF7pZcGYsyeapo8nieOPtHieA4fLVNr+8bRuUfpS/XV7o4jqChZR0ofllNF8oZhg7z2k9pyfIWnKE25Uu1LTNvs9Ppya1upKz5SZH1QlDhuObjAaMfWz7lk+iry3TusrJqB8DqhtsuNPWGIO3TII5Gv3c8cZ3cZSfsJ+gG3y6Utq0rRT1er7zpdr65rBU2ukNRJIdx53C0A4bwznvAWKs1nZWva47d9oRAOcfkN3H+2Ndf54dt/USr/AIk38NN+eJbf1Eq/4k38NIE03bJUar1HsTrToemo7jS3C1nnqiufJDUyQFh3y2ExtG+W56y3r6upeh0XS1tbsLsFHbbqbTWTacpWQVwiEnyd5p2YfukgOweOCV8x7Q+Vdf7/AGKqtGn9OU1kbVROhkqZak1EoY4EHc6LQ08esg/dFc+UhQ1exp2z8aTqGSGyNtfys1rS3IiEe/u7nVwzjPvQ09ht/wDR9tV/0hJv+X4PxF67ZzpfWunauqq9UbSajVlLJBiKA2mOnEbgQd8FjnOccZGB39vBfmwtY5Ou15myisu8tRaai6w3CONohjquaaxzC7pHIIJwcJe4OG/aP1JS6l5aNzmpKGso20Wn30bxV07oJJHNex2+WOAcAQ8YyASACr7WH+WNoj/h+p/96wC37eqOl2+XHad82Z3RVluFH8i+VgOaQ2Mb2/u8fR9WO1d155Q1HcdtNi2hN0tURxWu3S0bqQ1gLpC/f6QducMb/VjsQ7kexmrcrjV+0fTV6sEOhqu5QQT08rqkUtIJgXBzQ3JLXY4ZWIM2qcoFxDRdNQkngALW3j/01qo5YNt/USr/AIi38NF+d/biOGharP8AvFv4aDaf2Ok/6NQ5NV82gX/QctZtBpJoawVJbSyz0wp5Zod1p3nMAHbkA4GR/afjTbVTUFJtd1VT2wRilZc5txsf1Wney5ox2B2R7lqutuVXqS72yah03YaexOmYWGqfUmolYD2s6LQ0+ZBwsv0/rGgorXFTV1kZXVIc90lRI5pdIXPLsklpJPHtKlzcjSXatNvQ9PHJb/632L9N/wCHk4RxCsqMcQq+EcQrSjHEJGysSXdsH0jUlJbG/SNSS6aFJ6baL6yyip9M72rV9ovrLJ6n0rvaun438Tmn7IigKIoChTPIFyjcjco3LPTHRG5A5G5RuWemMgSgKIoCpUxkMUJRFCVNsIySSSRsIksJBEAlbCkJoRgJAI2hK2USE0KVgQtClYEpWUGwKeMKNgXRGEGWlE8I6lZ0Y4hV8I6laUQ6kjZqiS8tg+kakpLYOm1JJpoUl7tG9ZZRU+lctX2i9Tlk9T6V3tXTQ/ByrIigKIoXJaYUA5RuRuQFQpjIjco3KQqNyjTGQDkBRlAetRbGBQlEUJSNhEkEsIgEjYUhAIwEgEQCVsokOAjaEwCNoQKJDtClaELQpWBKysoOMLojCjjC6ImpWy8IngarSibxC4IGq0om8QkbNcSXlsb02pKW2N6bUkmmlSWe0X1lk9T6Z3tWqa5kFTRx1DeLZY2vHvGVldV6V3tXSQ/Bx7ISgcjKApaYUA5A5G5A5RpjIjco3KVyjco0xkRuQFG5AVJhBKbCLGU4CRsZIYBEAnARBqTSiQgEYCQajASlEhgEbQnaEbWoFEhNCmY1M1qlY1KWmQ4wumJqjjauqJqVs0RJNA3iFbUTOIXBTs4hXFDH1KbZs45Le2M6bUlJTkQQvmPVGwuPuGUkvllqqY9lda6sXfZ1a6kHL4oBBJ3gx9Hj7QAfevC17dydw813bHLs0it05O8BtQOfpgfGBhw9paAf2Sj1HSOhqXcO1fe4eTZOOpYykKAoyOKEpqYEAUDkZQOUaYxG5RuUpQOUqYxEUOMqTGSnDVNsZIjDUQajDUQaptlVIAaiDUYajDUCikANRtajDVI1iXSqkja1SNajaxSNYl0rMgNap2MTsZ5KeNiVstMCjYuqFnUmijXZTxZPUkbNUQS0sWccFd0UXVwXJRwdXBXVHD1JGzXEFbrSrFu0fcJt7DpIjCzzL+jw9xJ9yS8htjvAkqqexwuy2D6WfB9cjoj3A5/aSV+Kck+H+S5u7m7V9eDwVHUz0dXFV00hjmheHxvHWCDkFazHW02qbI25U4a2oaN2phHXG/7j1j/ArIFY6evNZZLgKukcDkbskbvqyN7itPHydjPmtaenq6d0TyCCOK5XNIXpKept2oaU1NC4MmAzLTuPTYf5jzCrKmjfG4gtWvvTWk8KsgoCF2vhKAwlTphRxOah3CV28wT2JxT+Sk2OlpwhiIRrvFOe5EKc9ym2WmTgDPJEI/Jd4pj3I20/kkbKqTgEZ7kQj8l3imPcjFMe5K2WmThbH5KRsa7m03kpG0x7krZWYOFsakZEe5dzabyUraU9yVstMHEyI9y6IoT3LsjpfJdUNL5JWy8wcsEGexWNLT8RwU8FL5Kxp6fHYkbNUQDSQYxwUOqb3Tacs76uUtdO8FtPEet7vuHWf8U2o7/bdO0nO1bw+dzcxU7T03/cPM/HqWNajvdbfrk6trX8eqONv1Y29wTRDp6/Rn6zrJ6ee2f5f4cNZUTVdVLVVEhkmlcXvceskpKJJajm298sSSSS8eJaaealnZPTyvilYctc04IXqbfrEvaIrvTCb/XRAB3vb1H3YSSRVNejxaQ11mqwDBXxNcfVlO4fipxSb/o3NeO9pykknVNi4EKF/gKNtC/wlJJBlpQYoX+AohQv8BSSSMvKDFC/wI20L/AUkkjLSgxQP8CNtA/wJJJWVSJG0D/ApG0D/B8EkkpaUStoH+BSsoH+BJJKy8onjoX+BSmCOEb00kcY73uA/vSSSlvS04K7UunLc089dIJHD1IDzhPl0cge9eSvu0meRrobJSfJweAnmw5/ub1D35SSVp459nyeo6/m1zLz9Hg6qonq6h9RUzSTTPOXPe4kn3qJJJVPmN6JJJJePH//2Q==">
@@ -946,6 +981,19 @@
 
     <div id="workoutExercises"></div>
 
+    <!-- Mini rest timer — shows when rest overlay is dismissed -->
+    <div class="mini-timer" id="miniTimer" onclick="document.getElementById('restOverlay').classList.add('active')">
+      <div class="mini-timer-left">
+        <div class="mini-timer-label">Rest</div>
+        <div class="mini-timer-count">0</div>
+        <div class="mini-timer-unit">sec</div>
+      </div>
+      <div class="mini-timer-bar-wrap">
+        <div class="mini-timer-bar-fill"></div>
+      </div>
+      <div class="mini-timer-tap">Tap to expand</div>
+    </div>
+
     <div class="card mt16">
       <div class="section-label">Session Notes</div>
       <textarea class="notes-field" id="workoutNotes" placeholder="How's the session feeling? Energy, sleep, any issues..."></textarea>
@@ -1024,6 +1072,29 @@
       <button class="lift-modal-close" onclick="closeLiftModal()">✕</button>
     </div>
     <div class="lift-modal-body" id="liftModalBody"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ COPY WORKOUT MODAL ══════════════════════ -->
+<div class="confirm-overlay hidden" id="copyWorkoutOverlay">
+  <div class="confirm-box" style="max-width:380px;text-align:left;">
+    <h3 style="margin-bottom:12px;">Copy Workout</h3>
+    <textarea class="notes-field" id="copyWorkoutText" style="min-height:180px;font-size:12px;font-family:var(--mono);margin-bottom:16px;" readonly></textarea>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="dismissCopyModal()">Close</button>
+      <button class="btn-confirm-del" style="background:var(--green)" onclick="copyToClipboard()">Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ EXERCISE INFO MODAL ══════════════════════ -->
+<div class="lift-modal-overlay hidden" id="exerciseInfoOverlay" onclick="closeExerciseInfo(event)">
+  <div class="lift-modal" id="exerciseInfoModal">
+    <div class="lift-modal-header">
+      <div class="lift-modal-title" id="exerciseInfoTitle"></div>
+      <button class="lift-modal-close" onclick="closeExerciseInfo()">✕</button>
+    </div>
+    <div class="lift-modal-body" id="exerciseInfoBody"></div>
   </div>
 </div>
 
@@ -1575,7 +1646,7 @@ function renderWorkoutExercises() {
         <div class="ex-block-header">
           <div>
             <div class="ex-block-name">
-              ${ex.name}
+              <span class="ex-name-link" onclick="openExerciseInfo('${ex.name.replace(/'/g, "\\'")}')">${ex.name}</span>
               ${hasPrev ? '<span class="prefill-badge">↑ last session</span>' : ''}
             </div>
             <div class="ex-block-meta">${ex.sets} sets · ${ex.reps} reps · ${ex.restLabel} rest</div>
@@ -1590,41 +1661,50 @@ function renderWorkoutExercises() {
 
 function renderSetRow(exIdx, sIdx, ex) {
   const set = setData[exIdx][sIdx];
+  const isEditing = set.editing || false;
+  const isLocked = set.done && !isEditing;
+
   return `
-    <div class="set-row ${set.done ? 'completed' : ''}" id="setRow_${exIdx}_${sIdx}">
+    <div class="set-row ${isLocked ? 'completed' : ''}" id="setRow_${exIdx}_${sIdx}">
       <div class="set-num">${sIdx + 1}</div>
       <div class="set-input-wrap">
         <div class="set-input-label">Weight</div>
         <input class="set-input" type="number" inputmode="decimal"
-          placeholder="lbs"
-          value="${set.weight}"
-          ${set.done ? 'disabled' : ''}
+          placeholder="lbs" value="${set.weight}"
+          ${isLocked ? 'disabled' : ''}
           onchange="updateSetData(${exIdx},${sIdx},'weight',this.value)">
       </div>
       <div class="set-input-wrap">
         <div class="set-input-label">Reps</div>
         <input class="set-input" type="number" inputmode="numeric"
-          placeholder="—"
-          value="${set.reps}"
-          ${set.done ? 'disabled' : ''}
+          placeholder="—" value="${set.reps}"
+          ${isLocked ? 'disabled' : ''}
           onchange="updateSetData(${exIdx},${sIdx},'reps',this.value)">
       </div>
       <div class="set-input-wrap">
         <div class="set-input-label">RPE</div>
         <input class="set-input" type="number" inputmode="decimal" min="1" max="10" step="0.5"
-          placeholder="—"
-          value="${set.rpe}"
-          ${set.done ? 'disabled' : ''}
+          placeholder="—" value="${set.rpe}"
+          ${isLocked ? 'disabled' : ''}
           onchange="updateSetData(${exIdx},${sIdx},'rpe',this.value)">
       </div>
-      <button class="btn-done-set ${set.done ? 'checked' : ''}"
-        onclick="completeSet(${exIdx},${sIdx})"
-        ${set.done ? 'disabled' : ''}
-        title="Mark set done">
-        ${set.done ? '✓' : '○'}
-      </button>
+      ${isLocked
+        ? `<button class="btn-done-set checked" onclick="editSet(${exIdx},${sIdx})" title="Edit set">✎</button>`
+        : `<button class="btn-done-set" onclick="completeSet(${exIdx},${sIdx})" title="Mark set done">○</button>`
+      }
     </div>
   `;
+}
+
+function editSet(exIdx, sIdx) {
+  setData[exIdx][sIdx].editing = true;
+  const row = document.getElementById(`setRow_${exIdx}_${sIdx}`);
+  const ex = activeSession.exercises[exIdx];
+  row.outerHTML = renderSetRow(exIdx, sIdx, ex);
+  // Focus first input
+  setTimeout(() => {
+    document.querySelector(`#setRow_${exIdx}_${sIdx} .set-input`)?.focus();
+  }, 50);
 }
 
 function updateSetData(exIdx, sIdx, field, value) {
@@ -1634,6 +1714,7 @@ function updateSetData(exIdx, sIdx, field, value) {
 function completeSet(exIdx, sIdx) {
   const set = setData[exIdx][sIdx];
   set.done = true;
+  set.editing = false;
 
   // Haptic + sound feedback
   haptic('medium');
@@ -1717,10 +1798,13 @@ function stopWorkoutTimer() {
 // ══════════════════════════════════════════════════════════════
 // REST TIMER
 // ══════════════════════════════════════════════════════════════
+let restEndTimestamp = null; // wall-clock time when rest ends — survives backgrounding
+
 function startRestTimer(seconds, exerciseName, setInfo, nextSetLabel) {
   clearInterval(restTimerInterval);
   restTotal = seconds;
   restRemaining = seconds;
+  restEndTimestamp = Date.now() + seconds * 1000;
 
   document.getElementById('restExerciseName').textContent = exerciseName;
   document.getElementById('restSetInfo').textContent = setInfo;
@@ -1728,34 +1812,78 @@ function startRestTimer(seconds, exerciseName, setInfo, nextSetLabel) {
   document.getElementById('restTimeNum').textContent = seconds;
 
   const ring = document.getElementById('restRingFill');
-  const circumference = 502;
   ring.style.strokeDashoffset = 0;
   ring.className = 'rest-ring-fill';
 
   document.getElementById('restOverlay').classList.add('active');
+  updateMiniTimer();
 
-  restTimerInterval = setInterval(() => {
-    restRemaining--;
-    document.getElementById('restTimeNum').textContent = restRemaining;
-
-    const progress = restRemaining / restTotal;
-    ring.style.strokeDashoffset = circumference * (1 - progress);
-
-    if (restRemaining <= 10) ring.classList.add('warning');
-    if (restRemaining <= 0) {
-      clearInterval(restTimerInterval);
-      ring.classList.remove('warning');
-      ring.classList.add('done');
-      document.getElementById('restTimeNum').textContent = 'GO';
-      haptic('success');
-      playRestDone();
-      setTimeout(closeRest, 1200);
-    }
-  }, 1000);
+  restTimerInterval = setInterval(_tickRestTimer, 500);
 }
 
-function skipRest() { clearInterval(restTimerInterval); closeRest(); }
-function closeRest() { document.getElementById('restOverlay').classList.remove('active'); }
+function _tickRestTimer() {
+  const remaining = Math.max(0, Math.ceil((restEndTimestamp - Date.now()) / 1000));
+  restRemaining = remaining;
+
+  document.getElementById('restTimeNum').textContent = remaining;
+  updateMiniTimer();
+
+  const circumference = 502;
+  const progress = remaining / restTotal;
+  const ring = document.getElementById('restRingFill');
+  ring.style.strokeDashoffset = circumference * (1 - progress);
+
+  if (remaining <= 10) ring.classList.add('warning');
+
+  if (remaining <= 0) {
+    clearInterval(restTimerInterval);
+    restEndTimestamp = null;
+    ring.classList.remove('warning');
+    ring.classList.add('done');
+    document.getElementById('restTimeNum').textContent = 'GO';
+    hideMiniTimer();
+    haptic('success');
+    playRestDone();
+    setTimeout(closeRest, 1200);
+  }
+}
+
+// Re-sync when app comes back to foreground
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && restEndTimestamp) {
+    _tickRestTimer(); // immediately correct the display
+  }
+});
+
+function skipRest() {
+  clearInterval(restTimerInterval);
+  restEndTimestamp = null;
+  hideMiniTimer();
+  closeRest();
+}
+function closeRest() {
+  document.getElementById('restOverlay').classList.remove('active');
+  // Show mini timer if rest is still running
+  if (restEndTimestamp && restRemaining > 0) showMiniTimer();
+}
+
+// ── Mini rest timer ───────────────────────────────────────────
+function updateMiniTimer() {
+  const el = document.getElementById('miniTimer');
+  if (!el) return;
+  if (!restEndTimestamp || restRemaining <= 0) { hideMiniTimer(); return; }
+  el.querySelector('.mini-timer-count').textContent = restRemaining;
+  const pct = (restRemaining / restTotal) * 100;
+  el.querySelector('.mini-timer-bar-fill').style.width = `${pct}%`;
+}
+function showMiniTimer() {
+  const el = document.getElementById('miniTimer');
+  if (el) el.classList.add('visible');
+}
+function hideMiniTimer() {
+  const el = document.getElementById('miniTimer');
+  if (el) el.classList.remove('visible');
+}
 
 // ══════════════════════════════════════════════════════════════
 // FINISH WORKOUT
@@ -1783,6 +1911,37 @@ async function finishWorkout() {
 
   await saveSession(session);
 
+  // Show copy modal before navigating away
+  showCopyModal(session);
+}
+
+function showCopyModal(session) {
+  const notes = session.notes ? session.notes + '\n\n' : '';
+  const lines = session.exercises.map(ex => {
+    const sets = ex.sets.map(s => `${s.weight}×${s.reps}`).join(' ');
+    return `${ex.name}\n${sets}`;
+  }).join('\n');
+
+  document.getElementById('copyWorkoutText').value = notes + lines;
+  document.getElementById('copyWorkoutOverlay').classList.remove('hidden');
+}
+
+async function copyToClipboard() {
+  const text = document.getElementById('copyWorkoutText').value;
+  try {
+    await navigator.clipboard.writeText(text);
+    const btn = document.querySelector('#copyWorkoutOverlay .btn-confirm-del');
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+  } catch {
+    // Fallback for older browsers
+    document.getElementById('copyWorkoutText').select();
+    document.execCommand('copy');
+  }
+}
+
+function dismissCopyModal() {
+  document.getElementById('copyWorkoutOverlay').classList.add('hidden');
   activeSession = null;
   setData = {};
   navigateToLog();
@@ -2235,7 +2394,294 @@ function closeLiftModal(e) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// SWIPE NAVIGATION
+// EXERCISE LIBRARY
+// ══════════════════════════════════════════════════════════════
+const EXERCISE_LIBRARY = {
+  'Barbell Bench Press': {
+    muscles: { primary: ['Chest'], secondary: ['Front Delts', 'Triceps'] },
+    pattern: 'Horizontal Push',
+    cues: ['Retract and depress shoulder blades before unracking', 'Bar path: slight arc from lower chest to over shoulders', 'Drive feet into floor, maintain arch', 'Elbows ~45–60° from torso — not flared, not tucked'],
+    notes: 'Primary strength marker for horizontal push. Keep touch point at lower chest, not mid-sternum.'
+  },
+  'Overhead Press (Barbell)': {
+    muscles: { primary: ['Front Delts', 'Shoulders'], secondary: ['Triceps', 'Upper Chest'] },
+    pattern: 'Vertical Push',
+    cues: ['Bar starts at upper chest, elbows slightly in front of bar', 'Press in a slight back-arc, not straight up', 'Squeeze glutes and abs — no lumbar hyperextension', 'Bar finishes stacked over mid-foot'],
+    notes: 'True shoulder strength test. Mobility limitation in thoracic extension is common — address if bar path is severely arced back.'
+  },
+  'Incline Dumbbell Press': {
+    muscles: { primary: ['Upper Chest'], secondary: ['Front Delts', 'Triceps'] },
+    pattern: 'Incline Push',
+    cues: ['Bench at 30–45°, lower angle = more chest', 'Slight wrist pronation at top, supination at stretch', 'Control the descent — 2–3 sec down', 'Elbows should not drop below bench level'],
+    notes: 'Best upper chest developer. Dumbbell allows greater range of motion than barbell variation.'
+  },
+  'Incline Barbell Press': {
+    muscles: { primary: ['Upper Chest'], secondary: ['Front Delts', 'Triceps'] },
+    pattern: 'Incline Push',
+    cues: ['Keep shoulder blades pinched throughout', 'Touch high on chest, not neck', 'Elbows at ~45° to torso', 'Maintain controlled descent'],
+    notes: 'Hypertrophy focus version. Higher rep ranges here prioritize upper chest development.'
+  },
+  'Weighted Pull-Up': {
+    muscles: { primary: ['Lats', 'Back'], secondary: ['Biceps', 'Rear Delts'] },
+    pattern: 'Vertical Pull',
+    cues: ['Dead hang start, no kipping', 'Initiate by depressing scapulae, then pull elbows to ribs', 'Chest to bar, chin over bar is secondary', 'Control descent fully — 2–3 sec'],
+    notes: 'King of vertical pulling. Belt attachment for added weight — go slow on loading progression.'
+  },
+  'Barbell Row (Pronated)': {
+    muscles: { primary: ['Mid/Upper Back', 'Lats'], secondary: ['Biceps', 'Rear Delts'] },
+    pattern: 'Horizontal Pull',
+    cues: ['Hinge to ~45° — not upright, not parallel', 'Pull bar to lower sternum, not belly button', 'Elbows travel back and slightly out', 'Hold contraction 1 sec at top'],
+    notes: 'Overhand grip hits more upper back. If lower back rounds under load, reduce weight before adding.'
+  },
+  'Back Squat (Barbell)': {
+    muscles: { primary: ['Quads', 'Glutes'], secondary: ['Hamstrings', 'Spinal Erectors'] },
+    pattern: 'Squat',
+    cues: ['Bar on upper traps (high bar) or mid-traps (low bar)', 'Brace hard before descent — 360° pressure in core', 'Break at hips and knees simultaneously', 'Knees track over toes, do not cave'],
+    notes: 'Primary lower body strength marker. High bar = more quad dominant. Low bar = more hip/posterior. Choose one and stay consistent.'
+  },
+  'Romanian Deadlift': {
+    muscles: { primary: ['Hamstrings', 'Glutes'], secondary: ['Spinal Erectors', 'Lats'] },
+    pattern: 'Hip Hinge',
+    cues: ['Soft knee bend, maintained throughout', 'Push hips back — not down', 'Bar stays in contact with legs throughout', 'Feel stretch in hamstrings, not lower back'],
+    notes: 'Best loaded stretch for hamstrings. If you feel it in lower back, your hips are not driving back far enough.'
+  },
+  'Trap Bar Deadlift': {
+    muscles: { primary: ['Quads', 'Glutes', 'Hamstrings'], secondary: ['Spinal Erectors', 'Traps'] },
+    pattern: 'Hip Hinge / Squat Hybrid',
+    cues: ['Stand centered in trap bar', 'Load the hip crease — sit back and down slightly', 'Drive floor away, not just hips up', 'Maintain neutral spine throughout'],
+    notes: 'More quad involvement than conventional. Easier to learn for beginners. High handles reduce ROM if needed.'
+  },
+  'Bulgarian Split Squat (DB)': {
+    muscles: { primary: ['Quads', 'Glutes'], secondary: ['Hamstrings', 'Hip Flexors'] },
+    pattern: 'Unilateral Squat',
+    cues: ['Rear foot elevated on bench, laces down', 'Front foot far enough forward that knee stays over foot at bottom', 'Drive through front heel', 'Torso slight forward lean is normal'],
+    notes: 'Most demanding unilateral leg exercise. Expect DOMS. Use DBs until form is locked in before loading heavier.'
+  },
+  'Dumbbell Shoulder Press': {
+    muscles: { primary: ['Shoulders'], secondary: ['Triceps', 'Upper Chest'] },
+    pattern: 'Vertical Push',
+    cues: ['DBs at ear height to start, not behind head', 'Press up and slightly in — slight arc', 'Do not lock out elbows fully at top', 'Maintain braced core throughout'],
+    notes: 'Greater range of motion than barbell. Each arm works independently — good for identifying imbalances.'
+  },
+  'Lat Pulldown (Wide Grip)': {
+    muscles: { primary: ['Lats'], secondary: ['Biceps', 'Rear Delts'] },
+    pattern: 'Vertical Pull',
+    cues: ['Slight lean back — chest up toward bar', 'Pull elbows down and back, not just down', 'Full stretch at top — let shoulder blades elevate', 'Bar to upper chest, not behind neck'],
+    notes: 'Prioritizes lat width. Wide grip reduces bicep contribution. Slow eccentric (3 sec) significantly increases stimulus.'
+  },
+  'Cable Row (Neutral Grip)': {
+    muscles: { primary: ['Mid Back', 'Lats'], secondary: ['Biceps', 'Rear Delts'] },
+    pattern: 'Horizontal Pull',
+    cues: ['Sit tall — no rounding', 'Pull handle to lower sternum', 'Elbows stay close to torso', 'Fully extend arms on return — no half reps'],
+    notes: 'Neutral grip reduces shoulder strain vs pronated. Control the eccentric — most people rush it.'
+  },
+  'Face Pull (Cable)': {
+    muscles: { primary: ['Rear Delts'], secondary: ['Rotator Cuff', 'Mid Traps'] },
+    pattern: 'Rear Delt / Rotator',
+    cues: ['Cable at or above head height', 'Pull to face, hands finish by ears', 'External rotate at end — think "double bicep pose"', 'Light weight, feel the muscle'],
+    notes: 'Best rear delt and rotator cuff health movement. Should be in every program. Never go heavy — it misses the point.'
+  },
+  'Cable Lateral Raise': {
+    muscles: { primary: ['Lateral Delts'] },
+    pattern: 'Shoulder Isolation',
+    cues: ['Cable at lowest position, cross-body pull', 'Slight forward lean', 'Lead with elbow, not hand', 'Slow and controlled — 3 sec down'],
+    notes: 'Cable provides constant tension vs dumbbells which drop off at bottom. Cross-body angle = better line of pull for lateral delt.'
+  },
+  'Lateral Raise (DB)': {
+    muscles: { primary: ['Lateral Delts'] },
+    pattern: 'Shoulder Isolation',
+    cues: ['Slight forward bend at hip', 'Lead with elbow', 'Pinky slightly higher than thumb at top', 'No momentum — especially at start'],
+    notes: 'Classic lateral delt builder. Tension drops near bottom with DBs — consider cable variation for superior stimulus.'
+  },
+  'Tricep Pushdown (Cable)': {
+    muscles: { primary: ['Triceps'] },
+    pattern: 'Elbow Extension',
+    cues: ['Elbows pinned to sides', 'Full extension at bottom — squeeze triceps', 'Controlled return — allow elbows to flex fully', 'Lean slightly forward for better leverage'],
+    notes: 'Best loaded position for triceps with constant cable tension. Rope attachment allows slight pronation at lockout for better contraction.'
+  },
+  'Overhead Tricep Extension': {
+    muscles: { primary: ['Triceps (Long Head)'] },
+    pattern: 'Elbow Extension (Overhead)',
+    cues: ['Arms by ears, not flared', 'Only forearms move — upper arms stay fixed', 'Full stretch at bottom — feel long head stretch', 'Keep core braced to avoid lumbar extension'],
+    notes: 'Only exercise that trains the long head in a fully stretched position. Critical for complete tricep development.'
+  },
+  'Skull Crusher (EZ Bar)': {
+    muscles: { primary: ['Triceps'] },
+    pattern: 'Elbow Extension',
+    cues: ['Bar lowers toward forehead/behind head, not to nose', 'Upper arms stay perpendicular to floor', 'Full stretch at bottom', 'Control — this is injury-prone with too much weight'],
+    notes: 'EZ bar reduces wrist strain vs straight bar. Go lighter than you think — tricep tendons are vulnerable at stretch.'
+  },
+  'Close-Grip Bench Press': {
+    muscles: { primary: ['Triceps'], secondary: ['Chest', 'Front Delts'] },
+    pattern: 'Horizontal Push',
+    cues: ['Hands shoulder width, not super narrow', 'Elbows track close to torso', 'Full range of motion — touch chest', 'Treat like a tricep move, not a bench variation'],
+    notes: 'Best compound tricep builder. Shoulder-width grip is safer than ultra-narrow which strains wrists.'
+  },
+  'Barbell Curl': {
+    muscles: { primary: ['Biceps'] },
+    pattern: 'Elbow Flexion',
+    cues: ['No swinging — elbows fixed at sides', 'Supinate fully at top', 'Full extension at bottom', 'Controlled descent is where growth happens'],
+    notes: 'Most loading potential for biceps. Straight bar may cause wrist discomfort — switch to EZ bar if needed.'
+  },
+  'Hammer Curl (DB)': {
+    muscles: { primary: ['Brachialis', 'Brachioradialis'], secondary: ['Biceps'] },
+    pattern: 'Elbow Flexion',
+    cues: ['Neutral grip (thumbs up) throughout', 'No rotation', 'Full range, controlled descent', 'Can alternate or do both simultaneously'],
+    notes: 'Targets brachialis which sits under the bicep — developing it pushes the bicep up for more peak. Great arm thickness builder.'
+  },
+  'Incline DB Curl': {
+    muscles: { primary: ['Biceps (Long Head)'] },
+    pattern: 'Elbow Flexion (Stretch)',
+    cues: ['Bench at 45–60°', 'Let arms hang straight down at start — full stretch', 'Do not bring elbow forward as you curl', 'Control the stretch on the way down'],
+    notes: 'Best stretch-position bicep exercise. Long head gets loaded fully at bottom. Slower and more controlled than standing curls.'
+  },
+  'Cable Curl (Rope)': {
+    muscles: { primary: ['Biceps'] },
+    pattern: 'Elbow Flexion',
+    cues: ['Cable at lowest position', 'Supinate as you curl', 'Elbows stay at sides', 'Squeeze at top — rope ends spread slightly'],
+    notes: 'Constant tension through full ROM. Good finisher — higher rep ranges with focus on the squeeze.'
+  },
+  'Straight-Arm Pulldown': {
+    muscles: { primary: ['Lats'] },
+    pattern: 'Lat Isolation',
+    cues: ['Arms stay straight throughout — this is not a row', 'Hinge slightly at hips', 'Drive elbows toward hips', 'Feel stretch at top with shoulder elevation'],
+    notes: 'Isolates lats without bicep involvement. Great for learning to feel the lat. Use at end of pull sessions.'
+  },
+  'Single-Arm DB Row': {
+    muscles: { primary: ['Lats', 'Mid Back'], secondary: ['Biceps', 'Rear Delts'] },
+    pattern: 'Horizontal Pull',
+    cues: ['Brace hand and knee on bench', 'Pull elbow to hip — not to shoulder', 'Allow shoulder to elevate at bottom for full stretch', 'No trunk rotation'],
+    notes: 'Heavy unilateral rowing. Can handle more load than bilateral variations. Great for targeting lats specifically.'
+  },
+  'Chest-Supported Row (DB)': {
+    muscles: { primary: ['Mid/Upper Back'], secondary: ['Rear Delts', 'Biceps'] },
+    pattern: 'Horizontal Pull',
+    cues: ['Chest on incline bench removes lower back demand', 'Pull elbows back and slightly up for upper back', 'Full hang at bottom', 'Hold 1 sec contraction at top'],
+    notes: 'Chest support eliminates lower back fatigue — allows full focus on back contraction. Best for higher volume work.'
+  },
+  'Leg Press': {
+    muscles: { primary: ['Quads'], secondary: ['Glutes', 'Hamstrings'] },
+    pattern: 'Quad-Dominant Push',
+    cues: ['Feet shoulder width or slightly wider, mid-platform', 'Do not lock out knees fully at top', 'Full depth — thighs past parallel if mobility allows', 'Do not let lower back peel off pad'],
+    notes: 'Safer way to pile on quad volume. Lower foot placement = more quad. Higher = more glute.'
+  },
+  'Leg Curl (Machine)': {
+    muscles: { primary: ['Hamstrings'] },
+    pattern: 'Knee Flexion',
+    cues: ['Adjust pad to just above heel, not mid-calf', 'Curl fully and squeeze at top', 'Slow eccentric — 3 sec return', 'Keep hips down — no lifting at the top'],
+    notes: 'Best isolation for hamstrings. Lying variation preferred over seated for most. Pair with RDLs for full hamstring development.'
+  },
+  'Walking Lunge (DB)': {
+    muscles: { primary: ['Quads', 'Glutes'], secondary: ['Hamstrings', 'Balance'] },
+    pattern: 'Unilateral Squat',
+    cues: ['Long stride — back knee near floor', 'Front shin stays vertical', 'Drive through front heel to stand', 'Upright torso throughout'],
+    notes: 'Adds coordination and balance demand to single-leg work. Use space efficiently — 12 each leg is 24 total steps.'
+  },
+  'Nordic Curl / Lying Leg Curl': {
+    muscles: { primary: ['Hamstrings'] },
+    pattern: 'Knee Flexion',
+    cues: ['Nordic: control descent with eccentric focus — most value is in lowering', 'Machine: same as Leg Curl above', 'For Nordic: start assisted if needed, build toward unassisted'],
+    notes: 'Nordic curl is one of the best hamstring injury prevention exercises. Eccentric emphasis is the key — most of the training effect comes from resisting the drop.'
+  },
+  'Goblet Squat (Tempo)': {
+    muscles: { primary: ['Quads'], secondary: ['Glutes', 'Core'] },
+    pattern: 'Squat',
+    cues: ['Hold DB or KB at chest', '3-second descent minimum', 'Elbows inside knees at bottom', 'Full depth — this is a mobility builder too'],
+    notes: 'Tempo emphasis makes this harder than it looks. Great for quad pump and maintaining squat depth under fatigue.'
+  },
+  'Standing Calf Raise': {
+    muscles: { primary: ['Gastrocnemius'] },
+    pattern: 'Ankle Plantar Flexion',
+    cues: ['Full stretch at bottom — heel below platform', 'Pause at bottom 1 sec', 'Full rise at top — squeeze', 'Slow — calves respond to time under tension'],
+    notes: 'Straight leg = gastrocnemius (the visible calf). Calves are stubborn — high reps and full range of motion matter more than load.'
+  },
+  'Seated Calf Raise': {
+    muscles: { primary: ['Soleus'] },
+    pattern: 'Ankle Plantar Flexion',
+    cues: ['Knees bent — this shifts load to soleus', 'Same full range principles as standing', 'Heavier load possible than standing', 'Slow and deliberate'],
+    notes: 'Bent knee = soleus (deeper calf, contributes to calf thickness). Train both standing and seated for complete calf development.'
+  },
+  'Hack Squat / Leg Press': {
+    muscles: { primary: ['Quads'], secondary: ['Glutes'] },
+    pattern: 'Quad-Dominant Push',
+    cues: ['Full depth if machine allows', 'Feet shoulder width, mid-platform', 'Do not lock out knees', 'Control descent — 2 sec'],
+    notes: 'Hack squat provides more vertical torso than barbell squat, making it very quad-dominant. Good barbell squat alternative on high fatigue days.'
+  },
+  'Cable Fly (Low-to-High)': {
+    muscles: { primary: ['Upper Chest', 'Front Delts'] },
+    pattern: 'Chest Isolation',
+    cues: ['Cable set at lowest position', 'Arc arms up and in — not straight across', 'Slight forward lean', 'Maintain slight elbow bend throughout'],
+    notes: 'Targets upper chest from a different angle than pressing. The stretch at the bottom with constant cable tension makes this very effective.'
+  },
+};
+
+async function openExerciseInfo(exName) {
+  const info = EXERCISE_LIBRARY[exName];
+  document.getElementById('exerciseInfoTitle').textContent = exName;
+  document.getElementById('exerciseInfoOverlay').classList.remove('hidden');
+
+  // Load historical data
+  const sessions = await loadSessions();
+  const entries = [];
+  sessions.forEach(s => {
+    const ex = s.exercises?.find(e => e.name === exName);
+    if (ex?.sets?.length) {
+      const topSet = ex.sets.reduce((a, b) =>
+        (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a, ex.sets[0]);
+      if (topSet.weight) entries.push({
+        date: s.date,
+        weight: parseFloat(topSet.weight),
+        reps: parseFloat(topSet.reps),
+        e1rm: epley(topSet.weight, topSet.reps)
+      });
+    }
+  });
+  entries.sort((a, b) => a.date.localeCompare(b.date));
+
+  const libraryHtml = info ? `
+    <div class="lift-modal-section">
+      <div class="lift-modal-section-label">Movement Pattern</div>
+      <div style="font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;">${info.pattern}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+        ${info.muscles.primary.map(m => `<span style="background:var(--accent-dim);color:var(--accent);font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:4px;">${m}</span>`).join('')}
+        ${(info.muscles.secondary||[]).map(m => `<span style="background:var(--surface);color:var(--muted2);font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:4px;">${m}</span>`).join('')}
+      </div>
+    </div>
+    <div class="lift-modal-section">
+      <div class="lift-modal-section-label">Form Cues</div>
+      ${info.cues.map(c => `<div style="font-size:13px;color:var(--muted2);padding:5px 0;border-bottom:1px solid var(--border);">· ${c}</div>`).join('')}
+    </div>
+    ${info.notes ? `
+    <div class="lift-modal-section">
+      <div class="lift-modal-section-label">Notes</div>
+      <div style="font-size:13px;color:var(--muted2);line-height:1.5;">${info.notes}</div>
+    </div>` : ''}
+  ` : `<div style="color:var(--muted);font-size:13px;padding:8px 0;">No library entry for this exercise yet.</div>`;
+
+  const historyHtml = entries.length ? `
+    <div class="lift-modal-section">
+      <div class="lift-modal-section-label">Your Top Sets</div>
+      ${(() => {
+        const maxW = Math.max(...entries.map(e => e.weight));
+        return entries.map(e => {
+          const pct = Math.max(10, (e.weight / maxW) * 100);
+          return `<div class="chart-bar-row">
+            <div class="chart-date">${formatDate(e.date, true)}</div>
+            <div class="chart-bar-wrap"><div class="chart-bar" style="width:${pct}%"><span class="chart-val">${e.weight}</span></div></div>
+            <div class="chart-rpe">${e.e1rm ? `~${e.e1rm}` : ''}</div>
+          </div>`;
+        }).join('');
+      })()}
+    </div>
+  ` : '';
+
+  document.getElementById('exerciseInfoBody').innerHTML = libraryHtml + historyHtml;
+}
+
+function closeExerciseInfo(e) {
+  if (e && e.target !== document.getElementById('exerciseInfoOverlay')) return;
+  document.getElementById('exerciseInfoOverlay').classList.add('hidden');
+}
 // ══════════════════════════════════════════════════════════════
 (function initSwipe() {
   let touchStartX = 0;
@@ -2264,11 +2710,13 @@ function closeLiftModal(e) {
 
     // Block swipe if any modal is open
     const liftModalOpen = !document.getElementById('liftModalOverlay').classList.contains('hidden');
+    const exerciseInfoOpen = !document.getElementById('exerciseInfoOverlay').classList.contains('hidden');
     const cancelModalOpen = !document.getElementById('cancelWorkoutOverlay').classList.contains('hidden');
     const confirmModalOpen = !document.getElementById('confirmOverlay').classList.contains('hidden');
     const restOpen = document.getElementById('restOverlay').classList.contains('active');
 
     if (liftModalOpen) { document.getElementById('liftModalOverlay').classList.add('hidden'); return; }
+    if (exerciseInfoOpen) { document.getElementById('exerciseInfoOverlay').classList.add('hidden'); return; }
     if (cancelModalOpen || confirmModalOpen || restOpen) return;
 
     const activeScreenId = document.querySelector('.screen.active')?.id;
