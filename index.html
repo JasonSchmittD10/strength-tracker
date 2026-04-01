@@ -46,8 +46,46 @@
     z-index: 50;
   }
   .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
   .header-logo { font-family: var(--head); font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; }
   .header-logo span { color: var(--accent); }
+
+  /* Nav mini rest timer */
+  .nav-mini-rest {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface);
+    border: 1px solid rgba(232,69,90,0.35);
+    border-radius: 8px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-mini-rest.hidden { display: none; }
+  .nav-mini-rest:hover { border-color: var(--accent); }
+  .nav-mini-rest-count {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    min-width: 22px;
+    text-align: right;
+  }
+  .nav-mini-rest-bar-wrap {
+    width: 36px;
+    height: 3px;
+    background: var(--surface);
+    border-radius: 2px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .nav-mini-rest-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.5s linear;
+  }
 
   /* Workout timer in nav */
   .nav-timer {
@@ -881,29 +919,6 @@
     margin-top: 4px;
   }
 
-  /* ── MINI REST TIMER ── */
-  .mini-timer {
-    display: none;
-    align-items: center;
-    gap: 12px;
-    background: var(--card);
-    border: 1px solid rgba(232,69,90,0.3);
-    border-radius: 12px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .mini-timer.visible { display: flex; }
-  .mini-timer:hover { border-color: var(--accent); }
-  .mini-timer-left { display: flex; align-items: baseline; gap: 4px; flex-shrink: 0; }
-  .mini-timer-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-right: 4px; }
-  .mini-timer-count { font-family: var(--mono); font-size: 20px; font-weight: 500; color: var(--accent); }
-  .mini-timer-unit { font-family: var(--mono); font-size: 11px; color: var(--muted); }
-  .mini-timer-bar-wrap { flex: 1; height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden; }
-  .mini-timer-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s linear; }
-  .mini-timer-tap { font-size: 10px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
-
   /* ── EXERCISE NAME LINK ── */
   .ex-name-link {
     cursor: pointer;
@@ -935,11 +950,17 @@
       <div class="header-logo">HYBRID<span>.</span></div>
     </div>
   </div>
-  <div class="nav-timer" id="navTimer" onclick="toggleWorkoutTimer()" title="Tap to pause">
-    <div class="nav-timer-dot" id="navTimerDot"></div>
-    <div>
-      <div class="nav-timer-label" id="navTimerLabel">WORKOUT</div>
-      <div class="nav-timer-time" id="navTimerDisplay">0:00</div>
+  <div class="header-right">
+    <div class="nav-mini-rest hidden" id="navMiniRest" onclick="document.getElementById('restOverlay').classList.add('active');document.body.classList.add('overlay-open');">
+      <div class="nav-mini-rest-count" id="navMiniRestCount">0</div>
+      <div class="nav-mini-rest-bar-wrap"><div class="nav-mini-rest-bar" id="navMiniRestBar"></div></div>
+    </div>
+    <div class="nav-timer" id="navTimer" onclick="toggleWorkoutTimer()" title="Tap to pause">
+      <div class="nav-timer-dot" id="navTimerDot"></div>
+      <div>
+        <div class="nav-timer-label" id="navTimerLabel">WORKOUT</div>
+        <div class="nav-timer-time" id="navTimerDisplay">0:00</div>
+      </div>
     </div>
   </div>
 </div>
@@ -999,19 +1020,6 @@
     </div>
 
     <div id="workoutExercises"></div>
-
-    <!-- Mini rest timer — shows when rest overlay is dismissed -->
-    <div class="mini-timer" id="miniTimer" onclick="document.getElementById('restOverlay').classList.add('active')">
-      <div class="mini-timer-left">
-        <div class="mini-timer-label">Rest</div>
-        <div class="mini-timer-count">0</div>
-        <div class="mini-timer-unit">sec</div>
-      </div>
-      <div class="mini-timer-bar-wrap">
-        <div class="mini-timer-bar-fill"></div>
-      </div>
-      <div class="mini-timer-tap">Tap to expand</div>
-    </div>
 
     <div class="card mt16">
       <div class="section-label">Session Notes</div>
@@ -1892,22 +1900,20 @@ function closeRest() {
   if (restEndTimestamp && restRemaining > 0) showMiniTimer();
 }
 
-// ── Mini rest timer ───────────────────────────────────────────
+// ── Mini rest timer (nav) ─────────────────────────────────────
 function updateMiniTimer() {
-  const el = document.getElementById('miniTimer');
-  if (!el) return;
+  const countEl = document.getElementById('navMiniRestCount');
+  const barEl = document.getElementById('navMiniRestBar');
+  if (!countEl) return;
   if (!restEndTimestamp || restRemaining <= 0) { hideMiniTimer(); return; }
-  el.querySelector('.mini-timer-count').textContent = restRemaining;
-  const pct = (restRemaining / restTotal) * 100;
-  el.querySelector('.mini-timer-bar-fill').style.width = `${pct}%`;
+  countEl.textContent = restRemaining;
+  barEl.style.width = `${(restRemaining / restTotal) * 100}%`;
 }
 function showMiniTimer() {
-  const el = document.getElementById('miniTimer');
-  if (el) el.classList.add('visible');
+  document.getElementById('navMiniRest')?.classList.remove('hidden');
 }
 function hideMiniTimer() {
-  const el = document.getElementById('miniTimer');
-  if (el) el.classList.remove('visible');
+  document.getElementById('navMiniRest')?.classList.add('hidden');
 }
 
 // ══════════════════════════════════════════════════════════════
