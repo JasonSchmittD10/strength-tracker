@@ -1,0 +1,18 @@
+{
+  "name": "Hybrid Strength Tracker",
+  "short_name": "Hybrid",
+  "description": "Personal strength training tracker with PPL programming",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1117",
+  "theme_color": "#1a1d27",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "200x200",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
