@@ -402,12 +402,16 @@
     font-size: 14px;
     font-weight: 700;
     color: var(--text);
+    margin-bottom: 2px;
   }
   .ex-block-meta {
     font-family: var(--mono);
     font-size: 11px;
     color: var(--muted);
   }
+
+  /* Prevent scroll behind full-screen overlays */
+  body.overlay-open { overflow: hidden; }
 
   /* Set rows */
   .set-row {
@@ -520,20 +524,35 @@
   .rest-time-sec { font-family: var(--mono); font-size: 14px; color: var(--muted); margin-top: 4px; }
   .rest-next-label { font-size: 12px; color: var(--muted); margin-top: 8px; }
   .rest-next-set { font-family: var(--head); font-size: 15px; color: var(--text); font-weight: 700; }
-  .btn-skip-rest {
+  .rest-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .btn-rest-close {
+    flex: 1;
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--muted2);
     border-radius: 10px;
-    padding: 10px 28px;
+    padding: 10px 20px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 16px;
     transition: all 0.2s;
     font-family: var(--body);
   }
-  .btn-skip-rest:hover { border-color: var(--border-strong); color: var(--text); }
+  .btn-rest-close:hover { border-color: var(--border-strong); color: var(--text); }
+  .btn-skip-rest {
+    flex: 1;
+    background: var(--accent-dim);
+    border: 1px solid rgba(232,69,90,0.3);
+    color: var(--accent);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--body);
+  }
+  .btn-skip-rest:hover { background: var(--accent); color: white; }
 
   /* ── HISTORY ── */
   .history-item {
@@ -1061,7 +1080,10 @@
   </div>
   <div class="rest-next-label">Next up</div>
   <div class="rest-next-set" id="restNextSet"></div>
-  <button class="btn-skip-rest" onclick="skipRest()">Skip Rest</button>
+  <div class="rest-actions">
+    <button class="btn-rest-close" onclick="closeRest()">Minimize</button>
+    <button class="btn-skip-rest" onclick="skipRest()">Skip Rest</button>
+  </div>
 </div>
 
 <!-- ══════════════════════ LIFT HISTORY MODAL ══════════════════════ -->
@@ -1647,7 +1669,6 @@ function renderWorkoutExercises() {
           <div>
             <div class="ex-block-name">
               <span class="ex-name-link" onclick="openExerciseInfo('${ex.name.replace(/'/g, "\\'")}')">${ex.name}</span>
-              ${hasPrev ? '<span class="prefill-badge">↑ last session</span>' : ''}
             </div>
             <div class="ex-block-meta">${ex.sets} sets · ${ex.reps} reps · ${ex.restLabel} rest</div>
           </div>
@@ -1816,6 +1837,7 @@ function startRestTimer(seconds, exerciseName, setInfo, nextSetLabel) {
   ring.className = 'rest-ring-fill';
 
   document.getElementById('restOverlay').classList.add('active');
+  document.body.classList.add('overlay-open');
   updateMiniTimer();
 
   restTimerInterval = setInterval(_tickRestTimer, 500);
@@ -1842,6 +1864,7 @@ function _tickRestTimer() {
     ring.classList.add('done');
     document.getElementById('restTimeNum').textContent = 'GO';
     hideMiniTimer();
+    document.body.classList.remove('overlay-open');
     haptic('success');
     playRestDone();
     setTimeout(closeRest, 1200);
@@ -1859,10 +1882,12 @@ function skipRest() {
   clearInterval(restTimerInterval);
   restEndTimestamp = null;
   hideMiniTimer();
+  document.body.classList.remove('overlay-open');
   closeRest();
 }
 function closeRest() {
   document.getElementById('restOverlay').classList.remove('active');
+  document.body.classList.remove('overlay-open');
   // Show mini timer if rest is still running
   if (restEndTimestamp && restRemaining > 0) showMiniTimer();
 }
