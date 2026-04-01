@@ -574,6 +574,119 @@
   }
   .btn-delete-session:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
+  /* ── ANALYTICS ── */
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .analytics-stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .analytics-stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .analytics-stat-value {
+    font-family: var(--head);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+  .analytics-stat-unit {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted2);
+    margin-top: 3px;
+  }
+  .analytics-stat.accent .analytics-stat-value { color: var(--accent); }
+  .analytics-stat.gold .analytics-stat-value { color: var(--gold); }
+  .analytics-stat.green .analytics-stat-value { color: var(--green); }
+  .analytics-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  /* Volume chart */
+  .volume-row { margin-bottom: 12px; }
+  .volume-row-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted2);
+    margin-bottom: 5px;
+  }
+  .volume-row-name { font-weight: 600; color: var(--text); }
+  .volume-row-count { font-family: var(--mono); font-size: 11px; }
+  .volume-bars { display: flex; flex-direction: column; gap: 3px; }
+  .volume-bar-wrap {
+    height: 8px;
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .volume-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+  .volume-bar.this-week { background: var(--accent); }
+  .volume-bar.last-week { background: var(--muted); opacity: 0.5; }
+  .volume-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .volume-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--muted2);
+    font-family: var(--mono);
+  }
+  .volume-legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* 1RM chart */
+  .e1rm-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .e1rm-btn {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted2);
+    border-radius: 8px;
+    padding: 7px;
+    font-size: 11px;
+    font-family: var(--mono);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .e1rm-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
   /* ── PROGRESS ── */
   .lift-select-wrap { margin-bottom: 16px; }
   .lift-select {
@@ -869,10 +982,25 @@
 <div class="screen" id="progress-screen">
   <div class="main">
     <div class="screen-header">
-      <div class="screen-title">Lift Progress</div>
+      <div class="screen-title">Analytics</div>
     </div>
+
+    <!-- Overview stats -->
+    <div class="analytics-grid" id="analyticsOverview"></div>
+
+    <!-- Weekly volume -->
+    <div class="card" id="volumeCard">
+      <div class="card-title">
+        Weekly Volume
+        <span class="analytics-sub">Sets per muscle group</span>
+      </div>
+      <div id="volumeChart"></div>
+    </div>
+
+    <!-- Lift tracker -->
     <div class="card">
-      <div class="section-label">Select Exercise</div>
+      <div class="card-title">Lift Tracker</div>
+      <div class="section-label" style="margin-bottom:8px;">Select Exercise</div>
       <div class="lift-select-wrap">
         <select class="lift-select" id="liftSelect" onchange="renderProgress()">
           <option value="">— Choose a lift —</option>
@@ -1352,7 +1480,7 @@ function switchTab(tab) {
   document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
   showScreen(`${tab}-screen`, tab === 'log' ? 'left' : 'right');
   if (tab === 'history') renderHistory();
-  if (tab === 'progress') renderProgressSelect();
+  if (tab === 'progress') renderAnalytics();
 }
 
 function showScreen(id, direction = 'right') {
@@ -1716,58 +1844,308 @@ async function renderHistory() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// PROGRESS
+// ANALYTICS
 // ══════════════════════════════════════════════════════════════
-async function renderProgressSelect() {
+
+// Maps exercise names to muscle groups for volume tracking
+const MUSCLE_MAP = {
+  // Chest
+  'Barbell Bench Press': 'Chest',
+  'Incline Barbell Press': 'Chest',
+  'Incline Dumbbell Press': 'Chest',
+  'Cable Fly (Low-to-High)': 'Chest',
+  'Close-Grip Bench Press': 'Chest',
+  // Shoulders
+  'Overhead Press (Barbell)': 'Shoulders',
+  'Dumbbell Shoulder Press': 'Shoulders',
+  'Cable Lateral Raise': 'Shoulders',
+  'Lateral Raise (DB)': 'Shoulders',
+  'Face Pull (Cable)': 'Shoulders',
+  // Back
+  'Weighted Pull-Up': 'Back',
+  'Barbell Row (Pronated)': 'Back',
+  'Chest-Supported Row (DB)': 'Back',
+  'Lat Pulldown (Wide Grip)': 'Back',
+  'Cable Row (Neutral Grip)': 'Back',
+  'Single-Arm DB Row': 'Back',
+  'Straight-Arm Pulldown': 'Back',
+  // Arms
+  'Tricep Pushdown (Cable)': 'Arms',
+  'Overhead Tricep Extension': 'Arms',
+  'Skull Crusher (EZ Bar)': 'Arms',
+  'Barbell Curl': 'Arms',
+  'Hammer Curl (DB)': 'Arms',
+  'Incline DB Curl': 'Arms',
+  'Cable Curl (Rope)': 'Arms',
+  // Legs
+  'Back Squat (Barbell)': 'Legs',
+  'Romanian Deadlift': 'Legs',
+  'Leg Press': 'Legs',
+  'Leg Curl (Machine)': 'Legs',
+  'Walking Lunge (DB)': 'Legs',
+  'Standing Calf Raise': 'Legs',
+  'Bulgarian Split Squat (DB)': 'Legs',
+  'Trap Bar Deadlift': 'Legs',
+  'Hack Squat / Leg Press': 'Legs',
+  'Nordic Curl / Lying Leg Curl': 'Legs',
+  'Goblet Squat (Tempo)': 'Legs',
+  'Seated Calf Raise': 'Legs',
+};
+
+const MUSCLE_ORDER = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs'];
+const MUSCLE_COLORS = {
+  Chest: 'var(--accent)',
+  Back: 'var(--gold)',
+  Shoulders: '#7c6ef0',
+  Arms: '#3bc9db',
+  Legs: 'var(--green)',
+};
+
+// Epley formula: estimated 1RM
+function epley(weight, reps) {
+  if (!weight || !reps || reps <= 0) return null;
+  const w = parseFloat(weight), r = parseFloat(reps);
+  if (isNaN(w) || isNaN(r) || r <= 0) return null;
+  return Math.round(w * (1 + r / 30));
+}
+
+// Get ISO week start (Monday) for a date string
+function weekStart(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay() || 7;
+  d.setDate(d.getDate() - day + 1);
+  return d.toISOString().split('T')[0];
+}
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+async function renderAnalytics() {
   const sessions = await loadSessions();
+  await renderOverviewStats(sessions);
+  renderVolumeChart(sessions);
+  await renderProgressSelect(sessions);
+}
+
+async function renderOverviewStats(sessions) {
+  const el = document.getElementById('analyticsOverview');
+  if (!sessions.length) { el.innerHTML = ''; return; }
+
+  // Total sessions
+  const totalSessions = sessions.length;
+
+  // Total volume (sum of weight × reps for all completed sets)
+  let totalVolume = 0;
+  sessions.forEach(s => {
+    s.exercises?.forEach(ex => {
+      ex.sets?.forEach(set => {
+        const w = parseFloat(set.weight), r = parseFloat(set.reps);
+        if (w > 0 && r > 0) totalVolume += w * r;
+      });
+    });
+  });
+
+  // Current streak (consecutive weeks with at least one session)
+  const weekSets = new Set(sessions.map(s => weekStart(s.date)));
+  let streak = 0;
+  let checkDate = new Date();
+  while (true) {
+    const ws = weekStart(checkDate.toISOString().split('T')[0]);
+    if (weekSets.has(ws)) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 7);
+    } else break;
+  }
+
+  // Avg duration (minutes)
+  const withDuration = sessions.filter(s => s.duration > 0);
+  const avgDuration = withDuration.length
+    ? Math.round(withDuration.reduce((a, s) => a + s.duration, 0) / withDuration.length / 60)
+    : null;
+
+  // Format volume
+  const volDisplay = totalVolume >= 1000000
+    ? `${(totalVolume/1000000).toFixed(1)}M`
+    : totalVolume >= 1000
+    ? `${Math.round(totalVolume/1000)}k`
+    : totalVolume;
+
+  el.innerHTML = `
+    <div class="analytics-stat accent">
+      <div class="analytics-stat-label">Sessions</div>
+      <div class="analytics-stat-value">${totalSessions}</div>
+      <div class="analytics-stat-unit">logged total</div>
+    </div>
+    <div class="analytics-stat gold">
+      <div class="analytics-stat-label">Volume</div>
+      <div class="analytics-stat-value">${volDisplay}</div>
+      <div class="analytics-stat-unit">lbs lifted total</div>
+    </div>
+    <div class="analytics-stat green">
+      <div class="analytics-stat-label">Streak</div>
+      <div class="analytics-stat-value">${streak}</div>
+      <div class="analytics-stat-unit">week${streak !== 1 ? 's' : ''} in a row</div>
+    </div>
+    <div class="analytics-stat">
+      <div class="analytics-stat-label">Avg Duration</div>
+      <div class="analytics-stat-value">${avgDuration ?? '—'}</div>
+      <div class="analytics-stat-unit">${avgDuration ? 'min per session' : 'no data yet'}</div>
+    </div>
+  `;
+}
+
+function renderVolumeChart(sessions) {
+  const el = document.getElementById('volumeChart');
+  if (!sessions.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">No sessions logged yet.</div>'; return; }
+
+  const thisWeek = weekStart(todayStr());
+  const lastWeekDate = new Date(thisWeek + 'T00:00:00');
+  lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+  const lastWeek = lastWeekDate.toISOString().split('T')[0];
+
+  // Count sets per muscle per week
+  const thisCounts = {}, lastCounts = {};
+  MUSCLE_ORDER.forEach(m => { thisCounts[m] = 0; lastCounts[m] = 0; });
+
+  sessions.forEach(s => {
+    const ws = weekStart(s.date);
+    const isThis = ws === thisWeek;
+    const isLast = ws === lastWeek;
+    if (!isThis && !isLast) return;
+
+    s.exercises?.forEach(ex => {
+      const muscle = MUSCLE_MAP[ex.name];
+      if (!muscle) return;
+      const sets = ex.sets?.length || 0;
+      if (isThis) thisCounts[muscle] += sets;
+      if (isLast) lastCounts[muscle] += sets;
+    });
+  });
+
+  const maxSets = Math.max(1, ...Object.values(thisCounts), ...Object.values(lastCounts));
+
+  const rows = MUSCLE_ORDER.map(muscle => {
+    const tw = thisCounts[muscle], lw = lastCounts[muscle];
+    const twPct = Math.max(0, (tw / maxSets) * 100);
+    const lwPct = Math.max(0, (lw / maxSets) * 100);
+    const color = MUSCLE_COLORS[muscle];
+    const delta = tw - lw;
+    const deltaLabel = delta > 0 ? `<span style="color:var(--green)">+${delta}</span>`
+      : delta < 0 ? `<span style="color:var(--accent)">${delta}</span>`
+      : '';
+
+    return `
+      <div class="volume-row">
+        <div class="volume-row-header">
+          <div class="volume-row-name">${muscle}</div>
+          <div class="volume-row-count">${tw} sets ${deltaLabel}</div>
+        </div>
+        <div class="volume-bars">
+          <div class="volume-bar-wrap">
+            <div class="volume-bar this-week" style="width:${twPct}%;background:${color}"></div>
+          </div>
+          <div class="volume-bar-wrap">
+            <div class="volume-bar last-week" style="width:${lwPct}%"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  el.innerHTML = rows + `
+    <div class="volume-legend">
+      <div class="volume-legend-item">
+        <div class="volume-legend-dot" style="background:var(--accent)"></div>
+        This week
+      </div>
+      <div class="volume-legend-item">
+        <div class="volume-legend-dot" style="background:var(--muted);opacity:0.5"></div>
+        Last week
+      </div>
+    </div>
+  `;
+}
+
+let progressViewMode = 'weight'; // 'weight' or 'e1rm'
+
+async function renderProgressSelect(sessions) {
+  if (!sessions) sessions = await loadSessions();
   const lifts = new Set();
-  sessions.forEach(s => s.exercises.forEach(ex => lifts.add(ex.name)));
+  sessions.forEach(s => s.exercises?.forEach(ex => lifts.add(ex.name)));
 
   const sel = document.getElementById('liftSelect');
   const current = sel.value;
   sel.innerHTML = '<option value="">— Choose a lift —</option>' +
     [...lifts].sort().map(l => `<option value="${l}" ${l === current ? 'selected' : ''}>${l}</option>`).join('');
 
-  if (current) renderProgress();
+  if (current) renderProgress(sessions);
 }
 
-async function renderProgress() {
+async function renderProgress(sessions) {
   const lift = document.getElementById('liftSelect').value;
   const el = document.getElementById('progressChart');
   if (!lift) { el.innerHTML = ''; return; }
 
-  const sessions = await loadSessions();
+  if (!sessions) sessions = await loadSessions();
   const entries = [];
+
   sessions.forEach(s => {
-    s.exercises.forEach(ex => {
-      if (ex.name === lift && ex.sets.length) {
-        const topSet = ex.sets.reduce((a, b) => parseFloat(b.weight) > parseFloat(a.weight) ? b : a, ex.sets[0]);
-        if (topSet.weight) entries.push({ date: s.date, weight: parseFloat(topSet.weight), rpe: topSet.rpe });
-      }
+    s.exercises?.forEach(ex => {
+      if (ex.name !== lift || !ex.sets?.length) return;
+      const topSet = ex.sets.reduce((a, b) =>
+        (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a, ex.sets[0]);
+      if (!topSet.weight) return;
+      const w = parseFloat(topSet.weight);
+      const r = parseFloat(topSet.reps);
+      const e1rm = epley(w, r);
+      entries.push({ date: s.date, weight: w, reps: r, rpe: topSet.rpe, e1rm });
     });
   });
 
   entries.sort((a, b) => a.date.localeCompare(b.date));
-  if (!entries.length) { el.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0;">No data for this lift yet.</div>`; return; }
+  if (!entries.length) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0;">No data for this lift yet.</div>`;
+    return;
+  }
 
-  const maxW = Math.max(...entries.map(e => e.weight));
-  el.innerHTML = entries.map(e => {
-    const pct = Math.max(12, (e.weight / maxW) * 100);
+  const isE1rm = progressViewMode === 'e1rm';
+  const values = entries.map(e => isE1rm ? (e.e1rm || e.weight) : e.weight);
+  const maxV = Math.max(...values);
+  const latest = values[values.length - 1];
+  const peak = Math.max(...values);
+
+  const chartRows = entries.map((e, i) => {
+    const val = values[i];
+    const pct = Math.max(10, (val / maxV) * 100);
     return `
       <div class="chart-bar-row">
         <div class="chart-date">${formatDate(e.date, true)}</div>
         <div class="chart-bar-wrap">
-          <div class="chart-bar" style="width:${pct}%"><span class="chart-val">${e.weight}</span></div>
+          <div class="chart-bar" style="width:${pct}%">
+            <span class="chart-val">${val}</span>
+          </div>
         </div>
         <div class="chart-rpe">${e.rpe ? `@${e.rpe}` : ''}</div>
       </div>
     `;
-  }).join('') + `
-    <div style="margin-top:14px;padding:10px 12px;background:var(--surface);border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--muted);">
-      Peak <span style="color:var(--accent);font-weight:500;">${maxW} lbs</span> · 
-      Latest <span style="color:var(--text)">${entries[entries.length-1].weight} lbs</span>
+  }).join('');
+
+  el.innerHTML = `
+    <div class="e1rm-toggle">
+      <div class="e1rm-btn ${!isE1rm ? 'active' : ''}" onclick="setProgressMode('weight')">Top Set Weight</div>
+      <div class="e1rm-btn ${isE1rm ? 'active' : ''}" onclick="setProgressMode('e1rm')">Est. 1RM</div>
+    </div>
+    ${chartRows}
+    <div style="margin-top:10px;padding:8px 10px;background:var(--surface);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:16px;">
+      <span>Peak <strong style="color:var(--accent)">${peak} lbs</strong></span>
+      <span>Latest <strong style="color:var(--text)">${latest} lbs</strong></span>
+      <span>${entries.length} session${entries.length > 1 ? 's' : ''}</span>
     </div>
   `;
+}
+
+function setProgressMode(mode) {
+  progressViewMode = mode;
+  renderProgress();
 }
 
 function cancelWorkout() {
