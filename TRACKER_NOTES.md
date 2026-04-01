@@ -20,4 +20,8 @@
 PPL × 2: Push A, Pull A, Legs A, Push B, Pull B, Legs B
 
 ## Wishlist / Known Issues
-(add things here as they come up)
+- Analytics: revisit with more data (volume trends, RPE fatigue detection, streak calendar)
+- Auto-progression suggestions (RPE-based weight recommendations after each session)
+- Multi-user auth (Supabase RLS + login screen) when ready to add wife/others
+- Settings screen (sound on/off, program switcher, reset start date)
+- Capacitor wrapper for true native haptics when going native app route
