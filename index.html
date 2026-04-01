@@ -122,6 +122,75 @@
     justify-content: space-between;
   }
 
+  /* ── NEXT UP CARD ── */
+  .next-up-card {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--card) 100%);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+  }
+  .next-up-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 3px 0 0 3px;
+  }
+  .next-up-card:hover { transform: translateY(-1px); border-color: var(--accent); }
+  .next-up-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 5px;
+  }
+  .next-up-name {
+    font-family: var(--head);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .next-up-meta { font-size: 12px; color: var(--muted2); }
+  .next-up-last { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--mono); }
+  .next-up-arrow {
+    font-size: 28px;
+    color: var(--accent);
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+
+  /* ── SOUND TOGGLE ── */
+  .sound-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    z-index: 40;
+    transition: all 0.2s;
+  }
+  .sound-toggle.visible { display: flex; }
+  .sound-toggle:hover { border-color: var(--border-strong); }
+
   /* ── SCREEN HEADERS ── */
   .screen-header { margin-bottom: 18px; }
   .screen-title { font-family: var(--head); font-size: 20px; font-weight: 800; margin-bottom: 4px; }
@@ -701,6 +770,7 @@
 <!-- ══════════════════════ SCREEN: LOG (session selector) ══════════════════════ -->
 <div class="screen active" id="log-screen">
   <div class="main">
+    <div id="nextUpCard"></div>
     <div class="screen-header">
       <div class="screen-title">Select Session</div>
       <div class="screen-subtitle">Choose a workout to preview and start</div>
@@ -800,6 +870,9 @@
   <div class="rest-next-set" id="restNextSet"></div>
   <button class="btn-skip-rest" onclick="skipRest()">Skip Rest</button>
 </div>
+
+<!-- ══════════════════════ SOUND TOGGLE ══════════════════════ -->
+<div class="sound-toggle visible" id="soundToggle" onclick="toggleSound()" title="Toggle sound"></div>
 
 <!-- ══════════════════════ LIFT HISTORY MODAL ══════════════════════ -->
 <div class="lift-modal-overlay hidden" id="liftModalOverlay" onclick="closeLiftModal(event)">
@@ -1007,13 +1080,126 @@ async function deleteSession(supabaseId) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// TABS / ROUTING
+// WHAT'S NEXT CARD
+// ══════════════════════════════════════════════════════════════
+
+// PPL rotation order
+const SESSION_ORDER = ['push-a', 'pull-a', 'legs-a', 'push-b', 'pull-b', 'legs-b'];
+
+async function renderNextUpCard() {
+  const el = document.getElementById('nextUpCard');
+  const sessions = await loadSessions();
+
+  if (!sessions.length) {
+    el.innerHTML = '';
+    return;
+  }
+
+  // Find the most recent logged session
+  const last = sessions[0]; // already sorted desc
+  const lastId = last.sessionId || 'push-a';
+  const lastIdx = SESSION_ORDER.indexOf(lastId);
+  const nextIdx = (lastIdx + 1) % SESSION_ORDER.length;
+  const nextId = SESSION_ORDER[nextIdx !== -1 ? nextIdx : 0];
+  const nextSession = PROGRAM.find(p => p.id === nextId) || PROGRAM[0];
+
+  // How long ago was last session
+  const daysSince = last.date ? Math.floor((Date.now() - new Date(last.date + 'T00:00:00')) / 86400000) : null;
+  const lastLabel = daysSince === 0 ? 'Last trained today'
+    : daysSince === 1 ? 'Last trained yesterday'
+    : daysSince ? `Last trained ${daysSince} days ago`
+    : '';
+
+  el.innerHTML = `
+    <div class="next-up-card" onclick="selectSession('${nextSession.id}')">
+      <div>
+        <div class="next-up-label">Up Next</div>
+        <div class="next-up-name">${nextSession.name}</div>
+        <div class="next-up-meta">${nextSession.focus}</div>
+        ${lastLabel ? `<div class="next-up-last">${lastLabel} · ${last.sessionName}</div>` : ''}
+      </div>
+      <div class="next-up-arrow">›</div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// HAPTICS
+// ══════════════════════════════════════════════════════════════
+function haptic(type = 'light') {
+  if (!navigator.vibrate) return;
+  const patterns = {
+    light: [30],
+    medium: [50],
+    success: [40, 30, 80],
+    warning: [80, 40, 80],
+  };
+  navigator.vibrate(patterns[type] || patterns.light);
+}
+
+// ══════════════════════════════════════════════════════════════
+// SOUND
+// ══════════════════════════════════════════════════════════════
+let soundEnabled = localStorage.getItem('hybrid_sound') !== 'off';
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, duration, type = 'sine', gain = 0.3) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const vol = ctx.createGain();
+    osc.connect(vol);
+    vol.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    vol.gain.setValueAtTime(gain, ctx.currentTime);
+    vol.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playSetComplete() {
+  // Short satisfying click-pop
+  playTone(600, 0.08, 'sine', 0.25);
+}
+
+function playRestDone() {
+  // Two-tone "go" chime
+  playTone(523, 0.15, 'sine', 0.3);
+  setTimeout(() => playTone(784, 0.25, 'sine', 0.3), 160);
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('hybrid_sound', soundEnabled ? 'on' : 'off');
+  updateSoundToggle();
+  // Unlock audio context on first interaction
+  if (soundEnabled) {
+    try { getAudioCtx().resume(); } catch(e) {}
+    playTone(440, 0.1, 'sine', 0.15);
+  }
+}
+
+function updateSoundToggle() {
+  const el = document.getElementById('soundToggle');
+  if (el) el.textContent = soundEnabled ? '🔔' : '🔕';
+}
+
+// ══════════════════════════════════════════════════════════════
 // ══════════════════════════════════════════════════════════════
 function navigateToLog() {
   showScreen('log-screen', 'left');
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelector('.tab[onclick="switchTab(\'log\')"]').classList.add('active');
   renderSessionList();
+  renderNextUpCard();
 }
 
 function switchTab(tab) {
@@ -1192,6 +1378,10 @@ function completeSet(exIdx, sIdx) {
   const set = setData[exIdx][sIdx];
   set.done = true;
 
+  // Haptic + sound feedback
+  haptic('medium');
+  playSetComplete();
+
   // Re-render just this row
   const row = document.getElementById(`setRow_${exIdx}_${sIdx}`);
   const ex = activeSession.exercises[exIdx];
@@ -1302,6 +1492,8 @@ function startRestTimer(seconds, exerciseName, setInfo, nextSetLabel) {
       ring.classList.remove('warning');
       ring.classList.add('done');
       document.getElementById('restTimeNum').textContent = 'GO';
+      haptic('success');
+      playRestDone();
       setTimeout(closeRest, 1200);
     }
   }, 1000);
@@ -1596,6 +1788,8 @@ function formatDate(dateStr, short = false) {
 // ══════════════════════════════════════════════════════════════
 function init() {
   renderSessionList();
+  renderNextUpCard();
+  updateSoundToggle();
 
   // Register service worker for PWA
   if ('serviceWorker' in navigator) {
