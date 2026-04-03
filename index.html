@@ -2970,18 +2970,18 @@ const FRONT_SLUG_MAP = {
   'triceps':    ['triceps'],
   'deltoids':   ['front delts', 'lateral delts', 'shoulders'],
   'trapezius':  ['traps', 'upper back'],
-  'neck':       [],
+  'neck':       null,
   'forearm':    ['forearm'],
   'quadriceps': ['quads', 'quadriceps'],
   'adductors':  ['adductors'],
-  'knees':      [],
-  'tibialis':   [],
+  'knees':      null,
+  'tibialis':   null,
   'calves':     ['gastrocnemius', 'calves'],
-  'hands':      [],
-  'ankles':     [],
-  'feet':       [],
-  'head':       [],
-  'hair':       [],
+  'hands':      null,
+  'ankles':     null,
+  'feet':       null,
+  'head':       null,
+  'hair':       null,
 };
 
 const BACK_SLUG_MAP = {
@@ -2995,12 +2995,12 @@ const BACK_SLUG_MAP = {
   'adductors':   ['adductors'],
   'hamstring':   ['hamstrings', 'hamstring'],
   'calves':      ['gastrocnemius', 'soleus', 'calves'],
-  'neck':        [],
-  'hands':       [],
-  'ankles':      [],
-  'feet':        [],
-  'head':        [],
-  'hair':        [],
+  'neck':        null,
+  'hands':       null,
+  'ankles':      null,
+  'feet':        null,
+  'head':        null,
+  'hair':        null,
 };
 
 function renderMuscleMap(primary = [], secondary = []) {
@@ -3008,18 +3008,24 @@ function renderMuscleMap(primary = [], secondary = []) {
   const sec = new Set(secondary.map(m => m.toLowerCase()));
 
   function getColor(slugGroups) {
-    if (!slugGroups || slugGroups.length === 0) return '#1e2235'; // inactive
+    if (!slugGroups || slugGroups.length === 0) return null; // skip decorative (head, hair, hands, feet)
     if (slugGroups.some(g => pri.has(g))) return '#e8455a';
     if (slugGroups.some(g => sec.has(g))) return '#f5a623';
-    return '#1e2235';
+    return '#2e3450'; // inactive — visible against card background
   }
 
   function buildPaths(pathData, slugMap) {
     return Object.entries(pathData).map(([slug, paths]) => {
       const color = getColor(slugMap[slug]);
-      const opacity = (color === '#1e2235') ? '0.55' : '1';
+      if (color === null) {
+        // Decorative slugs (head, hair, hands, feet, ankles, knees) — render subtly
+        return paths.map(d =>
+          `<path d="${d}" fill="#252a3d" stroke="rgba(255,255,255,0.06)" stroke-width="1.5"/>`
+        ).join('');
+      }
+      const isActive = color !== '#2e3450';
       return paths.map(d =>
-        `<path d="${d}" fill="${color}" opacity="${opacity}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`
+        `<path d="${d}" fill="${color}" stroke="rgba(255,255,255,${isActive ? '0.1' : '0.05'})" stroke-width="${isActive ? '1.5' : '1'}"/>`
       ).join('');
     }).join('');
   }
