@@ -622,6 +622,57 @@
   }
   .btn-delete-session:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
+  /* ── BODY HEATMAP ── */
+  .heatmap-wrap {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .heatmap-body { flex: 1; }
+  .heatmap-body svg { display: block; width: 100%; height: auto; }
+  .heatmap-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 8px;
+    min-width: 110px;
+  }
+  .heatmap-legend-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .heatmap-legend-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted2);
+  }
+  .heatmap-legend-bar-wrap {
+    height: 6px;
+    background: var(--surface);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .heatmap-legend-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .heatmap-legend-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .heatmap-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 12px;
+    text-align: center;
+  }
+
   /* ── ANALYTICS ── */
   .analytics-grid {
     display: grid;
@@ -1105,6 +1156,15 @@
 
     <!-- Overview stats -->
     <div class="analytics-grid" id="analyticsOverview"></div>
+
+    <!-- Weekly heatmap -->
+    <div class="card" style="background:#060d12;border-color:rgba(30,140,180,0.2);">
+      <div class="card-title">
+        Weekly Body Heatmap
+        <span class="analytics-sub">This week's volume</span>
+      </div>
+      <div id="weeklyHeatmap"></div>
+    </div>
 
     <!-- Weekly volume -->
     <div class="card" id="volumeCard">
@@ -2169,9 +2229,123 @@ function weekStart(dateStr) {
 
 function todayStr() { return new Date().toISOString().split('T')[0]; }
 
+// ── Weekly volume targets (sets/week per muscle group) ───────
+const VOLUME_TARGETS = {
+  Chest:      10,
+  Back:       12,
+  Shoulders:  12,
+  Arms:       10,
+  Legs:       12,
+};
+
+// Maps our muscle group names → SVG slugs for front and back bodies
+const HEATMAP_FRONT_SLUGS = {
+  Chest:     ['chest'],
+  Back:      [],
+  Shoulders: ['deltoids', 'trapezius'],
+  Arms:      ['biceps', 'triceps'],
+  Legs:      ['quadriceps', 'adductors', 'calves'],
+};
+const HEATMAP_BACK_SLUGS = {
+  Chest:     [],
+  Back:      ['upper-back', 'lower-back'],
+  Shoulders: ['deltoids', 'trapezius'],
+  Arms:      ['triceps', 'forearm'],
+  Legs:      ['gluteal', 'hamstring', 'calves', 'adductors'],
+};
+
+function heatColor(ratio) {
+  // Thermal imaging scale: cold blue base → teal → yellow → orange → red
+  if (ratio <= 0)    return { fill: '#0d3d52', stroke: 'rgba(30,140,180,0.15)' };  // cold blue — untrained
+  if (ratio < 0.15)  return { fill: '#0e5c7a', stroke: 'rgba(30,160,200,0.2)' };  // cool blue
+  if (ratio < 0.30)  return { fill: '#0a7e8c', stroke: 'rgba(20,180,180,0.25)' }; // teal
+  if (ratio < 0.50)  return { fill: '#d4a017', stroke: 'rgba(220,160,20,0.3)' };  // warm yellow
+  if (ratio < 0.70)  return { fill: '#e07020', stroke: 'rgba(230,110,30,0.35)' }; // orange
+  if (ratio < 0.90)  return { fill: '#e84020', stroke: 'rgba(240,60,30,0.4)' };   // red-orange
+  return               { fill: '#ff2a00', stroke: 'rgba(255,50,0,0.5)' };          // max — bright red
+}
+
+function renderWeeklyHeatmap(sessions) {
+  const el = document.getElementById('weeklyHeatmap');
+  if (!el) return;
+
+  // Count sets per muscle group this week
+  const thisWeek = weekStart(todayStr());
+  const setCounts = { Chest: 0, Back: 0, Shoulders: 0, Arms: 0, Legs: 0 };
+
+  sessions.forEach(s => {
+    if (weekStart(s.date) !== thisWeek) return;
+    s.exercises?.forEach(ex => {
+      const muscle = MUSCLE_MAP[ex.name];
+      if (muscle && setCounts.hasOwnProperty(muscle)) {
+        setCounts[muscle] += ex.sets?.length || 0;
+      }
+    });
+  });
+
+  // Build per-slug color maps
+  const frontColors = {};
+  const backColors = {};
+
+  Object.keys(VOLUME_TARGETS).forEach(group => {
+    const ratio = setCounts[group] / VOLUME_TARGETS[group];
+    const { fill, stroke } = heatColor(ratio);
+    HEATMAP_FRONT_SLUGS[group].forEach(slug => { frontColors[slug] = { fill, stroke }; });
+    HEATMAP_BACK_SLUGS[group].forEach(slug =>  { backColors[slug] = { fill, stroke }; });
+  });
+
+  function buildHeatPaths(pathData, colorMap) {
+    return Object.entries(pathData).map(([slug, paths]) => {
+      const c = colorMap[slug];
+      if (c) {
+        return paths.map(d =>
+          `<path d="${d}" fill="${c.fill}" stroke="${c.stroke}" stroke-width="1.5"/>`
+        ).join('');
+      }
+      // Inactive / decorative — cold blue base matching thermal style
+      return paths.map(d =>
+        `<path d="${d}" fill="#0d3d52" stroke="rgba(30,140,180,0.12)" stroke-width="1"/>`
+      ).join('');
+    }).join('');
+  }
+
+  const frontSvg = `<svg viewBox="50 95 615 1310" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;filter:drop-shadow(0 0 6px rgba(255,80,0,0.15))">${buildHeatPaths(BODY_FRONT_PATHS, frontColors)}</svg>`;
+  const backSvg  = `<svg viewBox="745 95 615 1310" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;filter:drop-shadow(0 0 6px rgba(255,80,0,0.15))">${buildHeatPaths(BODY_BACK_PATHS, backColors)}</svg>`;
+
+  // Legend items
+  const legendHtml = Object.keys(VOLUME_TARGETS).map(group => {
+    const sets = setCounts[group];
+    const target = VOLUME_TARGETS[group];
+    const ratio = Math.min(sets / target, 1);
+    const pct = Math.round(ratio * 100);
+    const { fill } = heatColor(sets / target);
+    return `
+      <div class="heatmap-legend-item">
+        <div class="heatmap-legend-name" style="color:rgba(100,200,230,0.7)">${group}</div>
+        <div class="heatmap-legend-bar-wrap" style="background:rgba(10,60,80,0.6)">
+          <div class="heatmap-legend-bar" style="width:${pct}%;background:${fill};box-shadow:0 0 4px ${fill}66"></div>
+        </div>
+        <div class="heatmap-legend-count" style="color:rgba(100,200,230,0.5)">${sets} / ${target} sets</div>
+      </div>
+    `;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="heatmap-wrap">
+      <div class="heatmap-body" style="display:flex;gap:4px;">
+        <div style="flex:1;">${frontSvg}</div>
+        <div style="flex:1;">${backSvg}</div>
+      </div>
+      <div class="heatmap-legend">${legendHtml}</div>
+    </div>
+    <div class="heatmap-note" style="color:rgba(100,200,230,0.35)">Targets based on weekly hypertrophy minimums</div>
+  `;
+}
+
 async function renderAnalytics() {
   const sessions = await loadSessions();
   await renderOverviewStats(sessions);
+  renderWeeklyHeatmap(sessions);
   renderVolumeChart(sessions);
   await renderProgressSelect(sessions);
 }
