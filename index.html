@@ -3051,6 +3051,20 @@ function renderMuscleMap(primary = [], secondary = []) {
 }
 
 
+// Exercise name → storage filename slug
+function exNameToSlug(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+async function fetchExerciseImage(exName) {
+  const slug = exNameToSlug(exName);
+  const url = `${SUPABASE_URL}/storage/v1/object/public/exercise-images/${slug}.jpg`;
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    return res.ok ? url : null;
+  } catch { return null; }
+}
+
 async function openExerciseInfo(exName) {
   const info = EXERCISE_LIBRARY[exName];
   document.getElementById('exerciseInfoTitle').textContent = exName;
