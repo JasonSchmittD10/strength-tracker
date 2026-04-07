@@ -2050,13 +2050,13 @@ async function startWorkout() {
 
   if (lastMatch) {
     lastMatch.exercises.forEach(ex => {
-      lastSessionData[ex.name] = ex.sets;
+      lastSessionData[normalizeExerciseName(ex.name)] = ex.sets;
     });
   }
 
   // Pre-fill setData from last session where available
   activeSession.exercises.forEach((ex, i) => {
-    const prev = lastSessionData[ex.name] || [];
+    const prev = lastSessionData[normalizeExerciseName(ex.name)] || [];
     setData[i] = Array.from({length: ex.sets}, (_, sIdx) => ({
       weight: prev[sIdx]?.weight ?? '',
       reps: prev[sIdx]?.reps ?? '',
@@ -2077,7 +2077,7 @@ async function startWorkout() {
 function renderWorkoutExercises() {
   const el = document.getElementById('workoutExercises');
   el.innerHTML = activeSession.exercises.map((ex, exIdx) => {
-    const hasPrev = lastSessionData[ex.name]?.length > 0;
+    const hasPrev = lastSessionData[normalizeExerciseName(ex.name)]?.length > 0;
     return `
       <div class="ex-block" id="exBlock_${exIdx}">
         <div class="ex-block-header">
@@ -2354,7 +2354,7 @@ function hideMiniTimer() {
 
 const _exerciseIdCache = {};
 async function getExerciseId(name) {
-  const resolved = resolveExName(name);
+  const resolved = normalizeExerciseName(name);
   if (_exerciseIdCache[resolved]) return _exerciseIdCache[resolved];
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/exercises?select=id&name=eq.${encodeURIComponent(resolved)}&limit=1`, { headers: sbHeaders });
@@ -2594,7 +2594,7 @@ function renderWeeklyHeatmap(sessions) {
   sessions.forEach(s => {
     if (weekStart(s.date) !== thisWeek) return;
     s.exercises?.forEach(ex => {
-      const muscle = MUSCLE_MAP[ex.name];
+      const muscle = MUSCLE_MAP[normalizeExerciseName(ex.name)];
       if (muscle && setCounts.hasOwnProperty(muscle)) {
         setCounts[muscle] += ex.sets?.length || 0;
       }
@@ -2755,7 +2755,7 @@ function renderVolumeChart(sessions) {
     if (!isThis && !isLast) return;
 
     s.exercises?.forEach(ex => {
-      const muscle = MUSCLE_MAP[ex.name];
+      const muscle = MUSCLE_MAP[normalizeExerciseName(ex.name)];
       if (!muscle) return;
       const sets = ex.sets?.length || 0;
       if (isThis) thisCounts[muscle] += sets;
@@ -2812,7 +2812,7 @@ let progressViewMode = 'weight'; // 'weight' or 'e1rm'
 async function renderProgressSelect(sessions) {
   if (!sessions) sessions = await loadSessions();
   const lifts = new Set();
-  sessions.forEach(s => s.exercises?.forEach(ex => lifts.add(ex.name)));
+  sessions.forEach(s => s.exercises?.forEach(ex => lifts.add(normalizeExerciseName(ex.name))));
 
   const sel = document.getElementById('liftSelect');
   const current = sel.value;
@@ -2985,7 +2985,7 @@ async function confirmDelete() {
 function getExerciseEntries(sessions, name) {
   const entries = [];
   sessions.forEach(s => {
-    const ex = s.exercises?.find(e => e.name === name);
+    const ex = s.exercises?.find(e => normalizeExerciseName(e.name) === normalizeExerciseName(name));
     if (!ex?.sets?.length) return;
     const topSet = ex.sets.reduce((a, b) =>
       (parseFloat(b.weight) || 0) > (parseFloat(a.weight) || 0) ? b : a, ex.sets[0]);
@@ -3719,12 +3719,12 @@ async function showExerciseDetail(name) {
 
   try {
     const legacySessions = await loadSessions();
-    const resolvedName = resolveExName(name);
+    const resolvedName = normalizeExerciseName(name);
     const allSets = [];
     const history = [];
 
     legacySessions.forEach(s => {
-      const exData = (s.exercises || []).find(e => resolveExName(e.name) === resolvedName);
+      const exData = (s.exercises || []).find(e => normalizeExerciseName(e.name) === resolvedName);
       if (!exData || !exData.sets || exData.sets.length === 0) return;
       const validSets = exData.sets.filter(st => st.weight > 0 && st.reps > 0);
       if (validSets.length === 0) return;
@@ -3735,7 +3735,7 @@ async function showExerciseDetail(name) {
     allSets.sort((a, b) => a.date.localeCompare(b.date));
     history.sort((a, b) => b.date.localeCompare(a.date));
 
-    const info = EXERCISE_LIBRARY[name] || EXERCISE_LIBRARY[resolvedName] || null;
+    const info = EXERCISE_LIBRARY[resolvedName] || null;
 
     // Fetch variants from DB
     try {
