@@ -1860,6 +1860,7 @@ function updateSetData(exIdx, sIdx, field, value) {
 
 function completeSet(exIdx, sIdx) {
   const set = setData[exIdx][sIdx];
+  const wasEditing = set.editing;
   set.done = true;
   set.editing = false;
 
@@ -1888,8 +1889,10 @@ function completeSet(exIdx, sIdx) {
     nextLabel = 'Last set — finish up!';
   }
 
-  // Start rest timer
-  startRestTimer(ex.rest, ex.name, `Set ${sIdx + 1} complete · ${set.weight || '?'} lbs × ${set.reps || '?'} reps`, nextLabel);
+  // Start rest timer (skip if re-submitting an edited set)
+  if (!wasEditing) {
+    startRestTimer(ex.rest, ex.name, `Set ${sIdx + 1} complete · ${set.weight || '?'} lbs × ${set.reps || '?'} reps`, nextLabel);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
