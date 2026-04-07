@@ -2607,6 +2607,31 @@ async function confirmDelete() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// SHARED EXERCISE HISTORY LOOKUP
+// ══════════════════════════════════════════════════════════════
+function getExerciseEntries(sessions, name) {
+  const entries = [];
+  sessions.forEach(s => {
+    const ex = s.exercises?.find(e => e.name === name);
+    if (!ex?.sets?.length) return;
+    const topSet = ex.sets.reduce((a, b) =>
+      (parseFloat(b.weight) || 0) > (parseFloat(a.weight) || 0) ? b : a, ex.sets[0]);
+    if (!topSet.weight) return;
+    entries.push({
+      date: s.date,
+      sessionName: s.sessionName,
+      sets: ex.sets,
+      topSet,
+      weight: parseFloat(topSet.weight),
+      reps: parseFloat(topSet.reps),
+      rpe: topSet.rpe,
+      e1rm: epley(topSet.weight, topSet.reps)
+    });
+  });
+  return entries.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// ══════════════════════════════════════════════════════════════
 // LIFT HISTORY MODAL
 // ══════════════════════════════════════════════════════════════
 async function openLiftModal(liftName) {
@@ -2615,16 +2640,7 @@ async function openLiftModal(liftName) {
   document.getElementById('liftModalOverlay').classList.remove('hidden');
 
   const allSessions = await loadSessions();
-  const entries = []; // { date, sessionName, sets: [{weight,reps,rpe}] }
-
-  allSessions.forEach(s => {
-    const ex = s.exercises?.find(e => e.name === liftName);
-    if (ex && ex.sets?.length) {
-      entries.push({ date: s.date, sessionName: s.sessionName, sets: ex.sets });
-    }
-  });
-
-  entries.sort((a, b) => a.date.localeCompare(b.date));
+  const entries = getExerciseEntries(allSessions, liftName);
 
   if (!entries.length) {
     document.getElementById('liftModalBody').innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;">No history for this lift yet.</div>`;
@@ -3262,21 +3278,7 @@ async function openExerciseInfo(exName) {
   ]);
 
   // Historical data
-  const entries = [];
-  sessions.forEach(s => {
-    const ex = s.exercises?.find(e => e.name === exName);
-    if (ex?.sets?.length) {
-      const topSet = ex.sets.reduce((a, b) =>
-        (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a, ex.sets[0]);
-      if (topSet.weight) entries.push({
-        date: s.date,
-        weight: parseFloat(topSet.weight),
-        reps: parseFloat(topSet.reps),
-        e1rm: epley(topSet.weight, topSet.reps)
-      });
-    }
-  });
-  entries.sort((a, b) => a.date.localeCompare(b.date));
+  const entries = getExerciseEntries(sessions, exName);
 
   // Image section
   const imageHtml = imgUrl ? `
