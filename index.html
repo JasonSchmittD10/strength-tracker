@@ -1042,23 +1042,61 @@
 
   .mt16 { margin-top: 16px; }
 
-  /* ── EXERCISE DETAIL SCREEN ── */
-  #exercise-detail-screen .main { padding-top: 8px; }
-  .exd-header {
+  /* ── EXERCISE DETAIL SHEET ── */
+  .exd-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(5px);
+    z-index: 280;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .exd-overlay.open { opacity: 1; pointer-events: all; }
+  .exd-sheet {
+    background: var(--mid);
+    border: 1px solid var(--border-strong);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 680px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .exd-overlay.open .exd-sheet { transform: translateY(0); }
+  .exd-drag-handle {
+    width: 36px; height: 4px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+  .exd-sheet-header {
     display: flex;
     align-items: flex-start;
+    padding: 10px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
     gap: 12px;
-    margin-bottom: 20px;
-    padding-top: 8px;
   }
-  .exd-title-block { flex: 1; }
+  .exd-sheet-title { flex: 1; min-width: 0; }
   .exd-name {
     font-family: var(--head);
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 800;
     color: var(--text);
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .exd-pattern-badge {
     display: inline-block;
@@ -1066,12 +1104,32 @@
     color: var(--accent);
     border: 1px solid rgba(232,69,90,0.25);
     border-radius: 6px;
-    padding: 3px 9px;
-    font-size: 11px;
+    padding: 2px 8px;
+    font-size: 10px;
     font-family: var(--mono);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.8px;
+  }
+  .exd-close-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted2);
+    border-radius: 50%;
+    width: 32px; height: 32px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-family: var(--body);
+    transition: all 0.2s;
+  }
+  .exd-close-btn:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .exd-sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 16px 40px;
+    -webkit-overflow-scrolling: touch;
   }
   .exd-loading {
     text-align: center;
@@ -1127,6 +1185,20 @@
   .exd-hist-set { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-family: var(--mono); font-size: 12px; color: var(--text); }
   .exd-load-more { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--muted2); border-radius: 8px; padding: 10px; font-size: 13px; font-family: var(--body); cursor: pointer; margin-top: 12px; transition: all 0.2s; }
   .exd-load-more:hover { border-color: var(--border-strong); color: var(--text); }
+  /* ── EXERCISE DETAIL DOT CHART + SESSION LIST ── */
+  .exd-dot-chart-wrap { margin-bottom: 4px; }
+  .exd-sess-list { display: flex; flex-direction: column; gap: 0; margin-top: 4px; }
+  .exd-sess-row {
+    display: flex; align-items: center;
+    padding: 10px 12px; border-radius: 8px;
+    cursor: pointer; transition: background 0.15s;
+    gap: 10px;
+  }
+  .exd-sess-row:hover { background: var(--surface); }
+  .exd-sess-row.exd-sess-active { background: rgba(232,69,90,0.08); border: 1px solid rgba(232,69,90,0.2); }
+  .exd-sess-date { font-family: var(--mono); font-size: 11px; color: var(--muted); flex-shrink: 0; width: 62px; }
+  .exd-sess-top { font-family: var(--mono); font-size: 13px; color: var(--text); flex: 1; }
+  .exd-sess-e1rm { font-family: var(--mono); font-size: 11px; color: var(--accent); flex-shrink: 0; }
   .ex-name-link { cursor: pointer; color: inherit; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.12); transition: border-color 0.15s; }
   .ex-name-link:hover { border-bottom-color: var(--accent); color: var(--accent); }
   .preview-ex-name-link { cursor: pointer; color: var(--text); font-size: 14px; font-weight: 600; flex: 1; border-bottom: 1px solid transparent; transition: all 0.15s; }
@@ -1360,21 +1432,18 @@
   </div>
 </div>
 
-<!-- ══════════════════════ EXERCISE DETAIL SCREEN ══════════════════════ -->
-<div class="screen" id="exercise-detail-screen">
-  <div class="main">
-    <div class="exd-header">
-      <button class="preview-back" onclick="backFromExDetail()">
-        <span>‹</span> Back
-      </button>
-      <div class="exd-title-block">
+<!-- ══════════════════════ EXERCISE DETAIL SHEET ══════════════════════ -->
+<div class="exd-overlay" id="exdOverlay" onclick="exdOverlayClick(event)">
+  <div class="exd-sheet" id="exdSheet">
+    <div class="exd-drag-handle"></div>
+    <div class="exd-sheet-header">
+      <div class="exd-sheet-title">
         <div class="exd-name" id="exDetailName"></div>
-        <div id="exDetailPatternWrap" style="min-height:22px;">
-          <span class="exd-pattern-badge" id="exDetailPattern"></span>
-        </div>
+        <span class="exd-pattern-badge" id="exDetailPattern"></span>
       </div>
+      <button class="exd-close-btn" onclick="closeExerciseDetail()" aria-label="Close">✕</button>
     </div>
-    <div id="exDetailBody"></div>
+    <div class="exd-sheet-body" id="exDetailBody"></div>
   </div>
 </div>
 
@@ -1852,7 +1921,7 @@ function showPreview(session) {
   list.innerHTML = session.exercises.map((ex, i) => `
     <div class="preview-ex-row">
       <div class="preview-ex-num">${String(i+1).padStart(2,'0')}</div>
-      <div class="preview-ex-name-link" onclick="showExerciseDetail('${ex.name.replace(/'/g, "\\'")}', 'preview')">${ex.name}</div>
+      <div class="preview-ex-name-link" onclick="showExerciseDetail('${ex.name.replace(/'/g, "\\'")}')">${ex.name}</div>
       <div>
         <div class="preview-ex-detail">${ex.sets} × ${ex.reps}</div>
         <div class="preview-ex-rest">Rest: ${ex.restLabel}</div>
@@ -1914,7 +1983,7 @@ function renderWorkoutExercises() {
         <div class="ex-block-header">
           <div>
             <div class="ex-block-name">
-              <span class="ex-name-link" onclick="showExerciseDetail('${ex.name.replace(/'/g, "\\'")}', 'workout')">${ex.name}</span>
+              <span class="ex-name-link" onclick="showExerciseDetail('${ex.name.replace(/'/g, "\\'")}')">${ex.name}</span>
             </div>
             <div class="ex-block-meta">${ex.sets} sets · ${ex.reps} reps · ${ex.restLabel} rest</div>
           </div>
@@ -3457,17 +3526,21 @@ async function openExerciseInfo(exName) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// EXERCISE DETAIL SCREEN
+// EXERCISE DETAIL SHEET
 // ══════════════════════════════════════════════════════════════
 
-let _exDetailFrom = 'log';
-
-async function showExerciseDetail(name, from) {
-  _exDetailFrom = from || 'log';
+async function showExerciseDetail(name) {
   document.getElementById('exDetailName').textContent = name;
   document.getElementById('exDetailPattern').textContent = '';
   document.getElementById('exDetailBody').innerHTML = '<div class="exd-loading">Loading…</div>';
-  showScreen('exercise-detail-screen', 'right');
+
+  // Open overlay
+  const overlay = document.getElementById('exdOverlay');
+  overlay.classList.add('open');
+  document.body.classList.add('overlay-open');
+
+  // Wire swipe-down to close
+  _exdInitSwipeDown();
 
   const legacySessions = await loadSessions();
 
@@ -3512,10 +3585,31 @@ async function showExerciseDetail(name, from) {
   ].join('');
 }
 
-function backFromExDetail() {
-  if (_exDetailFrom === 'workout') { showScreen('workout-screen', 'left'); return; }
-  if (_exDetailFrom === 'preview') { showScreen('preview-screen', 'left'); return; }
-  navigateToLog();
+function closeExerciseDetail() {
+  const overlay = document.getElementById('exdOverlay');
+  overlay.classList.remove('open');
+  document.body.classList.remove('overlay-open');
+}
+
+function exdOverlayClick(e) {
+  if (e.target === document.getElementById('exdOverlay')) closeExerciseDetail();
+}
+
+let _exdSwipeStartY = 0;
+let _exdSwipeStarted = false;
+
+function _exdInitSwipeDown() {
+  const sheet = document.getElementById('exdSheet');
+  sheet.ontouchstart = e => {
+    _exdSwipeStartY = e.touches[0].clientY;
+    _exdSwipeStarted = true;
+  };
+  sheet.ontouchend = e => {
+    if (!_exdSwipeStarted) return;
+    const dy = e.changedTouches[0].clientY - _exdSwipeStartY;
+    _exdSwipeStarted = false;
+    if (dy > 80) closeExerciseDetail();
+  };
 }
 
 function _renderExdStatic(name, info) {
@@ -3657,35 +3751,47 @@ function _renderExdContext(allSets, history, name) {
     `;
   }
 
-  // 6-month e1RM progression chart
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-  const sixMonthStr = sixMonthsAgo.toISOString().split('T')[0];
-  const recentSets = allSets.filter(s => s.date >= sixMonthStr);
-
-  let chartHtml;
-  if (recentSets.length) {
-    const byDate = {};
-    recentSets.forEach(s => {
-      const val = epley(s.weight, s.reps) || s.weight;
-      if (!byDate[s.date] || val > byDate[s.date]) byDate[s.date] = val;
+  // Build per-session chart data (one point per session, best e1RM)
+  const sessMap = {};
+  allSets.forEach(s => {
+    const key = s.date;
+    if (!sessMap[key]) sessMap[key] = { date: s.date, sessionName: s.sessionName, sets: [] };
+    sessMap[key].sets.push(s);
+  });
+  const chartData = Object.values(sessMap)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(sess => {
+      const topSet = sess.sets.reduce((best, s) => {
+        const e = epley(s.weight, s.reps) || 0;
+        return e > (epley(best.weight, best.reps) || 0) ? s : best;
+      }, sess.sets[0]);
+      return {
+        date: sess.date,
+        sessionName: sess.sessionName,
+        topSet,
+        e1rm: epley(topSet.weight, topSet.reps) || topSet.weight,
+      };
     });
-    const chartData = Object.entries(byDate).sort((a, b) => a[0].localeCompare(b[0]));
-    const maxVal = Math.max(...chartData.map(([, v]) => v));
-    const bars = chartData.map(([date, val]) => {
-      const pct = Math.max(8, (val / maxVal) * 100);
-      return `
-        <div class="chart-bar-row">
-          <div class="chart-date">${formatDate(date, true)}</div>
-          <div class="chart-bar-wrap">
-            <div class="chart-bar" style="width:${pct}%"><span class="chart-val">${val}</span></div>
-          </div>
-        </div>`;
-    }).join('');
+
+  let chartHtml = '';
+  if (chartData.length) {
     chartHtml = `
       <div class="card" style="margin-bottom:14px;">
-        <div class="card-title">e1RM Progression <span style="font-size:11px;color:var(--muted);font-weight:400;font-family:var(--mono);">Last 6 months</span></div>
-        ${bars}
+        <div class="card-title">e1RM Progression
+          <span style="font-size:11px;color:var(--muted);font-weight:400;font-family:var(--mono);">${chartData.length} sessions</span>
+        </div>
+        <div class="exd-dot-chart-wrap" id="exdDotChart">${_buildDotChartSVG(chartData, -1)}</div>
+        <div class="exd-sess-list" id="exdSessList">
+          ${[...chartData].reverse().map((d, revIdx) => {
+            const origIdx = chartData.length - 1 - revIdx;
+            const isLatest = origIdx === chartData.length - 1;
+            return `<div class="exd-sess-row${isLatest ? ' exd-sess-active' : ''}" data-idx="${origIdx}" onclick="exdDotClick(${origIdx})">
+              <div class="exd-sess-date">${formatDate(d.date, true)}</div>
+              <div class="exd-sess-top">${d.topSet.weight} × ${d.topSet.reps}</div>
+              <div class="exd-sess-e1rm">~${d.e1rm} lbs</div>
+            </div>`;
+          }).join('')}
+        </div>
       </div>`;
   } else {
     chartHtml = `
@@ -3715,47 +3821,98 @@ function _renderExdContext(allSets, history, name) {
 }
 
 function _renderExdHistory(history) {
-  if (!history.length) return `
-    <div class="card" style="margin-bottom:24px;">
-      <div class="card-title">Session History</div>
-      <div style="color:var(--muted);font-size:13px;">No history yet for this exercise.</div>
-    </div>`;
-
-  const PAGE = 20;
-  const shown = history.slice(0, PAGE);
-  const rows = shown.map(entry => {
-    const setsStr = entry.sets
-      .filter(s => s.weight && s.reps)
-      .map(s => {
-        const rpeStr = s.rpe ? ` @${s.rpe}` : '';
-        return `<span class="exd-hist-set">${s.weight}×${s.reps}${rpeStr}</span>`;
-      }).join('');
-    return `
-      <div class="exd-hist-row">
-        <div class="exd-hist-meta">
-          <div class="exd-hist-date">${formatDate(entry.date)}</div>
-          <div class="exd-hist-session">${entry.sessionName}</div>
-        </div>
-        <div class="exd-hist-sets">${setsStr || '<span style="color:var(--muted);font-size:12px;">—</span>'}</div>
-      </div>`;
-  }).join('');
-
-  const remaining = history.length - PAGE;
-  const moreBtn = remaining > 0 ? `
-    <button class="exd-load-more" onclick="exdLoadMore(this, ${JSON.stringify(history).replace(/</g,'\\u003c').replace(/>/g,'\\u003e')})">
-      Show ${Math.min(PAGE, remaining)} more · ${history.length} sessions total
-    </button>` : '';
-
-  return `
-    <div class="card" style="margin-bottom:24px;">
-      <div class="card-title">Session History <span class="analytics-sub">${history.length} sessions</span></div>
-      <div id="exdHistoryRows">${rows}</div>
-      ${moreBtn}
-    </div>`;
+  return ''; // history is now shown inline in the progression chart section
 }
 
 function saveExDetailNote(textarea) {
   localStorage.setItem(textarea.dataset.key, textarea.value);
+}
+
+function _buildDotChartSVG(chartData, highlightIdx) {
+  const W = 400, H = 160;
+  const PAD_L = 44, PAD_R = 14, PAD_T = 14, PAD_B = 26;
+  const cW = W - PAD_L - PAD_R;
+  const cH = H - PAD_T - PAD_B;
+  const n = chartData.length;
+
+  const vals = chartData.map(d => d.e1rm);
+  const minV = Math.min(...vals), maxV = Math.max(...vals);
+  const range = Math.max(maxV - minV, 1);
+  const buf = range * 0.12 + 5;
+  const yMin = Math.max(0, minV - buf), yMax = maxV + buf;
+
+  function xPos(i) { return PAD_L + (n < 2 ? cW / 2 : (i / (n - 1)) * cW); }
+  function yPos(v) { return PAD_T + (1 - (v - yMin) / (yMax - yMin)) * cH; }
+
+  // Y ticks
+  const yTicks = [Math.round(yMin), Math.round((yMin + yMax) / 2), Math.round(yMax)];
+  const yGridLines = yTicks.map(v =>
+    `<line x1="${PAD_L}" y1="${yPos(v).toFixed(1)}" x2="${W - PAD_R}" y2="${yPos(v).toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`
+  ).join('');
+  const yLabels = yTicks.map(v =>
+    `<text x="${PAD_L - 6}" y="${(yPos(v) + 4).toFixed(1)}" text-anchor="end" fill="#6b7394" font-size="9" font-family="'DM Mono',monospace">${v}</text>`
+  ).join('');
+
+  // X labels: first, middle (if 3+), last
+  const labelIdxs = n <= 1 ? [0] : n === 2 ? [0, n - 1] : [0, Math.floor((n - 1) / 2), n - 1];
+  const xLabels = [...new Set(labelIdxs)].map(i => {
+    const d = new Date(chartData[i].date + 'T00:00:00');
+    const lbl = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `<text x="${xPos(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" fill="#6b7394" font-size="9" font-family="'DM Mono',monospace">${lbl}</text>`;
+  }).join('');
+
+  // Connecting line
+  const points = chartData.map((d, i) => `${xPos(i).toFixed(1)},${yPos(d.e1rm).toFixed(1)}`).join(' ');
+  const polyline = n > 1
+    ? `<polyline points="${points}" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" stroke-linejoin="round"/>`
+    : '';
+
+  // Dots
+  const dots = chartData.map((d, i) => {
+    const x = xPos(i).toFixed(1), y = yPos(d.e1rm).toFixed(1);
+    const isLatest = i === n - 1;
+    const isHighlighted = i === highlightIdx;
+    const fill = isLatest ? '#e8455a' : (isHighlighted ? '#f5a623' : '#4a5068');
+    const r = isLatest || isHighlighted ? 5.5 : 4;
+    const strokeAttr = isLatest || isHighlighted ? `stroke="rgba(255,255,255,0.55)" stroke-width="1.5"` : '';
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}" ${strokeAttr} data-idx="${i}" style="cursor:pointer" onclick="exdDotClick(${i})"/>`;
+  }).join('');
+
+  // Y axis line
+  const yAxis = `<line x1="${PAD_L}" y1="${PAD_T}" x2="${PAD_L}" y2="${PAD_T + cH}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;overflow:visible">${yGridLines}${yAxis}${yLabels}${xLabels}${polyline}${dots}</svg>`;
+}
+
+function exdDotClick(idx) {
+  // Update dot styles
+  const chart = document.getElementById('exdDotChart');
+  if (!chart) return;
+  const circles = chart.querySelectorAll('circle');
+  const n = circles.length;
+  circles.forEach((c, i) => {
+    const isLatest = i === n - 1;
+    const isSelected = i === idx;
+    c.setAttribute('fill', isLatest ? '#e8455a' : (isSelected ? '#f5a623' : '#4a5068'));
+    c.setAttribute('r', isSelected || isLatest ? '5.5' : '4');
+    if (isSelected || isLatest) {
+      c.setAttribute('stroke', 'rgba(255,255,255,0.55)');
+      c.setAttribute('stroke-width', '1.5');
+    } else {
+      c.removeAttribute('stroke');
+      c.removeAttribute('stroke-width');
+    }
+  });
+
+  // Highlight corresponding session row
+  document.querySelectorAll('#exdSessList .exd-sess-row').forEach(row => {
+    row.classList.remove('exd-sess-active');
+  });
+  const targetRow = document.querySelector(`#exdSessList .exd-sess-row[data-idx="${idx}"]`);
+  if (targetRow) {
+    targetRow.classList.add('exd-sess-active');
+    targetRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 function exdLoadMore(btn, history) {
@@ -3818,6 +3975,8 @@ function closeExerciseInfo(e) {
     // Block swipe if any modal is open
     const liftModalOpen = !document.getElementById('liftModalOverlay').classList.contains('hidden');
     const exerciseInfoOpen = !document.getElementById('exerciseInfoOverlay').classList.contains('hidden');
+    const exdSheetOpen = document.getElementById('exdOverlay').classList.contains('open');
+    if (exdSheetOpen) return;
     const cancelModalOpen = !document.getElementById('cancelWorkoutOverlay').classList.contains('hidden');
     const confirmModalOpen = !document.getElementById('confirmOverlay').classList.contains('hidden');
     const restOpen = document.getElementById('restOverlay').classList.contains('active');
@@ -3829,7 +3988,6 @@ function closeExerciseInfo(e) {
     const activeScreenId = document.querySelector('.screen.active')?.id;
 
     if (activeScreenId === 'workout-screen') return; // locked during workout
-    if (activeScreenId === 'exercise-detail-screen') { backFromExDetail(); return; }
     if (activeScreenId === 'preview-screen') { backToLog(); return; }
     if (activeScreenId === 'history-screen' || activeScreenId === 'progress-screen') { switchTab('log'); return; }
   }, { passive: true });
