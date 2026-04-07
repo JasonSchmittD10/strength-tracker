@@ -1041,6 +1041,96 @@
   .btn-done-set.checked:hover { background: var(--gold-dim); border-color: rgba(245,166,35,0.4); color: var(--gold); }
 
   .mt16 { margin-top: 16px; }
+
+  /* ── EXERCISE DETAIL SCREEN ── */
+  #exercise-detail-screen .main { padding-top: 8px; }
+  .exd-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-top: 8px;
+  }
+  .exd-title-block { flex: 1; }
+  .exd-name {
+    font-family: var(--head);
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+  .exd-pattern-badge {
+    display: inline-block;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(232,69,90,0.25);
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .exd-loading {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 40px 0;
+  }
+  .exd-media-placeholder {
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: 14px;
+    padding: 32px 20px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .exd-media-icon { font-size: 28px; color: var(--muted); margin-bottom: 6px; opacity: 0.5; }
+  .exd-media-label { font-family: var(--head); font-size: 14px; font-weight: 700; color: var(--muted2); margin-bottom: 2px; }
+  .exd-media-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .exd-muscles { display: flex; gap: 20px; margin-bottom: 14px; flex-wrap: wrap; }
+  .exd-muscle-group { flex: 1; min-width: 120px; }
+  .exd-muscle-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+  .exd-muscle-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .exd-muscle-tag { border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; }
+  .exd-muscle-tag.primary { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(232,69,90,0.2); }
+  .exd-muscle-tag.secondary { background: var(--surface); color: var(--muted2); border: 1px solid var(--border); }
+  .exd-cues { display: flex; flex-direction: column; }
+  .exd-cue-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .exd-cue-row:last-child { border-bottom: none; }
+  .exd-cue-num { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 700; flex-shrink: 0; width: 18px; margin-top: 1px; }
+  .exd-cue-text { font-size: 13px; color: var(--muted2); line-height: 1.5; }
+  .exd-coach-note {
+    margin-top: 14px; padding: 12px;
+    background: var(--surface); border-radius: 8px;
+    border-left: 3px solid var(--gold);
+    font-size: 13px; color: var(--muted2); line-height: 1.6; font-style: italic;
+  }
+  .exd-rep-maxes { border-top: 1px solid var(--border); padding-top: 12px; }
+  .exd-rep-max-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+  .exd-rep-max-row { display: flex; gap: 10px; }
+  .exd-rep-max-card { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; }
+  .exd-rep-max-tag { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .exd-rep-max-val { font-family: var(--head); font-size: 15px; font-weight: 800; color: var(--green); }
+  .exd-last-session { padding: 4px 0; }
+  .exd-last-session-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 4px; }
+  .exd-last-session-date { font-family: var(--head); font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .exd-last-session-sets { font-family: var(--mono); font-size: 13px; color: var(--muted2); line-height: 1.8; word-break: break-word; }
+  .exd-hist-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .exd-hist-row:last-child { border-bottom: none; }
+  .exd-hist-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .exd-hist-date { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .exd-hist-session { font-size: 12px; color: var(--muted2); font-weight: 600; }
+  .exd-hist-sets { display: flex; flex-wrap: wrap; gap: 6px; }
+  .exd-hist-set { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .exd-load-more { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--muted2); border-radius: 8px; padding: 10px; font-size: 13px; font-family: var(--body); cursor: pointer; margin-top: 12px; transition: all 0.2s; }
+  .exd-load-more:hover { border-color: var(--border-strong); color: var(--text); }
+  .ex-name-link { cursor: pointer; color: inherit; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.12); transition: border-color 0.15s; }
+  .ex-name-link:hover { border-bottom-color: var(--accent); color: var(--accent); }
+  .preview-ex-name-link { cursor: pointer; color: var(--text); font-size: 14px; font-weight: 600; flex: 1; border-bottom: 1px solid transparent; transition: all 0.15s; }
+  .preview-ex-name-link:hover { color: var(--accent); border-bottom-color: rgba(232,69,90,0.3); }
 </style>
 <link rel="icon" type="image/png" href="data:image/png;base64,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">
 <link rel="apple-touch-icon" href="data:image/png;base64,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">
@@ -1267,6 +1357,24 @@
       <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
       <button class="btn-confirm-del" onclick="confirmDelete()">Delete</button>
     </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ EXERCISE DETAIL SCREEN ══════════════════════ -->
+<div class="screen" id="exercise-detail-screen">
+  <div class="main">
+    <div class="exd-header">
+      <button class="preview-back" onclick="backFromExDetail()">
+        <span>‹</span> Back
+      </button>
+      <div class="exd-title-block">
+        <div class="exd-name" id="exDetailName"></div>
+        <div id="exDetailPatternWrap" style="min-height:22px;">
+          <span class="exd-pattern-badge" id="exDetailPattern"></span>
+        </div>
+      </div>
+    </div>
+    <div id="exDetailBody"></div>
   </div>
 </div>
 
@@ -1744,7 +1852,7 @@ function showPreview(session) {
   list.innerHTML = session.exercises.map((ex, i) => `
     <div class="preview-ex-row">
       <div class="preview-ex-num">${String(i+1).padStart(2,'0')}</div>
-      <div class="preview-ex-name">${ex.name}</div>
+      <div class="preview-ex-name-link" onclick="showExerciseDetail('${ex.name.replace(/'/g, "\\'")}', 'preview')">${ex.name}</div>
       <div>
         <div class="preview-ex-detail">${ex.sets} × ${ex.reps}</div>
         <div class="preview-ex-rest">Rest: ${ex.restLabel}</div>
@@ -1806,7 +1914,7 @@ function renderWorkoutExercises() {
         <div class="ex-block-header">
           <div>
             <div class="ex-block-name">
-              <span class="ex-name-link" onclick="openExerciseInfo('${ex.name.replace(/'/g, "\\'")}')">${ex.name}</span>
+              <span class="ex-name-link" onclick="showExerciseDetail('${ex.name.replace(/'/g, "\\'")}', 'workout')">${ex.name}</span>
             </div>
             <div class="ex-block-meta">${ex.sets} sets · ${ex.reps} reps · ${ex.restLabel} rest</div>
           </div>
@@ -3348,6 +3456,334 @@ async function openExerciseInfo(exName) {
   document.getElementById('exerciseInfoBody').innerHTML = imageHtml + libraryHtml + historyHtml;
 }
 
+// ══════════════════════════════════════════════════════════════
+// EXERCISE DETAIL SCREEN
+// ══════════════════════════════════════════════════════════════
+
+let _exDetailFrom = 'log';
+
+async function showExerciseDetail(name, from) {
+  _exDetailFrom = from || 'log';
+  document.getElementById('exDetailName').textContent = name;
+  document.getElementById('exDetailPattern').textContent = '';
+  document.getElementById('exDetailBody').innerHTML = '<div class="exd-loading">Loading…</div>';
+  showScreen('exercise-detail-screen', 'right');
+
+  const legacySessions = await loadSessions();
+
+  // Build unified flat set list and per-session history from legacy data
+  const allSets = [];   // { date, sessionName, weight, reps, rpe }
+  const history = [];   // { date, sessionName, sets:[] } — newest first
+
+  legacySessions.forEach(s => {
+    const resolvedName = resolveExName(name);
+    const ex = s.exercises?.find(e =>
+      resolveExName(e.name) === resolvedName || e.name === name
+    );
+    if (!ex?.sets?.length) return;
+    const workingSets = ex.sets.filter(st =>
+      st.weight && st.reps && parseFloat(st.weight) > 0 && parseFloat(st.reps) > 0
+    );
+    if (!workingSets.length) return;
+    workingSets.forEach(st => allSets.push({
+      date: s.date,
+      sessionName: s.sessionName,
+      weight: parseFloat(st.weight),
+      reps: parseFloat(st.reps),
+      rpe: st.rpe ? parseFloat(st.rpe) : null
+    }));
+    history.push({ date: s.date, sessionName: s.sessionName, sets: workingSets });
+  });
+
+  allSets.sort((a, b) => a.date.localeCompare(b.date));
+  history.sort((a, b) => b.date.localeCompare(a.date));
+
+  const info = EXERCISE_LIBRARY[name] || EXERCISE_LIBRARY[resolveExName(name)];
+
+  if (info?.pattern) {
+    document.getElementById('exDetailPattern').textContent = info.pattern;
+  }
+
+  document.getElementById('exDetailBody').innerHTML = [
+    _renderExdStatic(name, info),
+    _renderExdAnalytics(allSets),
+    _renderExdContext(allSets, history, name),
+    _renderExdHistory(history),
+  ].join('');
+}
+
+function backFromExDetail() {
+  if (_exDetailFrom === 'workout') { showScreen('workout-screen', 'left'); return; }
+  if (_exDetailFrom === 'preview') { showScreen('preview-screen', 'left'); return; }
+  navigateToLog();
+}
+
+function _renderExdStatic(name, info) {
+  const muscleHtml = info ? `
+    <div class="exd-muscles">
+      <div class="exd-muscle-group">
+        <div class="exd-muscle-label">Primary</div>
+        <div class="exd-muscle-tags">
+          ${info.muscles.primary.map(m => `<span class="exd-muscle-tag primary">${m}</span>`).join('')}
+        </div>
+      </div>
+      ${info.muscles.secondary?.length ? `
+      <div class="exd-muscle-group">
+        <div class="exd-muscle-label">Secondary</div>
+        <div class="exd-muscle-tags">
+          ${info.muscles.secondary.map(m => `<span class="exd-muscle-tag secondary">${m}</span>`).join('')}
+        </div>
+      </div>` : ''}
+    </div>
+  ` : '';
+
+  const cuesHtml = info?.cues?.length ? `
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Form Cues</div>
+      <div class="exd-cues">
+        ${info.cues.map((c, i) => `
+          <div class="exd-cue-row">
+            <div class="exd-cue-num">${i + 1}</div>
+            <div class="exd-cue-text">${c}</div>
+          </div>
+        `).join('')}
+      </div>
+      ${info.notes ? `<div class="exd-coach-note">${info.notes}</div>` : ''}
+    </div>
+  ` : `<div class="card" style="margin-bottom:14px;"><div style="color:var(--muted);font-size:13px;">No library entry for this exercise yet.</div></div>`;
+
+  return `
+    <div class="exd-media-placeholder">
+      <div class="exd-media-icon">▶</div>
+      <div class="exd-media-label">Video / GIF Demo</div>
+      <div class="exd-media-sub">Coming soon</div>
+    </div>
+    ${muscleHtml}
+    ${cuesHtml}
+  `;
+}
+
+function _renderExdAnalytics(allSets) {
+  if (!allSets.length) return `
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Performance Analytics</div>
+      <div style="color:var(--muted);font-size:13px;">Log your first set to see stats here.</div>
+    </div>
+  `;
+
+  const allTime1rm = Math.max(0, ...allSets.map(s => epley(s.weight, s.reps) || 0));
+
+  const cutoff30 = new Date();
+  cutoff30.setDate(cutoff30.getDate() - 30);
+  const cutoff30Str = cutoff30.toISOString().split('T')[0];
+  const recent30 = allSets.filter(s => s.date >= cutoff30Str);
+  const recent1rm = recent30.length ? Math.max(0, ...recent30.map(s => epley(s.weight, s.reps) || 0)) : null;
+
+  const maxWeight = Math.max(...allSets.map(s => s.weight));
+  const maxWeightSet = allSets.filter(s => s.weight === maxWeight).slice(-1)[0];
+
+  function bestRepMax(targetReps) {
+    const cands = allSets.filter(s => s.reps <= targetReps);
+    return cands.length ? Math.max(...cands.map(s => s.weight)) : null;
+  }
+  const best3 = bestRepMax(3);
+  const best5 = bestRepMax(5);
+  const best10 = bestRepMax(10);
+
+  const sessionTonnage = {};
+  allSets.forEach(s => {
+    const key = s.date + '|' + s.sessionName;
+    sessionTonnage[key] = (sessionTonnage[key] || 0) + s.weight * s.reps;
+  });
+  const volumePR = Object.values(sessionTonnage).length ? Math.max(...Object.values(sessionTonnage)) : null;
+
+  return `
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Performance Analytics</div>
+      <div class="analytics-grid" style="grid-template-columns:1fr 1fr;margin-bottom:12px;">
+        <div class="analytics-stat accent">
+          <div class="analytics-stat-label">All-Time e1RM</div>
+          <div class="analytics-stat-value">${allTime1rm || '—'}</div>
+          <div class="analytics-stat-unit">lbs estimated</div>
+        </div>
+        <div class="analytics-stat gold">
+          <div class="analytics-stat-label">30-Day e1RM</div>
+          <div class="analytics-stat-value">${recent1rm || '—'}</div>
+          <div class="analytics-stat-unit">${recent30.length ? 'lbs estimated' : 'no recent data'}</div>
+        </div>
+        <div class="analytics-stat green">
+          <div class="analytics-stat-label">Max Weight PR</div>
+          <div class="analytics-stat-value">${maxWeight}</div>
+          <div class="analytics-stat-unit">lbs · ${maxWeightSet ? formatDate(maxWeightSet.date, true) : ''}</div>
+        </div>
+        <div class="analytics-stat">
+          <div class="analytics-stat-label">Volume PR</div>
+          <div class="analytics-stat-value">${volumePR ? Math.round(volumePR).toLocaleString() : '—'}</div>
+          <div class="analytics-stat-unit">lbs in one session</div>
+        </div>
+      </div>
+      <div class="exd-rep-maxes">
+        <div class="exd-rep-max-label">Best Sets</div>
+        <div class="exd-rep-max-row">
+          ${[['3RM', best3], ['5RM', best5], ['10RM', best10]].map(([label, val]) => `
+            <div class="exd-rep-max-card">
+              <div class="exd-rep-max-tag">${label}</div>
+              <div class="exd-rep-max-val">${val !== null ? val + ' lbs' : '—'}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function _renderExdContext(allSets, history, name) {
+  // Last session callout
+  let lastSessionHtml = '';
+  if (history.length) {
+    const last = history[0];
+    const setsSummary = last.sets
+      .filter(s => s.weight && s.reps)
+      .map(s => `${s.weight}×${s.reps}`)
+      .join(', ');
+    lastSessionHtml = `
+      <div class="card" style="margin-bottom:14px;">
+        <div class="exd-last-session">
+          <div class="exd-last-session-label">Last Performed</div>
+          <div class="exd-last-session-date">${formatDate(last.date)} · <span style="color:var(--muted2);font-weight:400;font-size:13px;">${last.sessionName}</span></div>
+          <div class="exd-last-session-sets">${setsSummary || 'No data'}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 6-month e1RM progression chart
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const sixMonthStr = sixMonthsAgo.toISOString().split('T')[0];
+  const recentSets = allSets.filter(s => s.date >= sixMonthStr);
+
+  let chartHtml;
+  if (recentSets.length) {
+    const byDate = {};
+    recentSets.forEach(s => {
+      const val = epley(s.weight, s.reps) || s.weight;
+      if (!byDate[s.date] || val > byDate[s.date]) byDate[s.date] = val;
+    });
+    const chartData = Object.entries(byDate).sort((a, b) => a[0].localeCompare(b[0]));
+    const maxVal = Math.max(...chartData.map(([, v]) => v));
+    const bars = chartData.map(([date, val]) => {
+      const pct = Math.max(8, (val / maxVal) * 100);
+      return `
+        <div class="chart-bar-row">
+          <div class="chart-date">${formatDate(date, true)}</div>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar" style="width:${pct}%"><span class="chart-val">${val}</span></div>
+          </div>
+        </div>`;
+    }).join('');
+    chartHtml = `
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">e1RM Progression <span style="font-size:11px;color:var(--muted);font-weight:400;font-family:var(--mono);">Last 6 months</span></div>
+        ${bars}
+      </div>`;
+  } else {
+    chartHtml = `
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">Progression</div>
+        <div style="color:var(--muted);font-size:13px;">Log sessions to see progression over time.</div>
+      </div>`;
+  }
+
+  // Notes (localStorage)
+  const noteKey = 'exNote_' + name;
+  const savedNote = localStorage.getItem(noteKey) || '';
+  const notesHtml = `
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">Personal Notes</div>
+      <textarea
+        class="notes-field"
+        id="exDetailNotes"
+        placeholder="Form cues, personal tweaks, what works for you…"
+        style="min-height:90px;"
+        onchange="saveExDetailNote(this)"
+        data-key="${noteKey}"
+      >${savedNote}</textarea>
+    </div>`;
+
+  return lastSessionHtml + chartHtml + notesHtml;
+}
+
+function _renderExdHistory(history) {
+  if (!history.length) return `
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title">Session History</div>
+      <div style="color:var(--muted);font-size:13px;">No history yet for this exercise.</div>
+    </div>`;
+
+  const PAGE = 20;
+  const shown = history.slice(0, PAGE);
+  const rows = shown.map(entry => {
+    const setsStr = entry.sets
+      .filter(s => s.weight && s.reps)
+      .map(s => {
+        const rpeStr = s.rpe ? ` @${s.rpe}` : '';
+        return `<span class="exd-hist-set">${s.weight}×${s.reps}${rpeStr}</span>`;
+      }).join('');
+    return `
+      <div class="exd-hist-row">
+        <div class="exd-hist-meta">
+          <div class="exd-hist-date">${formatDate(entry.date)}</div>
+          <div class="exd-hist-session">${entry.sessionName}</div>
+        </div>
+        <div class="exd-hist-sets">${setsStr || '<span style="color:var(--muted);font-size:12px;">—</span>'}</div>
+      </div>`;
+  }).join('');
+
+  const remaining = history.length - PAGE;
+  const moreBtn = remaining > 0 ? `
+    <button class="exd-load-more" onclick="exdLoadMore(this, ${JSON.stringify(history).replace(/</g,'\\u003c').replace(/>/g,'\\u003e')})">
+      Show ${Math.min(PAGE, remaining)} more · ${history.length} sessions total
+    </button>` : '';
+
+  return `
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title">Session History <span class="analytics-sub">${history.length} sessions</span></div>
+      <div id="exdHistoryRows">${rows}</div>
+      ${moreBtn}
+    </div>`;
+}
+
+function saveExDetailNote(textarea) {
+  localStorage.setItem(textarea.dataset.key, textarea.value);
+}
+
+function exdLoadMore(btn, history) {
+  const container = document.getElementById('exdHistoryRows');
+  const currentCount = container.querySelectorAll('.exd-hist-row').length;
+  const PAGE = 20;
+  const next = history.slice(currentCount, currentCount + PAGE);
+  next.forEach(entry => {
+    const setsStr = entry.sets
+      .filter(s => s.weight && s.reps)
+      .map(s => {
+        const rpeStr = s.rpe ? ` @${s.rpe}` : '';
+        return `<span class="exd-hist-set">${s.weight}×${s.reps}${rpeStr}</span>`;
+      }).join('');
+    const div = document.createElement('div');
+    div.className = 'exd-hist-row';
+    div.innerHTML = `
+      <div class="exd-hist-meta">
+        <div class="exd-hist-date">${formatDate(entry.date)}</div>
+        <div class="exd-hist-session">${entry.sessionName}</div>
+      </div>
+      <div class="exd-hist-sets">${setsStr || '<span style="color:var(--muted);font-size:12px;">—</span>'}</div>`;
+    container.appendChild(div);
+  });
+  if (currentCount + PAGE >= history.length) btn.remove();
+  else btn.textContent = `Show ${Math.min(PAGE, history.length - currentCount - PAGE)} more · ${history.length} sessions total`;
+}
+
 function closeExerciseInfo(e) {
   if (e && e.target !== document.getElementById('exerciseInfoOverlay')) return;
   document.getElementById('exerciseInfoOverlay').classList.add('hidden');
@@ -3393,6 +3829,7 @@ function closeExerciseInfo(e) {
     const activeScreenId = document.querySelector('.screen.active')?.id;
 
     if (activeScreenId === 'workout-screen') return; // locked during workout
+    if (activeScreenId === 'exercise-detail-screen') { backFromExDetail(); return; }
     if (activeScreenId === 'preview-screen') { backToLog(); return; }
     if (activeScreenId === 'history-screen' || activeScreenId === 'progress-screen') { switchTab('log'); return; }
   }, { passive: true });
