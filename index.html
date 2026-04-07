@@ -1792,6 +1792,56 @@ async function deleteSession(supabaseId) {
   } catch (e) { console.error('deleteSession error', e); }
 }
 
+// ══════════════════════════════════════════════════════════════
+// ONE-TIME DATA MIGRATION — call window.migrateExerciseNames() from console
+// ══════════════════════════════════════════════════════════════
+window.migrateExerciseNames = async function() {
+  console.log('[migrate] Loading all sessions...');
+  const sessions = await loadSessions(true); // force-bypass cache
+  let updated = 0, unchanged = 0;
+
+  for (const s of sessions) {
+    if (!s._supabase_id) { console.warn('[migrate] Session missing _supabase_id, skipping:', s); continue; }
+
+    const originalExercises = s.exercises || [];
+    let changed = false;
+
+    const normalizedExercises = originalExercises.map(ex => {
+      const canonical = normalizeExerciseName(ex.name);
+      if (canonical !== ex.name) {
+        console.log(`[migrate] Session ${s._supabase_id} (${s.date}): "${ex.name}" → "${canonical}"`);
+        changed = true;
+        return { ...ex, name: canonical };
+      }
+      return ex;
+    });
+
+    if (!changed) { unchanged++; continue; }
+
+    // Rebuild full session data with normalized names
+    const updatedData = { ...s, exercises: normalizedExercises };
+    delete updatedData._supabase_id; // don't store internal key in JSONB
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/sessions?id=eq.${s._supabase_id}`, {
+        method: 'PATCH',
+        headers: sbHeaders,
+        body: JSON.stringify({ data: updatedData })
+      });
+      if (!res.ok) {
+        console.error(`[migrate] PATCH failed for session ${s._supabase_id}:`, res.status, await res.text());
+      } else {
+        updated++;
+      }
+    } catch (e) {
+      console.error(`[migrate] Network error for session ${s._supabase_id}:`, e);
+    }
+  }
+
+  sessionCache = null; // invalidate so next load gets clean data
+  console.log(`[migrate] Done. ${updated} sessions updated, ${unchanged} unchanged.`);
+};
+
 // ── User config (active program, start date) ──────────────────
 async function loadConfig() {
   try {
