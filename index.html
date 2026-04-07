@@ -816,6 +816,27 @@
   .chart-val { font-family: var(--mono); font-size: 11px; color: white; font-weight: 500; }
   .chart-rpe { font-family: var(--mono); font-size: 10px; color: var(--muted); width: 36px; flex-shrink: 0; text-align: right; }
 
+  /* ── SCATTER CHART ── */
+  .scatter-wrap { position: relative; margin-bottom: 16px; }
+  .scatter-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .scatter-dot { cursor: pointer; transition: r 0.15s; }
+  .scatter-dot:hover { r: 7; }
+  .scatter-tooltip {
+    position: absolute;
+    z-index: 100;
+    background: var(--card);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 7px 11px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    pointer-events: none;
+    white-space: nowrap;
+    display: none;
+    line-height: 1.6;
+  }
+
   /* ── SCREEN TRANSITIONS ── */
   .screen.slide-in-right {
     animation: slideInRight 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
@@ -2090,6 +2111,7 @@ function updateSetData(exIdx, sIdx, field, value) {
 
 function completeSet(exIdx, sIdx) {
   const set = setData[exIdx][sIdx];
+  const wasEditing = set.editing;
   set.done = true;
   set.editing = false;
 
@@ -2118,8 +2140,10 @@ function completeSet(exIdx, sIdx) {
     nextLabel = 'Last set — finish up!';
   }
 
-  // Start rest timer
-  startRestTimer(ex.rest, ex.name, `Set ${sIdx + 1} complete · ${set.weight || '?'} lbs × ${set.reps || '?'} reps`, nextLabel);
+  // Start rest timer (skip if re-submitting an edited set)
+  if (!wasEditing) {
+    startRestTimer(ex.rest, ex.name, `Set ${sIdx + 1} complete · ${set.weight || '?'} lbs × ${set.reps || '?'} reps`, nextLabel);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2252,6 +2276,12 @@ document.addEventListener('visibilitychange', () => {
     if (restEndTimestamp) _tickRestTimer();
     if (workoutStartTimestamp && !workoutTimerPaused) _updateWorkoutDisplay();
   }
+});
+
+// Dismiss scatter tooltip on tap/click outside a dot
+document.addEventListener('click', () => {
+  const tip = document.getElementById('scatterTip');
+  if (tip) tip.style.display = 'none';
 });
 
 function skipRest() {
@@ -2752,22 +2782,8 @@ async function renderProgress(sessions) {
   if (!lift) { el.innerHTML = ''; return; }
 
   if (!sessions) sessions = await loadSessions();
-  const entries = [];
+  const entries = getExerciseEntries(sessions, lift);
 
-  sessions.forEach(s => {
-    s.exercises?.forEach(ex => {
-      if (ex.name !== lift || !ex.sets?.length) return;
-      const topSet = ex.sets.reduce((a, b) =>
-        (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a, ex.sets[0]);
-      if (!topSet.weight) return;
-      const w = parseFloat(topSet.weight);
-      const r = parseFloat(topSet.reps);
-      const e1rm = epley(w, r);
-      entries.push({ date: s.date, weight: w, reps: r, rpe: topSet.rpe, e1rm });
-    });
-  });
-
-  entries.sort((a, b) => a.date.localeCompare(b.date));
   if (!entries.length) {
     el.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0;">No data for this lift yet.</div>`;
     return;
@@ -2775,32 +2791,82 @@ async function renderProgress(sessions) {
 
   const isE1rm = progressViewMode === 'e1rm';
   const values = entries.map(e => isE1rm ? (e.e1rm || e.weight) : e.weight);
+  const minV = Math.min(...values);
   const maxV = Math.max(...values);
   const latest = values[values.length - 1];
   const peak = Math.max(...values);
 
-  const chartRows = entries.map((e, i) => {
-    const val = values[i];
-    const pct = Math.max(10, (val / maxV) * 100);
-    return `
-      <div class="chart-bar-row">
-        <div class="chart-date">${formatDate(e.date, true)}</div>
-        <div class="chart-bar-wrap">
-          <div class="chart-bar" style="width:${pct}%">
-            <span class="chart-val">${val}</span>
-          </div>
-        </div>
-        <div class="chart-rpe">${e.rpe ? `@${e.rpe}` : ''}</div>
-      </div>
-    `;
+  // SVG coordinate constants
+  const W = 320, H = 160;
+  const PAD = { top: 12, right: 12, bottom: 28, left: 42 };
+  const plotW = W - PAD.left - PAD.right;
+  const plotH = H - PAD.top - PAD.bottom;
+  const n = entries.length;
+
+  function xPos(i) {
+    return PAD.left + (n === 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+  }
+  function yPos(v) {
+    if (maxV === minV) return PAD.top + plotH / 2;
+    return PAD.top + plotH - ((v - minV) / (maxV - minV)) * plotH;
+  }
+
+  // Trend line (first → last point)
+  const trendLine = n > 1
+    ? `<line x1="${xPos(0)}" y1="${yPos(values[0])}" x2="${xPos(n-1)}" y2="${yPos(values[n-1])}"
+         stroke="var(--muted)" stroke-width="1" stroke-dasharray="4 3" opacity="0.4"/>`
+    : '';
+
+  // Dots
+  const dots = entries.map((e, i) => {
+    const cx = xPos(i), cy = yPos(values[i]);
+    const tip = `${e.date}|${e.weight} lbs \u00d7 ${e.reps} reps${e.e1rm ? '|\u007e' + e.e1rm + ' e1RM' : ''}`;
+    return `<circle class="scatter-dot" cx="${cx}" cy="${cy}" r="5"
+      fill="var(--accent)" stroke="var(--dark)" stroke-width="1.5"
+      onclick="showScatterTip(event,'${tip}',${cx},${cy})"/>`;
   }).join('');
+
+  // X axis labels: first, mid, last date
+  const xLabels = [0, Math.floor((n - 1) / 2), n - 1]
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .map(i => `<text x="${xPos(i)}" y="${H - 4}" text-anchor="middle"
+      font-family="var(--mono)" font-size="9" fill="var(--muted)">${formatDate(entries[i].date, true)}</text>`)
+    .join('');
+
+  // Y axis labels: min and max
+  const yLabels = [
+    `<text x="${PAD.left - 6}" y="${yPos(maxV) + 4}" text-anchor="end"
+      font-family="var(--mono)" font-size="9" fill="var(--muted)">${maxV}</text>`,
+    maxV !== minV
+      ? `<text x="${PAD.left - 6}" y="${yPos(minV) + 4}" text-anchor="end"
+          font-family="var(--mono)" font-size="9" fill="var(--muted)">${minV}</text>`
+      : ''
+  ].join('');
+
+  // Grid line at max
+  const gridLine = `<line x1="${PAD.left}" y1="${yPos(maxV)}" x2="${W - PAD.right}" y2="${yPos(maxV)}"
+    stroke="var(--border)" stroke-width="1"/>`;
+
+  const singleNote = n === 1
+    ? `<div style="color:var(--muted);font-size:11px;font-family:var(--mono);margin-top:6px;">Log more sessions to see trend</div>`
+    : '';
 
   el.innerHTML = `
     <div class="e1rm-toggle">
       <div class="e1rm-btn ${!isE1rm ? 'active' : ''}" onclick="setProgressMode('weight')">Top Set Weight</div>
       <div class="e1rm-btn ${isE1rm ? 'active' : ''}" onclick="setProgressMode('e1rm')">Est. 1RM</div>
     </div>
-    ${chartRows}
+    <div class="scatter-wrap" id="scatterWrap">
+      <svg class="scatter-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+        ${gridLine}
+        ${trendLine}
+        ${dots}
+        ${xLabels}
+        ${yLabels}
+      </svg>
+      <div class="scatter-tooltip" id="scatterTip"></div>
+    </div>
+    ${singleNote}
     <div style="margin-top:10px;padding:8px 10px;background:var(--surface);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:16px;">
       <span>Peak <strong style="color:var(--accent)">${peak} lbs</strong></span>
       <span>Latest <strong style="color:var(--text)">${latest} lbs</strong></span>
@@ -2812,6 +2878,28 @@ async function renderProgress(sessions) {
 function setProgressMode(mode) {
   progressViewMode = mode;
   renderProgress();
+}
+
+function showScatterTip(event, tipData, cx, cy) {
+  event.stopPropagation();
+  const tip = document.getElementById('scatterTip');
+  if (!tip) return;
+  const parts = tipData.split('|');
+  tip.innerHTML = parts.join('<br>');
+  tip.style.display = 'block';
+  // Position tip above the dot; keep within wrap bounds
+  const wrap = document.getElementById('scatterWrap');
+  const svgEl = wrap.querySelector('svg');
+  const svgRect = svgEl.getBoundingClientRect();
+  const scaleX = svgRect.width / 320;
+  const scaleY = svgRect.height / 160;
+  let left = cx * scaleX - tip.offsetWidth / 2;
+  let top = cy * scaleY - tip.offsetHeight - 10;
+  const wrapWidth = wrap.getBoundingClientRect().width;
+  left = Math.max(0, Math.min(left, wrapWidth - tip.offsetWidth));
+  top = Math.max(0, top);
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
 }
 
 function cancelWorkout() {
@@ -2846,6 +2934,31 @@ async function confirmDelete() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// SHARED EXERCISE HISTORY LOOKUP
+// ══════════════════════════════════════════════════════════════
+function getExerciseEntries(sessions, name) {
+  const entries = [];
+  sessions.forEach(s => {
+    const ex = s.exercises?.find(e => e.name === name);
+    if (!ex?.sets?.length) return;
+    const topSet = ex.sets.reduce((a, b) =>
+      (parseFloat(b.weight) || 0) > (parseFloat(a.weight) || 0) ? b : a, ex.sets[0]);
+    if (!topSet.weight) return;
+    entries.push({
+      date: s.date,
+      sessionName: s.sessionName,
+      sets: ex.sets,
+      topSet,
+      weight: parseFloat(topSet.weight),
+      reps: parseFloat(topSet.reps),
+      rpe: topSet.rpe,
+      e1rm: epley(topSet.weight, topSet.reps)
+    });
+  });
+  return entries.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// ══════════════════════════════════════════════════════════════
 // LIFT HISTORY MODAL
 // ══════════════════════════════════════════════════════════════
 async function openLiftModal(liftName) {
@@ -2854,16 +2967,7 @@ async function openLiftModal(liftName) {
   document.getElementById('liftModalOverlay').classList.remove('hidden');
 
   const allSessions = await loadSessions();
-  const entries = []; // { date, sessionName, sets: [{weight,reps,rpe}] }
-
-  allSessions.forEach(s => {
-    const ex = s.exercises?.find(e => e.name === liftName);
-    if (ex && ex.sets?.length) {
-      entries.push({ date: s.date, sessionName: s.sessionName, sets: ex.sets });
-    }
-  });
-
-  entries.sort((a, b) => a.date.localeCompare(b.date));
+  const entries = getExerciseEntries(allSessions, liftName);
 
   if (!entries.length) {
     document.getElementById('liftModalBody').innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0;">No history for this lift yet.</div>`;
@@ -3501,21 +3605,7 @@ async function openExerciseInfo(exName) {
   ]);
 
   // Historical data
-  const entries = [];
-  sessions.forEach(s => {
-    const ex = s.exercises?.find(e => e.name === exName);
-    if (ex?.sets?.length) {
-      const topSet = ex.sets.reduce((a, b) =>
-        (parseFloat(b.weight)||0) > (parseFloat(a.weight)||0) ? b : a, ex.sets[0]);
-      if (topSet.weight) entries.push({
-        date: s.date,
-        weight: parseFloat(topSet.weight),
-        reps: parseFloat(topSet.reps),
-        e1rm: epley(topSet.weight, topSet.reps)
-      });
-    }
-  });
-  entries.sort((a, b) => a.date.localeCompare(b.date));
+  const entries = getExerciseEntries(sessions, exName);
 
   // Image section
   const imageHtml = imgUrl ? `
