@@ -19,14 +19,20 @@ export default function LoginScreen() {
       })
       if (error) {
         const msg = error.message ?? ''
+        const lower = msg.toLowerCase()
         const isNetworkError =
           msg === 'Load failed' ||
           msg === 'Failed to fetch' ||
-          msg.toLowerCase().includes('networkerror') ||
-          msg.toLowerCase().includes('network request failed')
+          lower.includes('networkerror') ||
+          lower.includes('network request failed')
+        const isServerError =
+          lower.includes('error saving new user') ||
+          lower.includes('database error saving new user')
         setError(
           isNetworkError
             ? 'Unable to reach the server. Check your connection and try again.'
+            : isServerError
+            ? 'Sign-up is temporarily unavailable due to a server configuration issue. Please contact support.'
             : msg
         )
       } else {
