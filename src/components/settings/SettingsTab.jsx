@@ -118,7 +118,7 @@ function Section({ title, children }) {
   return (
     <div className="mb-5">
       <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{title}</div>
-      <div className="bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-2">
+      <div className="bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-2 space-y-1">
         {children}
       </div>
     </div>

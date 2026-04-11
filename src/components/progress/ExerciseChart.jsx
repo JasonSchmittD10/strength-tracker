@@ -57,7 +57,7 @@ export default function ExerciseChart({ data, metric = 'e1rm' }) {
                 cx={cx(i)} cy={cy(v)}
                 r={isHovered ? 6 : isLast ? 5 : 4}
                 fill={isLast ? '#6c63ff' : 'rgba(108,99,255,0.5)'}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', transition: 'r 0.1s' }}
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
                 onTouchStart={() => setHovered(i)}

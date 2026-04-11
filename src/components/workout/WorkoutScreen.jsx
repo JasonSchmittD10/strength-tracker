@@ -44,7 +44,7 @@ export default function WorkoutScreen() {
         )?.sets || []
         const sets = Array.from({ length: ex.sets }, (_, j) => ({
           weight: prevSets[j]?.weight ?? '',
-          reps: prevSets[j]?.reps ?? '',
+          reps: prevSets[j]?.reps ?? ex.reps?.split('–')[0] ?? '',
           rpe: '',
           completed: false,
         }))
