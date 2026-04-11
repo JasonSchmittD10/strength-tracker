@@ -9,6 +9,8 @@ import ProgressTab from '@/components/progress/ProgressTab'
 import SettingsTab from '@/components/settings/SettingsTab'
 import WorkoutScreen from '@/components/workout/WorkoutScreen'
 import ProgramSelector from '@/components/programs/ProgramSelector'
+import GroupsTab from '@/components/groups/GroupsTab'
+import GroupDetailScreen from '@/components/groups/GroupDetailScreen'
 
 function MainApp() {
   return (
@@ -17,16 +19,6 @@ function MainApp() {
         <Outlet />
       </div>
       <BottomNav />
-    </div>
-  )
-}
-
-function GroupsTab() {
-  return (
-    <div className="flex flex-col items-center justify-center h-64 text-center px-6 mt-12">
-      <div className="text-4xl mb-4">👥</div>
-      <h2 className="text-xl font-bold text-text-primary mb-2">Groups</h2>
-      <p className="text-text-secondary text-sm">Coming soon — train with friends and share progress.</p>
     </div>
   )
 }
@@ -46,6 +38,7 @@ const router = createHashRouter([
       { path: 'program-selector', element: <ProgramSelector /> },
     ],
   },
+  { path: '/groups/:groupId', element: <GroupDetailScreen /> },
 ])
 
 export default function App() {
