@@ -22,17 +22,20 @@ async function fetchUserGroups() {
 }
 
 async function fetchGroupDetail(groupId) {
-  const { data: group, error } = await supabase
-    .from('groups')
+  // Query via group_members (same direction as fetchUserGroups, avoids RLS issues on groups table)
+  const { data: memberRows, error } = await supabase
+    .from('group_members')
     .select(`
-      id, name, description, invite_code, created_by, created_at,
-      group_members ( user_id, role, joined_at )
+      user_id, role, joined_at,
+      groups ( id, name, description, invite_code, created_by, created_at )
     `)
-    .eq('id', groupId)
-    .single()
+    .eq('group_id', groupId)
   if (error) throw error
+  if (!memberRows || memberRows.length === 0) return null
 
-  const memberIds = (group.group_members || []).map(m => m.user_id)
+  const groupData = memberRows[0].groups
+  const memberIds = memberRows.map(m => m.user_id)
+
   let profilesMap = {}
   if (memberIds.length > 0) {
     const { data: profiles } = await supabase
@@ -43,9 +46,11 @@ async function fetchGroupDetail(groupId) {
   }
 
   return {
-    ...group,
-    group_members: (group.group_members || []).map(m => ({
-      ...m,
+    ...groupData,
+    group_members: memberRows.map(m => ({
+      user_id: m.user_id,
+      role: m.role,
+      joined_at: m.joined_at,
       profiles: profilesMap[m.user_id] ?? null,
     })),
   }
