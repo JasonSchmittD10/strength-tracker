@@ -12,13 +12,31 @@ export default function LoginScreen() {
     if (!email.trim()) return
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: window.location.origin },
-    })
-    setLoading(false)
-    if (error) setError(error.message)
-    else setSent(true)
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { emailRedirectTo: window.location.origin },
+      })
+      if (error) {
+        const msg = error.message ?? ''
+        const isNetworkError =
+          msg === 'Load failed' ||
+          msg === 'Failed to fetch' ||
+          msg.toLowerCase().includes('networkerror') ||
+          msg.toLowerCase().includes('network request failed')
+        setError(
+          isNetworkError
+            ? 'Unable to reach the server. Check your connection and try again.'
+            : msg
+        )
+      } else {
+        setSent(true)
+      }
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   function handleSubmit(e) {
