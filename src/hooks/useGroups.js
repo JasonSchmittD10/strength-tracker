@@ -22,19 +22,33 @@ async function fetchUserGroups() {
 }
 
 async function fetchGroupDetail(groupId) {
-  const { data, error } = await supabase
+  const { data: group, error } = await supabase
     .from('groups')
     .select(`
       id, name, description, invite_code, created_by, created_at,
-      group_members (
-        user_id, role, joined_at,
-        profiles ( display_name, avatar_url, is_private )
-      )
+      group_members ( user_id, role, joined_at )
     `)
     .eq('id', groupId)
     .single()
   if (error) throw error
-  return data
+
+  const memberIds = (group.group_members || []).map(m => m.user_id)
+  let profilesMap = {}
+  if (memberIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, display_name, avatar_url, is_private')
+      .in('id', memberIds)
+    for (const p of profiles || []) profilesMap[p.id] = p
+  }
+
+  return {
+    ...group,
+    group_members: (group.group_members || []).map(m => ({
+      ...m,
+      profiles: profilesMap[m.user_id] ?? null,
+    })),
+  }
 }
 
 async function createGroup({ name, description }) {
