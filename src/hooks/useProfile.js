@@ -26,6 +26,7 @@ export function useUpdateProfile() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (updates) => {
+      if (!user?.id) throw new Error('Not authenticated')
       const { error } = await supabase
         .from('profiles')
         .upsert({ id: user.id, ...updates })

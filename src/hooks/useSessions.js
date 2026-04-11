@@ -73,9 +73,16 @@ export function useSaveSession() {
   return useMutation({
     mutationFn: async (session) => {
       const saved = await saveSession(session)
-      await writeActivity({ sessionId: saved.id, summary: { sessionName: session.sessionName, volume: session.totalVolume } })
+      try {
+        await writeActivity({ sessionId: saved.id, summary: { sessionName: session.sessionName, volume: session.totalVolume } })
+      } catch (e) {
+        console.warn('activity write failed', e)
+      }
       return saved
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sessions'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      queryClient.invalidateQueries({ queryKey: ['program'] })
+    },
   })
 }

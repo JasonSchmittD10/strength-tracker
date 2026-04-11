@@ -13,30 +13,35 @@ async function fetchConfig() {
   if (error) throw error
   if (data) return data.data
   // First run — seed default config
-  await supabase.from('user_config').insert({ data: DEFAULT_CONFIG })
+  const { error: seedError } = await supabase.from('user_config').insert({ data: DEFAULT_CONFIG })
+  if (seedError) console.warn('config seed failed', seedError)
   return DEFAULT_CONFIG
 }
 
-async function fetchSessionsForProgram() {
-  const { data, error } = await supabase
-    .from('sessions')
-    .select('id, data, created_at')
-    .order('created_at', { ascending: false })
-    .limit(20)
-  if (error) throw error
-  return (data || []).map(row => {
-    const d = row.data
-    return { _id: row.id, sessionId: d.sessionId, sessionName: d.sessionName, date: d.date }
-  })
-}
-
 export function useProgram() {
+  const queryClient = useQueryClient()
   return useQuery({
     queryKey: ['program'],
     queryFn: async () => {
-      const [config, recentSessions] = await Promise.all([fetchConfig(), fetchSessionsForProgram()])
+      const config = await fetchConfig()
       const program = getActiveProgram(config)
       const blockInfo = getBlockAndWeek(config)
+      // Read sessions from cache if available, otherwise fetch a lightweight slice
+      const cachedSessions = queryClient.getQueryData(['sessions'])
+      let recentSessions = cachedSessions
+      if (!recentSessions) {
+        const { data } = await supabase
+          .from('sessions')
+          .select('id, data')
+          .order('created_at', { ascending: false })
+          .limit(10)
+        recentSessions = (data || []).map(row => ({
+          _id: row.id,
+          sessionId: row.data?.sessionId,
+          sessionName: row.data?.sessionName,
+          date: row.data?.date,
+        }))
+      }
       const nextSession = getNextSession(config, recentSessions)
       return { config, program, blockInfo, nextSession }
     },
@@ -47,8 +52,8 @@ export function useSaveConfig() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (config) => {
-      // Delete existing and insert fresh (single-row config pattern)
-      await supabase.from('user_config').delete().not('id', 'is', null)
+      const { error: deleteError } = await supabase.from('user_config').delete().not('id', 'is', null)
+      if (deleteError) throw deleteError
       const { error } = await supabase.from('user_config').insert({ data: config })
       if (error) throw error
       return config
