@@ -8,8 +8,7 @@ export default function LoginScreen() {
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function sendLink() {
     if (!email.trim()) return
     setLoading(true)
     setError('')
@@ -22,7 +21,12 @@ export default function LoginScreen() {
     else setSent(true)
   }
 
-  if (sent) return <MagicLinkSent email={email} onBack={() => setSent(false)} onResend={handleSubmit} />
+  function handleSubmit(e) {
+    e.preventDefault()
+    sendLink()
+  }
+
+  if (sent) return <MagicLinkSent email={email} onBack={() => setSent(false)} onResend={sendLink} />
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center px-6">
