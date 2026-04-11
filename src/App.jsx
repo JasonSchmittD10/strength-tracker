@@ -8,6 +8,7 @@ import HistoryTab from '@/components/history/HistoryTab'
 import ProgressTab from '@/components/progress/ProgressTab'
 import SettingsTab from '@/components/settings/SettingsTab'
 import WorkoutScreen from '@/components/workout/WorkoutScreen'
+import ProgramSelector from '@/components/programs/ProgramSelector'
 
 function MainApp() {
   return (
@@ -42,6 +43,7 @@ const router = createHashRouter([
       { path: 'groups', element: <GroupsTab /> },
       { path: 'settings', element: <SettingsTab /> },
       { path: 'workout', element: <WorkoutScreen /> },
+      { path: 'program-selector', element: <ProgramSelector /> },
     ],
   },
 ])

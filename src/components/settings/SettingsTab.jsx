@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { useSessions } from '@/hooks/useSessions'
@@ -15,6 +16,7 @@ export default function SettingsTab() {
   const [displayName, setDisplayName] = useState('')
   const [editingName, setEditingName] = useState(false)
   const [migrating, setMigrating] = useState(false)
+  const navigate = useNavigate()
 
   const name = profile?.display_name || user?.email?.split('@')[0] || '?'
   const initial = name[0]?.toUpperCase() || '?'
@@ -104,7 +106,12 @@ export default function SettingsTab() {
             <div className="text-sm font-medium text-text-primary">{programData?.program?.name || 'PPL × 2'}</div>
             <div className="text-xs text-text-muted">Active program</div>
           </div>
-          <span className="text-xs text-text-muted">(change coming soon)</span>
+          <button
+            onClick={() => navigate('/program-selector')}
+            className="text-sm text-accent font-medium"
+          >
+            Change
+          </button>
         </div>
       </Section>
 
