@@ -172,14 +172,15 @@ export default function WorkoutScreen() {
   }
 
   function handleAddExercise(exerciseName) {
-    setCustomExercises(prev => {
-      const newIdx = prev.length
-      setExerciseSets(prev2 => ({
-        ...prev2,
-        [newIdx]: [{ weight: '', reps: '', rpe: '', completed: false }],
-      }))
-      return [...prev, { name: exerciseName, sets: 3, reps: '8–12', rest: 90, restLabel: '90 sec' }]
-    })
+    const newIdx = customExercises.length
+    setCustomExercises(prev => [
+      ...prev,
+      { name: exerciseName, sets: 3, reps: '8–12', rest: 90, restLabel: '90 sec' },
+    ])
+    setExerciseSets(prev => ({
+      ...prev,
+      [newIdx]: Array.from({ length: 3 }, () => ({ weight: '', reps: '', rpe: '', completed: false })),
+    }))
   }
 
   const buildSessionData = useCallback(() => {
@@ -248,8 +249,8 @@ export default function WorkoutScreen() {
   }
 
   const currentSessionState = {
-    exercises: activeExercises.map((ex, i) => ({ ...ex, sets: exerciseSets[i] ?? [] })),
     ...(mode === 'program' ? session : {}),
+    exercises: activeExercises.map((ex, i) => ({ ...ex, sets: exerciseSets[i] ?? [] })),
   }
 
   const isCustomMode = mode === 'custom' || mode === 'template'
