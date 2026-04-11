@@ -36,10 +36,11 @@ export default function WorkoutSummary({
 
   const [workoutName, setWorkoutName] = useState('')
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
 
-  // Reset name field when sheet opens
+  // Reset name field and error when sheet opens
   useEffect(() => {
-    if (open) setWorkoutName(templateName ?? '')
+    if (open) { setWorkoutName(templateName ?? ''); setSaveError(null) }
   }, [open, templateName])
 
   const { vol, completedSets } = useMemo(() => {
@@ -67,18 +68,27 @@ export default function WorkoutSummary({
 
   async function handleSaveWithTemplate() {
     setSaving(true)
+    setSaveError(null)
     try {
       const name = workoutName.trim() || 'Custom Workout'
       const exercises = inferTemplateExercises(session.exercises)
       await saveTemplate({ id: templateId, name, exercises })
       await onSave(name)
+    } catch (e) {
+      setSaveError('Failed to save template. Please try again.')
     } finally {
       setSaving(false)
     }
   }
 
   async function handleSaveWithoutTemplate() {
-    await onSave(null)
+    if (saving) return
+    setSaving(true)
+    try {
+      await onSave(null)
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -107,13 +117,20 @@ export default function WorkoutSummary({
         {/* Save as Template section — custom/template modes only */}
         {isCustomMode ? (
           <div className="space-y-3 pt-2 border-t border-bg-tertiary">
-            <div className="text-xs text-text-muted uppercase tracking-wider">Save as Template</div>
+            <div className="text-xs text-text-muted uppercase tracking-wider">
+              {templateId ? 'Update Template' : 'Save as Template'}
+            </div>
             <input
               value={workoutName}
               onChange={e => setWorkoutName(e.target.value)}
               placeholder="e.g. Upper Body Power"
+              aria-label="Workout template name"
+              maxLength={100}
               className="w-full bg-bg-tertiary rounded-xl px-4 py-3 text-text-primary placeholder-text-muted text-sm focus:outline-none focus:ring-1 focus:ring-accent"
             />
+            {saveError && (
+              <p className="text-xs text-danger">{saveError}</p>
+            )}
             <button
               onClick={handleSaveWithTemplate}
               disabled={saving}
@@ -123,7 +140,8 @@ export default function WorkoutSummary({
             </button>
             <button
               onClick={handleSaveWithoutTemplate}
-              className="w-full py-2 text-text-muted text-sm hover:text-text-secondary transition-colors"
+              disabled={saving}
+              className="w-full py-2 text-text-muted text-sm hover:text-text-secondary transition-colors disabled:opacity-50"
             >
               Don't Save
             </button>
