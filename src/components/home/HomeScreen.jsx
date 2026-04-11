@@ -5,7 +5,9 @@ import { useSessions } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
 import { useAuth } from '@/hooks/useAuth'
 import { useWorkoutTemplates, useDeleteTemplate } from '@/hooks/useTemplates'
-import { formatDate, formatDuration, formatVolume, totalVolume } from '@/lib/utils'
+import { useRecentActivity } from '@/hooks/useActivity'
+import WorkoutActivityCard from '@/components/groups/WorkoutActivityCard'
+import { formatDate } from '@/lib/utils'
 
 const TAG_COLORS = {
   push: 'bg-push/15 text-push border-push/30',
@@ -28,11 +30,11 @@ export default function HomeScreen() {
   const { data: programData, isLoading } = useProgram()
   const { data: templates = [] } = useWorkoutTemplates()
   const { mutateAsync: deleteTemplate, isPending: deletePending } = useDeleteTemplate()
+  const { data: recentActivity = [] } = useRecentActivity(3)
 
   const [templateToDelete, setTemplateToDelete] = useState(null)
 
-  const { config, program, blockInfo, nextSession } = programData || {}
-  const recent = sessions.slice(0, 3)
+  const { program, blockInfo, nextSession } = programData || {}
 
   function startSession(session) {
     navigate('/workout', { state: { session, programId: program?.id } })
@@ -52,7 +54,6 @@ export default function HomeScreen() {
     setTemplateToDelete(null)
   }
 
-  // Compute last-used date for a template by matching sessionName
   function getLastUsed(templateName) {
     const match = sessions.find(s => s.sessionName === templateName)
     return match?.date ? formatDate(match.date, true) : 'Never used'
@@ -174,25 +175,16 @@ export default function HomeScreen() {
         )}
       </div>
 
-      {/* Recent activity */}
-      {recent.length > 0 && (
+      {/* Recent activity — from activity table */}
+      {recentActivity.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm font-semibold text-text-secondary">Recent</div>
             <button onClick={() => navigate('/history')} className="text-xs text-accent">See all</button>
           </div>
           <div className="space-y-2">
-            {recent.map((s, i) => (
-              <div key={s._id || i} className="bg-bg-card border border-bg-tertiary rounded-xl px-4 py-3 flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-text-primary">{s.sessionName}</div>
-                  <div className="text-xs text-text-muted">{formatDate(s.date, true)}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs text-text-secondary">{formatVolume(totalVolume(s.exercises))} kg</div>
-                  {s.duration && <div className="text-xs text-text-muted">{formatDuration(s.duration)}</div>}
-                </div>
-              </div>
+            {recentActivity.map(activity => (
+              <WorkoutActivityCard key={activity.id} activity={activity} compact />
             ))}
           </div>
         </div>
