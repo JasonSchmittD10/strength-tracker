@@ -80,6 +80,8 @@ export default function WorkoutScreen() {
   const [restTimer, setRestTimer] = useState(null) // { duration }
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [confirmBack, setConfirmBack] = useState(false)
+
+  const handleRestDismiss = useCallback(() => setRestTimer(null), [])
   const startedAt = useRef(new Date().toISOString())
 
   const hasCompletedSets = Object.values(exerciseSets).some(sets => sets.some(s => s.completed))
@@ -196,7 +198,7 @@ export default function WorkoutScreen() {
       {restTimer && (
         <RestTimer
           duration={restTimer.duration}
-          onDismiss={() => setRestTimer(null)}
+          onDismiss={handleRestDismiss}
         />
       )}
 
@@ -212,11 +214,16 @@ export default function WorkoutScreen() {
       {/* Confirm leave dialog */}
       {confirmBack && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
-          <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
-            <h3 className="font-bold text-text-primary mb-2">Leave workout?</h3>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-back-title"
+            className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm"
+          >
+            <h3 id="confirm-back-title" className="font-bold text-text-primary mb-2">Leave workout?</h3>
             <p className="text-text-secondary text-sm mb-5">Your progress will be lost.</p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmBack(false)} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Stay</button>
+              <button autoFocus onClick={() => setConfirmBack(false)} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Stay</button>
               <button onClick={() => navigate(-1)} className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold">Leave</button>
             </div>
           </div>

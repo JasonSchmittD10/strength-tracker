@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { epley, formatDuration, formatVolume, totalVolume } from '@/lib/utils'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 import { useSessions } from '@/hooks/useSessions'
@@ -5,21 +6,30 @@ import { normalizeExerciseName } from '@/lib/exercises'
 
 export default function WorkoutSummary({ open, onClose, onSave, session, durationSeconds }) {
   const { data: allSessions = [] } = useSessions()
-  const vol = totalVolume(session.exercises)
-  const completedSets = session.exercises.reduce((n, ex) => n + ex.sets.filter(s => s.completed).length, 0)
+
+  const { vol, completedSets } = useMemo(() => {
+    if (!open) return { vol: 0, completedSets: 0 }
+    return {
+      vol: totalVolume(session.exercises),
+      completedSets: session.exercises.reduce((n, ex) => n + ex.sets.filter(s => s.completed).length, 0),
+    }
+  }, [open, session.exercises])
 
   // Detect PRs: highest e1RM ever for each exercise
-  const prs = session.exercises.map(ex => {
-    const name = normalizeExerciseName(ex.name)
-    const currentBest = Math.max(0, ...ex.sets.filter(s => s.completed).map(s => epley(s.weight, s.reps) || 0))
-    const historicBest = allSessions.reduce((best, s) => {
-      const match = s.exercises?.find(e => normalizeExerciseName(e.name) === name)
-      if (!match) return best
-      const sessionBest = Math.max(0, ...(match.sets || []).map(st => epley(st.weight, st.reps) || 0))
-      return Math.max(best, sessionBest)
-    }, 0)
-    return currentBest > 0 && currentBest > historicBest ? { name: ex.name, e1rm: currentBest } : null
-  }).filter(Boolean)
+  const prs = useMemo(() => {
+    if (!open) return []
+    return session.exercises.map(ex => {
+      const name = normalizeExerciseName(ex.name)
+      const currentBest = Math.max(0, ...ex.sets.filter(s => s.completed).map(s => epley(s.weight, s.reps) || 0))
+      const historicBest = allSessions.reduce((best, s) => {
+        const match = s.exercises?.find(e => normalizeExerciseName(e.name) === name)
+        if (!match) return best
+        const sessionBest = Math.max(0, ...(match.sets || []).map(st => epley(st.weight, st.reps) || 0))
+        return Math.max(best, sessionBest)
+      }, 0)
+      return currentBest > 0 && currentBest > historicBest ? { name: ex.name, e1rm: currentBest } : null
+    }).filter(Boolean)
+  }, [open, session.exercises, allSessions])
 
   return (
     <SlideUpSheet open={open} onClose={onClose} title="Workout Summary" heightClass="h-auto max-h-[85vh]">
