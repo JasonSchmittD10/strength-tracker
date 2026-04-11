@@ -27,7 +27,7 @@ export default function HomeScreen() {
   const { data: sessions = [] } = useSessions()
   const { data: programData, isLoading } = useProgram()
   const { data: templates = [] } = useWorkoutTemplates()
-  const { mutateAsync: deleteTemplate } = useDeleteTemplate()
+  const { mutateAsync: deleteTemplate, isPending: deletePending } = useDeleteTemplate()
 
   const [templateToDelete, setTemplateToDelete] = useState(null)
 
@@ -217,9 +217,10 @@ export default function HomeScreen() {
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold"
+                disabled={deletePending}
+                className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50"
               >
-                Delete
+                {deletePending ? 'Deleting…' : 'Delete'}
               </button>
             </div>
           </div>
@@ -245,7 +246,9 @@ function TemplateCard({ template, lastUsed, onStart, onDeleteRequest }) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchMove={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       onContextMenu={e => { e.preventDefault(); onDeleteRequest() }}
+      aria-label={`Start ${template.name} workout`}
       className="flex-shrink-0 w-36 bg-bg-card border border-bg-tertiary rounded-xl p-3 text-left hover:border-accent/50 transition-colors"
     >
       <div className="text-xs font-semibold text-text-primary mb-1 truncate">{template.name}</div>
