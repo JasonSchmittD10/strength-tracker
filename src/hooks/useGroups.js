@@ -22,19 +22,38 @@ async function fetchUserGroups() {
 }
 
 async function fetchGroupDetail(groupId) {
-  const { data, error } = await supabase
-    .from('groups')
+  // Query via group_members (same direction as fetchUserGroups, avoids RLS issues on groups table)
+  const { data: memberRows, error } = await supabase
+    .from('group_members')
     .select(`
-      id, name, description, invite_code, created_by, created_at,
-      group_members (
-        user_id, role, joined_at,
-        profiles ( display_name, avatar_url, is_private )
-      )
+      user_id, role, joined_at,
+      groups ( id, name, description, invite_code, created_by, created_at )
     `)
-    .eq('id', groupId)
-    .single()
+    .eq('group_id', groupId)
   if (error) throw error
-  return data
+  if (!memberRows || memberRows.length === 0) return null
+
+  const groupData = memberRows[0].groups
+  const memberIds = memberRows.map(m => m.user_id)
+
+  let profilesMap = {}
+  if (memberIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, display_name, avatar_url, is_private')
+      .in('id', memberIds)
+    for (const p of profiles || []) profilesMap[p.id] = p
+  }
+
+  return {
+    ...groupData,
+    group_members: memberRows.map(m => ({
+      user_id: m.user_id,
+      role: m.role,
+      joined_at: m.joined_at,
+      profiles: profilesMap[m.user_id] ?? null,
+    })),
+  }
 }
 
 async function createGroup({ name, description }) {

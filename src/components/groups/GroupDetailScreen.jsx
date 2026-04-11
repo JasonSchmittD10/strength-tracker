@@ -68,7 +68,7 @@ export default function GroupDetailScreen() {
   const { groupId } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { data: group, isLoading } = useGroupDetail(groupId)
+  const { data: group, isLoading, error: groupError } = useGroupDetail(groupId)
   const { data: activityFeed = [] } = useGroupActivity(groupId)
   const { mutateAsync: leaveGroup, isPending: isLeaving } = useLeaveGroup()
 
@@ -111,7 +111,7 @@ export default function GroupDetailScreen() {
   if (!group) {
     return (
       <div className="flex flex-col items-center justify-center h-screen text-text-muted">
-        <p>Group not found.</p>
+        <p>{groupError ? groupError.message : 'Group not found.'}</p>
         <button onClick={() => navigate('/groups')} className="mt-3 text-accent text-sm">Back to Groups</button>
       </div>
     )
