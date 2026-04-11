@@ -9,7 +9,7 @@ export function totalVolume(exercises) {
   ;(exercises || []).forEach(ex => {
     ;(ex.sets || []).forEach(s => {
       const w = parseFloat(s.weight), r = parseFloat(s.reps)
-      if (w > 0 && r > 0 && s.completed) vol += w * r
+      if (w > 0 && r > 0 && s.completed !== false) vol += w * r
     })
   })
   return vol
