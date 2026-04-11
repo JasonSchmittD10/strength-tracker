@@ -63,14 +63,17 @@ export default function ExerciseChart({ data, metric = 'e1rm' }) {
                 onTouchStart={() => setHovered(i)}
                 onTouchEnd={() => setTimeout(() => setHovered(null), 1500)}
               />
-              {isHovered && (
-                <g>
-                  <rect x={cx(i) - 30} y={cy(v) - 24} width="60" height="18" rx="4" fill="#1e2235" stroke="rgba(108,99,255,0.4)" strokeWidth="1" />
-                  <text x={cx(i)} y={cy(v) - 11} textAnchor="middle" fill="#f0f2ff" fontSize="9" fontFamily="Syne, sans-serif">
-                    {v}{metric === 'volume' ? ' kg·reps' : ' kg'}
-                  </text>
-                </g>
-              )}
+              {isHovered && (() => {
+                const tooltipX = Math.max(PAD + 30, Math.min(cx(i), W - PAD - 30))
+                return (
+                  <g>
+                    <rect x={tooltipX - 30} y={cy(v) - 24} width="60" height="18" rx="4" fill="#1e2235" stroke="rgba(108,99,255,0.4)" strokeWidth="1" />
+                    <text x={tooltipX} y={cy(v) - 11} textAnchor="middle" fill="#f0f2ff" fontSize="9" fontFamily="Syne, sans-serif">
+                      {v}{metric === 'volume' ? ' kg·reps' : ' kg'}
+                    </text>
+                  </g>
+                )
+              })()}
             </g>
           )
         })}

@@ -29,8 +29,8 @@ export default function ProgressTab() {
           ...s,
           exercises: s.exercises.filter(e => normalizeExerciseName(e.name) === selectedExercise),
         }))
+        .slice(0, 20)
         .reverse()
-        .slice(-20)
     : []
 
   const allSets = exerciseData.flatMap(s => s.exercises?.flatMap(e => e.sets || []) || [])

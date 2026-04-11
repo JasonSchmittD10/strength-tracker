@@ -22,8 +22,12 @@ export default function SettingsTab() {
 
   async function saveName() {
     if (!displayName.trim()) { setEditingName(false); return }
-    await updateProfile({ display_name: displayName.trim() })
-    setEditingName(false)
+    try {
+      await updateProfile({ display_name: displayName.trim() })
+      setEditingName(false)
+    } catch (e) {
+      // keep editing open; mutation error is handled by TanStack Query
+    }
   }
 
   function exportData() {
@@ -31,14 +35,24 @@ export default function SettingsTab() {
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = `hybrid-sessions-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(a.href)
   }
 
   async function runMigration() {
+    if (!window.confirm('This will update exercise names in all your sessions. Continue?')) return
     setMigrating(true)
-    await migrateExerciseNames(supabase)
-    setMigrating(false)
-    alert('Migration complete. Check console for details.')
+    try {
+      await migrateExerciseNames(supabase)
+      alert('Migration complete. Check console for details.')
+    } catch (e) {
+      alert('Migration failed. Check console for details.')
+      console.error('[migrate] Unexpected error', e)
+    } finally {
+      setMigrating(false)
+    }
   }
 
   async function togglePrivacy() {
@@ -133,6 +147,8 @@ function ToggleRow({ label, description, checked, onChange }) {
         {description && <div className="text-xs text-text-muted">{description}</div>}
       </div>
       <button
+        role="switch"
+        aria-checked={checked}
         onClick={onChange}
         className={`w-11 h-6 rounded-full transition-colors relative flex-shrink-0 ${checked ? 'bg-accent' : 'bg-bg-tertiary'}`}
       >
