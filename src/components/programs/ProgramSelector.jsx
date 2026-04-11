@@ -40,15 +40,21 @@ export default function ProgramSelector() {
   const activeId = programData?.config?.activeProgramId ?? 'ppl-x2'
   const [confirmProgram, setConfirmProgram] = useState(null)
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
+  const [configError, setConfigError] = useState(null)
 
   async function handleStartProgram() {
-    await saveConfig({
-      ...programData?.config,
-      activeProgramId: confirmProgram.id,
-      programStartDate: startDate,
-    })
-    setConfirmProgram(null)
-    navigate('/settings')
+    setConfigError(null)
+    try {
+      await saveConfig({
+        ...programData?.config,
+        activeProgramId: confirmProgram.id,
+        programStartDate: startDate,
+      })
+      setConfirmProgram(null)
+      navigate('/settings')
+    } catch {
+      setConfigError('Failed to update program. Please try again.')
+    }
   }
 
   return (
@@ -132,9 +138,12 @@ export default function ProgramSelector() {
               onChange={e => setStartDate(e.target.value)}
               className="w-full bg-bg-tertiary rounded-xl px-4 py-3 text-text-primary text-sm focus:outline-none focus:ring-1 focus:ring-accent mb-4"
             />
+            {configError && (
+              <p className="text-xs text-danger mb-3">{configError}</p>
+            )}
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmProgram(null)}
+                onClick={() => { setConfirmProgram(null); setConfigError(null) }}
                 className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary"
               >
                 Cancel
