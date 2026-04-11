@@ -15,7 +15,7 @@ export default function LoginScreen() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: import.meta.env.VITE_APP_URL ?? window.location.origin },
       })
       if (error) {
         const msg = error.message ?? ''
