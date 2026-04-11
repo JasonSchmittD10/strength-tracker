@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Plus } from 'lucide-react'
 import ExerciseBlock from './ExerciseBlock'
+import ExerciseSearchSheet from './ExerciseSearchSheet'
 import RestTimer from './RestTimer'
 import WorkoutSummary from './WorkoutSummary'
 import { useSessions, useSaveSession } from '@/hooks/useSessions'
@@ -26,37 +27,78 @@ function formatElapsed(s) {
 export default function WorkoutScreen() {
   const { state } = useLocation()
   const navigate = useNavigate()
-  const session = state?.session
-  const programId = state?.programId
+
+  // Derive mode: explicit state.mode, or 'program' if session present, else 'custom'
+  const mode = state?.mode || (state?.session ? 'program' : 'custom')
+  const session = state?.session        // program mode only
+  const programId = state?.programId    // program mode only
+  const template = state?.template      // template mode only
 
   const elapsed = useElapsedTimer()
   const { data: allSessions = [] } = useSessions()
   const { mutateAsync: saveSession } = useSaveSession()
 
-  // Pre-fill sets from last matching session in history
-  const [exerciseSets, setExerciseSets] = useState(() => {
-    if (!session) return {}
-    const lastMatch = allSessions.find(s => s.sessionId === session.id)
-    return Object.fromEntries(
-      session.exercises.map((ex, i) => {
-        const prevSets = lastMatch?.exercises?.find(
-          e => normalizeExerciseName(e.name) === normalizeExerciseName(ex.name)
-        )?.sets || []
-        const sets = Array.from({ length: ex.sets }, (_, j) => ({
-          weight: prevSets[j]?.weight ?? '',
-          reps: prevSets[j]?.reps ?? ex.reps?.split('–')[0] ?? '',
-          rpe: '',
-          completed: false,
-        }))
-        return [i, sets]
-      })
-    )
+  // ─── Custom/template exercises (not used in program mode) ────────────────
+  const [customExercises, setCustomExercises] = useState(() => {
+    if (mode === 'template' && template?.exercises) {
+      return template.exercises.map(ex => ({
+        name: ex.name,
+        sets: ex.sets,
+        reps: ex.reps,
+        rest: ex.rest ?? 90,
+        restLabel: ex.restLabel ?? '90 sec',
+      }))
+    }
+    return []
   })
 
-  // Pre-fill effect: runs when allSessions loads (handles async case)
+  // The exercises rendered — from session (program) or customExercises (custom/template)
+  const activeExercises = mode === 'program' ? (session?.exercises ?? []) : customExercises
+
+  // ─── exerciseSets — indexed by exercise position ─────────────────────────
+  const [exerciseSets, setExerciseSets] = useState(() => {
+    if (mode === 'program' && session) {
+      const lastMatch = allSessions.find(s => s.sessionId === session.id)
+      return Object.fromEntries(
+        session.exercises.map((ex, i) => {
+          const prevSets = lastMatch?.exercises?.find(
+            e => normalizeExerciseName(e.name) === normalizeExerciseName(ex.name)
+          )?.sets ?? []
+          const sets = Array.from({ length: ex.sets }, (_, j) => ({
+            weight: prevSets[j]?.weight ?? '',
+            reps: prevSets[j]?.reps ?? ex.reps?.split('–')[0] ?? '',
+            rpe: '',
+            completed: false,
+          }))
+          return [i, sets]
+        })
+      )
+    }
+    if (mode === 'template' && template?.exercises) {
+      const lastMatch = allSessions.find(s => s.sessionName === template.name)
+      return Object.fromEntries(
+        template.exercises.map((ex, i) => {
+          const prevSets = lastMatch?.exercises?.find(
+            e => normalizeExerciseName(e.name) === normalizeExerciseName(ex.name)
+          )?.sets ?? []
+          const setsCount = ex.sets ?? 3
+          const sets = Array.from({ length: setsCount }, (_, j) => ({
+            weight: prevSets[j]?.weight ?? '',
+            reps: prevSets[j]?.reps ?? ex.reps?.split('–')[0] ?? '',
+            rpe: '',
+            completed: false,
+          }))
+          return [i, sets]
+        })
+      )
+    }
+    return {}
+  })
+
+  // Async pre-fill for program mode (when allSessions loads after first render)
   const prefilledRef = useRef(false)
   useEffect(() => {
-    if (!session || prefilledRef.current || !allSessions.length) return
+    if (mode !== 'program' || !session || prefilledRef.current || !allSessions.length) return
     prefilledRef.current = true
     const lastMatch = allSessions.find(s => s.sessionId === session.id)
     if (!lastMatch) return
@@ -65,7 +107,7 @@ export default function WorkoutScreen() {
       session.exercises.forEach((ex, i) => {
         const prevSets = lastMatch.exercises?.find(
           e => normalizeExerciseName(e.name) === normalizeExerciseName(ex.name)
-        )?.sets || []
+        )?.sets ?? []
         if (!prevSets.length) return
         next[i] = prev[i].map((s, j) => ({
           ...s,
@@ -75,11 +117,36 @@ export default function WorkoutScreen() {
       })
       return next
     })
-  }, [allSessions, session])
+  }, [allSessions, session, mode])
 
-  const [restTimer, setRestTimer] = useState(null) // { duration }
+  // Async pre-fill for template mode
+  const templatePrefilledRef = useRef(false)
+  useEffect(() => {
+    if (mode !== 'template' || !template || templatePrefilledRef.current || !allSessions.length) return
+    templatePrefilledRef.current = true
+    const lastMatch = allSessions.find(s => s.sessionName === template.name)
+    if (!lastMatch) return
+    setExerciseSets(prev => {
+      const next = { ...prev }
+      template.exercises.forEach((ex, i) => {
+        const prevSets = lastMatch.exercises?.find(
+          e => normalizeExerciseName(e.name) === normalizeExerciseName(ex.name)
+        )?.sets ?? []
+        if (!prevSets.length) return
+        next[i] = (prev[i] ?? []).map((s, j) => ({
+          ...s,
+          weight: prevSets[j]?.weight ?? s.weight,
+          reps: prevSets[j]?.reps ?? s.reps,
+        }))
+      })
+      return next
+    })
+  }, [allSessions, template, mode])
+
+  const [restTimer, setRestTimer] = useState(null)
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [confirmBack, setConfirmBack] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   const handleRestDismiss = useCallback(() => setRestTimer(null), [])
   const startedAt = useRef(new Date().toISOString())
@@ -92,55 +159,87 @@ export default function WorkoutScreen() {
   }
 
   function handleSetComplete(exIdx, setIdx) {
-    const sets = exerciseSets[exIdx]
+    const sets = exerciseSets[exIdx] ?? []
     const wasCompleted = sets[setIdx]?.completed
     if (!wasCompleted) {
-      // Only trigger rest timer when marking a set complete (not when un-completing)
-      const restDuration = session.exercises[exIdx]?.rest || 90
+      const restDuration = activeExercises[exIdx]?.rest ?? 90
       setRestTimer({ duration: restDuration })
     }
     setExerciseSets(prev => ({
       ...prev,
-      [exIdx]: prev[exIdx].map((s, i) => i === setIdx ? { ...s, completed: !wasCompleted } : s),
+      [exIdx]: (prev[exIdx] ?? []).map((s, i) => i === setIdx ? { ...s, completed: !wasCompleted } : s),
     }))
   }
 
-  const buildSessionData = useCallback(() => ({
-    sessionId: session.id,
-    sessionName: session.name,
-    tag: session.tag,
-    tagLabel: session.tagLabel,
-    programId,
-    startedAt: startedAt.current,
-    completedAt: new Date().toISOString(),
-    durationSeconds: elapsed,
-    duration: elapsed,
-    date: new Date().toISOString().split('T')[0],
-    exercises: session.exercises.map((ex, i) => ({
+  function handleAddExercise(exerciseName) {
+    setCustomExercises(prev => {
+      const newIdx = prev.length
+      setExerciseSets(prev2 => ({
+        ...prev2,
+        [newIdx]: [{ weight: '', reps: '', rpe: '', completed: false }],
+      }))
+      return [...prev, { name: exerciseName, sets: 3, reps: '8–12', rest: 90, restLabel: '90 sec' }]
+    })
+  }
+
+  const buildSessionData = useCallback(() => {
+    const exercises = activeExercises.map((ex, i) => ({
       name: ex.name,
-      sets: (exerciseSets[i] || []).map((s, j) => ({
+      sets: (exerciseSets[i] ?? []).map((s, j) => ({
         setNumber: j + 1,
         weight: parseFloat(s.weight) || 0,
         reps: parseInt(s.reps) || 0,
         rpe: s.rpe ? parseFloat(s.rpe) : null,
         completed: s.completed,
       })),
-    })),
-  }), [session, programId, elapsed, exerciseSets])
+    }))
+    if (mode === 'program') {
+      return {
+        sessionId: session.id,
+        sessionName: session.name,
+        tag: session.tag,
+        tagLabel: session.tagLabel,
+        programId,
+        startedAt: startedAt.current,
+        completedAt: new Date().toISOString(),
+        durationSeconds: elapsed,
+        duration: elapsed,
+        date: new Date().toISOString().split('T')[0],
+        exercises,
+      }
+    }
+    return {
+      sessionId: null,
+      sessionName: 'Custom Workout',
+      tag: null,
+      tagLabel: null,
+      programId: 'custom',
+      startedAt: startedAt.current,
+      completedAt: new Date().toISOString(),
+      durationSeconds: elapsed,
+      duration: elapsed,
+      date: new Date().toISOString().split('T')[0],
+      exercises,
+    }
+  }, [mode, session, programId, elapsed, exerciseSets, activeExercises])
 
-  async function handleSave() {
+  async function handleSave(sessionName) {
     const data = buildSessionData()
+    if (sessionName) data.sessionName = sessionName
     data.totalVolume = totalVolume(data.exercises)
     await saveSession(data)
     navigate('/history')
   }
 
-  if (!session) return (
-    <div className="flex items-center justify-center h-screen text-text-muted">
-      No session selected.{' '}
-      <button onClick={() => navigate('/home')} className="ml-2 text-accent">Go home</button>
-    </div>
-  )
+  // Guards
+  if (mode === 'program' && !session) {
+    return (
+      <div className="flex items-center justify-center h-screen text-text-muted">
+        No session selected.{' '}
+        <button onClick={() => navigate('/home')} className="ml-2 text-accent">Go home</button>
+      </div>
+    )
+  }
 
   const TAG_COLORS = {
     push: 'text-push bg-push/15',
@@ -148,11 +247,12 @@ export default function WorkoutScreen() {
     legs: 'text-legs bg-legs/15',
   }
 
-  // Build the current session state for summary
   const currentSessionState = {
-    ...session,
-    exercises: session.exercises.map((ex, i) => ({ ...ex, sets: exerciseSets[i] || [] })),
+    exercises: activeExercises.map((ex, i) => ({ ...ex, sets: exerciseSets[i] ?? [] })),
+    ...(mode === 'program' ? session : {}),
   }
+
+  const isCustomMode = mode === 'custom' || mode === 'template'
 
   return (
     <div className="safe-top pb-24">
@@ -162,26 +262,54 @@ export default function WorkoutScreen() {
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1 flex items-center gap-2 min-w-0">
-          <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full flex-shrink-0 ${TAG_COLORS[session.tag] || ''}`}>
-            {session.tagLabel}
+          {mode === 'program' && session.tag && (
+            <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full flex-shrink-0 ${TAG_COLORS[session.tag] ?? ''}`}>
+              {session.tagLabel}
+            </span>
+          )}
+          <span className="font-bold text-text-primary truncate">
+            {mode === 'program' ? session.name : 'Custom Workout'}
           </span>
-          <span className="font-bold text-text-primary truncate">{session.name}</span>
         </div>
         <span className="font-mono text-sm text-text-muted flex-shrink-0">{formatElapsed(elapsed)}</span>
       </div>
 
       {/* Exercise blocks */}
       <div className="px-4 pt-4">
-        {session.exercises.map((ex, i) => (
+        {isCustomMode && activeExercises.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="text-4xl mb-3">💪</div>
+            <p className="text-text-secondary text-sm mb-6">No exercises yet. Add one to get started.</p>
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl px-6 py-3 text-sm transition-colors"
+            >
+              <Plus size={18} />
+              Add Exercise
+            </button>
+          </div>
+        )}
+
+        {activeExercises.map((ex, i) => (
           <ExerciseBlock
             key={i}
             exercise={ex}
             exIdx={i}
-            sets={exerciseSets[i] || []}
+            sets={exerciseSets[i] ?? []}
             onChange={sets => setExerciseSets(prev => ({ ...prev, [i]: sets }))}
             onSetComplete={handleSetComplete}
           />
         ))}
+
+        {isCustomMode && activeExercises.length > 0 && (
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 mb-4 border border-dashed border-bg-tertiary rounded-xl text-text-muted text-sm hover:border-accent/50 hover:text-accent transition-colors"
+          >
+            <Plus size={16} />
+            Add Exercise
+          </button>
+        )}
       </div>
 
       {/* Finish Workout sticky button */}
@@ -195,12 +323,14 @@ export default function WorkoutScreen() {
       </div>
 
       {/* Rest timer overlay */}
-      {restTimer && (
-        <RestTimer
-          duration={restTimer.duration}
-          onDismiss={handleRestDismiss}
-        />
-      )}
+      {restTimer && <RestTimer duration={restTimer.duration} onDismiss={handleRestDismiss} />}
+
+      {/* Exercise search sheet */}
+      <ExerciseSearchSheet
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onAdd={handleAddExercise}
+      />
 
       {/* Workout summary sheet */}
       <WorkoutSummary
@@ -209,6 +339,9 @@ export default function WorkoutScreen() {
         onSave={handleSave}
         session={currentSessionState}
         durationSeconds={elapsed}
+        mode={mode}
+        templateId={template?.id}
+        templateName={template?.name}
       />
 
       {/* Confirm leave dialog */}
