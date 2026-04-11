@@ -1,7 +1,6 @@
 export function epley(weight, reps) {
-  if (!weight || !reps || reps <= 0) return null
   const w = parseFloat(weight), r = parseFloat(reps)
-  if (isNaN(w) || isNaN(r) || r <= 0) return null
+  if (!w || isNaN(w) || !r || isNaN(r) || r <= 0) return null
   return Math.round(w * (1 + r / 30))
 }
 
