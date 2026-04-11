@@ -10,7 +10,7 @@ async function fetchTemplates() {
   return data || []
 }
 
-async function saveTemplate({ id, name, exercises, description = null }) {
+async function saveTemplate({ id, name, exercises = [], description = null }) {
   if (id) {
     const { data, error } = await supabase
       .from('workout_templates')
@@ -33,6 +33,7 @@ async function saveTemplate({ id, name, exercises, description = null }) {
 async function deleteTemplate(id) {
   const { error } = await supabase.from('workout_templates').delete().eq('id', id)
   if (error) throw error
+  return id
 }
 
 export function useWorkoutTemplates() {
