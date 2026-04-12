@@ -1,10 +1,11 @@
+// src/components/workout/ExerciseBlock.jsx
 import { useState } from 'react'
 import { ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
 
-export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete }) {
+export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false }) {
   const [cuesOpen, setCuesOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const info = EXERCISE_LIBRARY[exercise.name] || {}
@@ -27,6 +28,11 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
         <div>
           <div className="font-bold text-text-primary text-base">{exercise.name}</div>
           {primaryMuscle && <div className="text-xs text-text-secondary">{primaryMuscle}</div>}
+          {exercise.reps && (
+            <div className="text-xs text-text-muted mt-0.5">
+              {exercise.sets} × {exercise.reps} reps
+            </div>
+          )}
         </div>
         <button onClick={() => setHistoryOpen(true)} className="p-2 text-text-muted hover:text-accent transition-colors">
           <Clock size={16} />
@@ -72,12 +78,14 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
         />
       ))}
 
-      <button
-        onClick={addSet}
-        className="w-full mt-2 py-2 text-xs text-accent border border-accent/30 rounded-lg hover:bg-accent/10 transition-colors"
-      >
-        + Add Set
-      </button>
+      {!isProgramMode && (
+        <button
+          onClick={addSet}
+          className="w-full mt-2 py-2 text-xs text-accent border border-accent/30 rounded-lg hover:bg-accent/10 transition-colors"
+        >
+          + Add Set
+        </button>
+      )}
 
       <ExerciseHistorySheet
         open={historyOpen}
