@@ -15,7 +15,7 @@ import GroupDetailScreen from '@/components/groups/GroupDetailScreen'
 function MainApp() {
   return (
     <div className="flex flex-col h-screen bg-bg-primary overflow-hidden">
-      <div className="flex-1 overflow-y-auto" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
+      <div className="flex-1 overflow-y-auto min-h-0">
         <Outlet />
       </div>
       <BottomNav />
