@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
+import { Copy, Check } from 'lucide-react'
 import { epley, formatDuration, formatVolume, totalVolume } from '@/lib/utils'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 import { useSessions } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
+import { useUnitPreference } from '@/hooks/useProfile'
 import { normalizeExerciseName } from '@/lib/exercises'
 
 // Convert live exercise data → template exercise definition
@@ -32,11 +34,27 @@ export default function WorkoutSummary({
 }) {
   const { data: allSessions = [] } = useSessions()
   const { mutateAsync: saveTemplate } = useSaveTemplate()
+  const unit = useUnitPreference()
   const isCustomMode = mode === 'custom' || mode === 'template'
 
   const [workoutName, setWorkoutName] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  const [copied, setCopied] = useState(false)
+
+  function copyWorkout() {
+    const lines = session.exercises.map(ex => {
+      const sets = ex.sets
+        .filter(s => s.completed && s.weight && s.reps)
+        .map(s => `${s.weight}×${s.reps}`)
+        .join(' ')
+      return sets ? `${ex.name}\n${sets}` : ex.name
+    }).join('\n')
+    navigator.clipboard.writeText(lines).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   // Reset name field and error when sheet opens
   useEffect(() => {
@@ -96,10 +114,19 @@ export default function WorkoutSummary({
       <div className="space-y-4">
         {/* Stats grid */}
         <div className="grid grid-cols-3 gap-3">
-          <Stat label="Volume" value={`${formatVolume(vol)} kg`} />
+          <Stat label="Volume" value={`${formatVolume(vol)} ${unit}`} />
           <Stat label="Sets" value={completedSets} />
           <Stat label="Duration" value={formatDuration(durationSeconds)} />
         </div>
+
+        {/* Copy workout */}
+        <button
+          onClick={copyWorkout}
+          className="w-full flex items-center justify-center gap-2 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary hover:border-accent/40 hover:text-accent transition-colors"
+        >
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+          {copied ? 'Copied!' : 'Copy Workout'}
+        </button>
 
         {/* PRs */}
         {prs.length > 0 && (
@@ -108,7 +135,7 @@ export default function WorkoutSummary({
             {prs.map(pr => (
               <div key={pr.name} className="flex items-center justify-between py-2 border-b border-bg-tertiary last:border-0">
                 <span className="text-sm text-text-primary">{pr.name}</span>
-                <span className="text-sm font-bold text-accent">{pr.e1rm}kg e1RM</span>
+                <span className="text-sm font-bold text-accent">{pr.e1rm}{unit} e1RM</span>
               </div>
             ))}
           </div>
