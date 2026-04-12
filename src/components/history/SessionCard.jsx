@@ -50,7 +50,39 @@ export default function SessionCard({ session }) {
         </div>
       </button>
 
-      <SlideUpSheet open={detailOpen} onClose={() => setDetailOpen(false)} title={session.sessionName}>
+      <SlideUpSheet
+        open={detailOpen}
+        onClose={() => { setDetailOpen(false); setConfirmDelete(false) }}
+        title={session.sessionName}
+        footer={confirmDelete ? (
+          <div className="space-y-2">
+            <p className="text-sm text-text-secondary text-center">Delete this workout? This can't be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+                className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="w-full py-2 text-danger text-sm font-medium hover:opacity-80 transition-opacity"
+          >
+            Delete Workout
+          </button>
+        )}
+      >
         <div className="space-y-4">
           <div className="flex gap-4 text-sm text-text-secondary">
             <span>{formatDate(session.date)}</span>
@@ -71,37 +103,6 @@ export default function SessionCard({ session }) {
               </div>
             )
           })}
-
-          <div className="pt-4 border-t border-bg-tertiary">
-            {confirmDelete ? (
-              <div className="space-y-2">
-                <p className="text-sm text-text-secondary text-center">Delete this workout? This can't be undone.</p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setConfirmDelete(false)}
-                    disabled={deleting}
-                    className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50"
-                  >
-                    {deleting ? 'Deleting…' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setConfirmDelete(true)}
-                className="w-full py-2.5 text-danger text-sm font-medium hover:opacity-80 transition-opacity"
-              >
-                Delete Workout
-              </button>
-            )}
-          </div>
         </div>
       </SlideUpSheet>
     </>

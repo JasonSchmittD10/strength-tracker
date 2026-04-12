@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export default function SlideUpSheet({ open, onClose, title, children, heightClass = 'h-[70vh]' }) {
+export default function SlideUpSheet({ open, onClose, title, children, footer, heightClass = 'h-[70vh]' }) {
   const dragStartY = useRef(null)
 
   useEffect(() => {
@@ -46,6 +46,11 @@ export default function SlideUpSheet({ open, onClose, title, children, heightCla
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {children}
         </div>
+        {footer && (
+          <div className="flex-shrink-0 px-5 pb-4 pt-3 border-t border-bg-tertiary">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )
