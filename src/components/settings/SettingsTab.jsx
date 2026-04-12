@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Camera } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
-import { useSessions } from '@/hooks/useSessions'
+import { useProfile, useUpdateProfile, useUnitPreference } from '@/hooks/useProfile'
+import { useSessions, usePRs } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
 import { migrateExerciseNames } from '@/lib/exercises'
 import { supabase } from '@/lib/supabase'
+import { formatWeight } from '@/lib/utils'
 
 export default function SettingsTab() {
   const { user, signOut } = useAuth()
@@ -13,9 +15,12 @@ export default function SettingsTab() {
   const { mutateAsync: updateProfile } = useUpdateProfile()
   const { data: sessions = [] } = useSessions()
   const { data: programData } = useProgram()
+  const unit = useUnitPreference()
+  const prs = usePRs()
   const [displayName, setDisplayName] = useState('')
   const [editingName, setEditingName] = useState(false)
   const [migrating, setMigrating] = useState(false)
+  const fileInputRef = useRef(null)
   const navigate = useNavigate()
 
   const name = profile?.display_name || user?.email?.split('@')[0] || '?'
@@ -61,15 +66,54 @@ export default function SettingsTab() {
     await updateProfile({ is_private: !isPrivate })
   }
 
+  // TODO: create 'avatars' bucket in Supabase Storage (public read, authenticated write)
+  async function handlePhotoUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(`${user.id}/avatar.jpg`, file, { upsert: true })
+      if (uploadError) throw uploadError
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(`${user.id}/avatar.jpg`)
+      await updateProfile({ avatar_url: publicUrl })
+    } catch (e) {
+      console.warn('Avatar upload failed', e)
+    }
+  }
+
   return (
     <div className="safe-top px-4 pb-8 max-w-lg mx-auto">
       <h1 className="font-bold text-2xl text-text-primary py-4">Settings</h1>
 
       <Section title="Profile">
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
-            {initial}
-          </div>
+          <button
+            className="relative flex-shrink-0 group"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Change profile photo"
+          >
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} className="w-14 h-14 rounded-full object-cover" alt="Profile" />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center text-white text-xl font-bold">
+                {initial}
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
+              <Camera size={18} className="text-white" />
+            </div>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="user"
+            className="hidden"
+            onChange={handlePhotoUpload}
+          />
           <div className="flex-1 min-w-0">
             {editingName ? (
               <div className="flex gap-2">
@@ -98,6 +142,28 @@ export default function SettingsTab() {
           checked={isPrivate}
           onChange={togglePrivacy}
         />
+      </Section>
+
+      <Section title="App Settings">
+        <ToggleRow
+          label="Use pounds (lb)"
+          checked={unit === 'lb'}
+          onChange={() => updateProfile({ unit_preference: unit === 'lb' ? 'kg' : 'lb' })}
+        />
+      </Section>
+
+      <Section title="Personal Records">
+        <div className="grid grid-cols-2 gap-3 py-2">
+          {prs.map(({ name, e1rm }) => (
+            <div key={name} className="bg-bg-tertiary rounded-xl p-3">
+              <div className="text-xs text-text-muted mb-1 leading-tight">{name}</div>
+              <div className="font-bold text-text-primary text-base">
+                {e1rm ? formatWeight(Math.round(e1rm * 10) / 10, unit) : '—'}
+              </div>
+              <div className="text-xs text-text-muted">e1RM</div>
+            </div>
+          ))}
+        </div>
       </Section>
 
       <Section title="Program">
