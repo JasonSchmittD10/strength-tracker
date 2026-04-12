@@ -12,10 +12,10 @@ const TABS = [
 
 export default function BottomNav() {
   return (
-    <nav className="bg-[#181818] backdrop-blur-[8px] shrink-0">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#181818] backdrop-blur-[8px]">
       <div
         className="flex pt-[10px] px-2"
-        style={{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom))' }}
+        style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}
       >
         {TABS.map(({ to, icon: Icon, label }) => (
           <NavLink
