@@ -35,3 +35,9 @@ export function useUpdateProfile() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profile', user?.id] }),
   })
 }
+
+export function useUnitPreference() {
+  const { data: profile } = useProfile()
+  // TODO: when unit preference changes, convert historical weight values in exerciseSets
+  return profile?.unit_preference ?? 'lb'
+}
