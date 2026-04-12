@@ -150,7 +150,10 @@ export default function WorkoutScreen() {
   const [confirmBack, setConfirmBack] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
 
-  const handleRestDismiss = useCallback(() => setRestTimer(null), [])
+  const handleRestDismiss = useCallback(() => {
+    setRestTimer(null)
+    setRestTimerFullScreen(false)
+  }, [])
   const startedAt = useRef(new Date().toISOString())
 
   const hasCompletedSets = Object.values(exerciseSets).some(sets => sets.some(s => s.completed))
@@ -283,7 +286,7 @@ export default function WorkoutScreen() {
       </div>
 
       {/* Scrollable exercise list */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-36">
+      <div className="flex-1 overflow-y-auto px-4 pt-4" style={{ paddingBottom: 'calc(9rem + env(safe-area-inset-bottom))' }}>
         {isCustomMode && activeExercises.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-4xl mb-3">💪</div>
