@@ -159,18 +159,11 @@ export default function WorkoutScreen() {
     }
   }, [blocker.state])
 
-  // Belt-and-suspenders: intercept iOS swipe-back at the native popstate level
+  // Suppress iOS swipe-back gesture at the CSS level (fires before JS can react)
   useEffect(() => {
-    if (allowNav) return
-    window.history.pushState(null, '')
-    function handlePopState() {
-      if (allowNav) return
-      window.history.pushState(null, '')
-      setConfirmBack(true)
-    }
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [allowNav])
+    document.body.style.overscrollBehaviorX = 'none'
+    return () => { document.body.style.overscrollBehaviorX = '' }
+  }, [])
 
   const handleRestDismiss = useCallback(() => {
     setRestTimer(null)
