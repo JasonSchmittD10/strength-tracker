@@ -149,10 +149,11 @@ export default function WorkoutScreen() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [confirmBack, setConfirmBack] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
-  const [allowNav, setAllowNav] = useState(false)
+  const allowNavRef = useRef(false)
 
   // Block swipe-back and browser back button during workout
-  const blocker = useBlocker(() => !allowNav)
+  // useRef so the flag is synchronously true before navigate() is called
+  const blocker = useBlocker(() => !allowNavRef.current)
   useEffect(() => {
     if (blocker.state === 'blocked') {
       setConfirmBack(true)
@@ -251,7 +252,7 @@ export default function WorkoutScreen() {
     if (sessionName) data.sessionName = sessionName
     data.totalVolume = totalVolume(data.exercises)
     await saveSession(data)
-    setAllowNav(true)
+    allowNavRef.current = true
     navigate('/history')
   }
 
@@ -400,7 +401,7 @@ export default function WorkoutScreen() {
             <p className="text-text-secondary text-sm mb-5">Your progress will be lost.</p>
             <div className="flex gap-3">
               <button autoFocus onClick={() => { setConfirmBack(false); blocker.reset?.() }} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Keep going</button>
-              <button onClick={() => { setAllowNav(true); setConfirmBack(false); blocker.proceed?.() ?? navigate(-1) }} className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold">Cancel Workout</button>
+              <button onClick={() => { allowNavRef.current = true; setConfirmBack(false); blocker.proceed?.() ?? navigate(-1) }} className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold">Cancel Workout</button>
             </div>
           </div>
         </div>
