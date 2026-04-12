@@ -155,13 +155,22 @@ export default function WorkoutScreen() {
   const blocker = useBlocker(() => !allowNav)
   useEffect(() => {
     if (blocker.state === 'blocked') {
-      if (hasCompletedSets) {
-        setConfirmBack(true)
-      } else {
-        blocker.proceed()
-      }
+      setConfirmBack(true)
     }
   }, [blocker.state])
+
+  // Belt-and-suspenders: intercept iOS swipe-back at the native popstate level
+  useEffect(() => {
+    if (allowNav) return
+    window.history.pushState(null, '')
+    function handlePopState() {
+      if (allowNav) return
+      window.history.pushState(null, '')
+      setConfirmBack(true)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [allowNav])
 
   const handleRestDismiss = useCallback(() => {
     setRestTimer(null)
@@ -300,7 +309,7 @@ export default function WorkoutScreen() {
       </div>
 
       {/* Scrollable exercise list */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-36">
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8">
         {isCustomMode && activeExercises.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-4xl mb-3">💪</div>
@@ -336,22 +345,22 @@ export default function WorkoutScreen() {
             Add Exercise
           </button>
         )}
-      </div>
 
-      {/* Fixed bottom bar — Finish + Cancel */}
-      <div className="fixed bottom-0 left-0 right-0 px-4 pt-4 pb-6 bg-bg-primary/95 backdrop-blur border-t border-bg-tertiary">
-        <button
-          onClick={() => setSummaryOpen(true)}
-          className="w-full bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl py-3 transition-colors mb-2"
-        >
-          Finish Workout
-        </button>
-        <button
-          onClick={handleBack}
-          className="w-full text-danger text-sm font-medium py-1"
-        >
-          Cancel Workout
-        </button>
+        {/* Finish + Cancel — inline at bottom of scroll area */}
+        <div className="pt-4 mt-2 border-t border-bg-tertiary">
+          <button
+            onClick={() => setSummaryOpen(true)}
+            className="w-full bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl py-3 transition-colors mb-2"
+          >
+            Finish Workout
+          </button>
+          <button
+            onClick={handleBack}
+            className="w-full text-danger text-sm font-medium py-2"
+          >
+            Cancel Workout
+          </button>
+        </div>
       </div>
 
       {/* Rest timer */}
