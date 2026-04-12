@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
 import { useGroups, useCreateGroup, useJoinGroup } from '@/hooks/useGroups'
 import GroupCard from './GroupCard'
 
@@ -131,19 +130,16 @@ export default function GroupsTab() {
 
   const hasGroups = groups.length > 0
 
+  useEffect(() => {
+    if (!isLoading && groups.length > 0) {
+      navigate(`/groups/${groups[0].id}`, { replace: true })
+    }
+  }, [isLoading, groups, navigate])
+
   return (
     <div className="safe-top px-4 pb-4 max-w-lg mx-auto">
-      <div className="flex items-center justify-between py-4">
+      <div className="py-4">
         <h1 className="font-bold text-2xl text-text-primary">Groups</h1>
-        {hasGroups && (
-          <button
-            onClick={() => setShowCreate(true)}
-            className="w-9 h-9 rounded-full bg-bg-tertiary flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
-            aria-label="Create group"
-          >
-            <Plus size={18} />
-          </button>
-        )}
       </div>
 
       {isLoading ? (
