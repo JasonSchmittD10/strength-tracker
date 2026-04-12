@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useSessions } from '@/hooks/useSessions'
+import { useUnitPreference } from '@/hooks/useProfile'
 import { normalizeExerciseName } from '@/lib/exercises'
 import { epley, formatDate, formatVolume, totalVolume } from '@/lib/utils'
 import ExerciseChart from './ExerciseChart'
@@ -13,6 +14,7 @@ const METRICS = [
 
 export default function ProgressTab() {
   const { data: sessions = [], isLoading } = useSessions()
+  const unit = useUnitPreference()
   const [selectedExercise, setSelectedExercise] = useState('')
   const [metric, setMetric] = useState('e1rm')
 
@@ -86,7 +88,7 @@ export default function ProgressTab() {
           {bestE1RM > 0 && (
             <div className="bg-accent/10 border border-accent/30 rounded-2xl p-4 mb-4">
               <div className="text-xs text-text-muted mb-1">Personal Best e1RM</div>
-              <div className="text-2xl font-bold text-accent">{bestE1RM} kg</div>
+              <div className="text-2xl font-bold text-accent">{bestE1RM} {unit}</div>
               {bestSession && (
                 <div className="text-xs text-text-secondary mt-1">{formatDate(bestSession.date)}</div>
               )}
@@ -105,11 +107,11 @@ export default function ProgressTab() {
                     <div>
                       <div className="text-sm text-text-primary">{formatDate(s.date, true)}</div>
                       <div className="text-xs text-text-muted">
-                        {topSet.weight}kg × {topSet.reps} · {formatVolume(vol)} kg
+                        {topSet.weight}{unit} × {topSet.reps} · {formatVolume(vol)} {unit}
                       </div>
                     </div>
                     <div className="text-sm font-semibold text-accent">
-                      {epley(topSet.weight, topSet.reps) || '—'} kg
+                      {epley(topSet.weight, topSet.reps) || '—'} {unit}
                     </div>
                   </div>
                 )
