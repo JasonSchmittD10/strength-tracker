@@ -54,3 +54,8 @@ export function weekStart(dateStr) {
   d.setDate(d.getDate() - day + 1)
   return d.toISOString().split('T')[0]
 }
+
+export function formatWeight(value, unit = 'lb') {
+  if (value == null || value === '' || value === 0) return '—'
+  return `${value} ${unit}`
+}
