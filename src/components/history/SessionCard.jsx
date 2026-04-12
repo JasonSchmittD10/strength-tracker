@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { formatDate, formatDuration, formatVolume, totalVolume } from '@/lib/utils'
 import { useUnitPreference } from '@/hooks/useProfile'
+import { useDeleteSession } from '@/hooks/useSessions'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 
 const TAG_COLORS = {
@@ -11,7 +12,15 @@ const TAG_COLORS = {
 
 export default function SessionCard({ session }) {
   const [detailOpen, setDetailOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const { mutateAsync: deleteSession, isPending: deleting } = useDeleteSession()
   const unit = useUnitPreference()
+
+  async function handleDelete() {
+    await deleteSession(session._id)
+    setDetailOpen(false)
+    setConfirmDelete(false)
+  }
   const vol = totalVolume(session.exercises || [])
   const completedSets = (session.exercises || []).reduce((n, ex) => n + (ex.sets || []).filter(s => s.completed !== false).length, 0)
 
@@ -62,6 +71,37 @@ export default function SessionCard({ session }) {
               </div>
             )
           })}
+
+          <div className="pt-4 border-t border-bg-tertiary">
+            {confirmDelete ? (
+              <div className="space-y-2">
+                <p className="text-sm text-text-secondary text-center">Delete this workout? This can't be undone.</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    disabled={deleting}
+                    className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+                  >
+                    {deleting ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="w-full py-2.5 text-danger text-sm font-medium hover:opacity-80 transition-opacity"
+              >
+                Delete Workout
+              </button>
+            )}
+          </div>
         </div>
       </SlideUpSheet>
     </>

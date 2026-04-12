@@ -136,6 +136,20 @@ export function useSessionsByExercise(exerciseName) {
   })
 }
 
+export function useDeleteSession() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.from('sessions').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      queryClient.invalidateQueries({ queryKey: ['activity'] })
+    },
+  })
+}
+
 export function useSaveSession() {
   const queryClient = useQueryClient()
   return useMutation({
