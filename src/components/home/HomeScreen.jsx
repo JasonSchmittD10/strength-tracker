@@ -69,7 +69,7 @@ export default function HomeScreen() {
         <div className="bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-3 mb-4 flex items-center justify-between">
           <div>
             <div className="text-xs text-text-muted font-medium uppercase tracking-wider mb-0.5">Active Program</div>
-            <div className="font-bold text-text-primary text-sm">{program?.name}</div>
+            <div className="font-bold text-text-primary text-sm">{program.name}</div>
             <div className="text-xs text-text-secondary mt-0.5">
               Block {blockInfo.blockNumber} · Week {blockInfo.weekInBlock} · {blockInfo.phaseName}
               {blockInfo.isDeload && <span className="text-warning ml-1">· Deload</span>}
