@@ -1,3 +1,4 @@
+// src/components/shared/BottomNav.jsx
 import { NavLink } from 'react-router-dom'
 import { Home, Clock, TrendingUp, Users, Settings } from 'lucide-react'
 
@@ -11,8 +12,11 @@ const TABS = [
 
 export default function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-bg-secondary border-t border-bg-tertiary">
-      <div className="flex safe-bottom">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 bg-bg-secondary border-t border-bg-tertiary"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="flex">
         {TABS.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
