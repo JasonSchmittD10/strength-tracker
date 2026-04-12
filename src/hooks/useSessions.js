@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { normalizeExerciseName } from '@/lib/exercises'
@@ -92,6 +93,32 @@ function detectPRs(session, previousSessions) {
 
 export function useSessions() {
   return useQuery({ queryKey: ['sessions'], queryFn: fetchSessions })
+}
+
+const MAIN_LIFTS = [
+  'Barbell Bench Press',
+  'Back Squat (Barbell)',
+  'Romanian Deadlift',
+  'Overhead Press (Barbell)',
+]
+
+export function usePRs() {
+  const { data: sessions = [] } = useSessions()
+  return useMemo(() => {
+    const bests = {}
+    for (const session of sessions) {
+      for (const exercise of session.exercises ?? []) {
+        const name = normalizeExerciseName(exercise.name)
+        if (!MAIN_LIFTS.includes(name)) continue
+        for (const set of exercise.sets ?? []) {
+          if (!set.completed || !set.weight || !set.reps) continue
+          const e1rm = set.weight * (1 + set.reps / 30)
+          if (!bests[name] || e1rm > bests[name]) bests[name] = e1rm
+        }
+      }
+    }
+    return MAIN_LIFTS.map(name => ({ name, e1rm: bests[name] ?? null }))
+  }, [sessions])
 }
 
 export function useSessionsByExercise(exerciseName) {
