@@ -149,6 +149,8 @@ export default function WorkoutScreen() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [confirmBack, setConfirmBack] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [saveError, setSaveError] = useState(null)
+  const [saving, setSaving] = useState(false)
   const allowNavRef = useRef(false)
 
   // Block swipe-back and browser back button during workout
@@ -248,12 +250,20 @@ export default function WorkoutScreen() {
   }, [mode, session, programId, elapsed, exerciseSets, activeExercises])
 
   async function handleSave(sessionName) {
-    const data = buildSessionData()
-    if (sessionName) data.sessionName = sessionName
-    data.totalVolume = totalVolume(data.exercises)
-    await saveSession(data)
-    allowNavRef.current = true
-    navigate('/history')
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const data = buildSessionData()
+      if (sessionName) data.sessionName = sessionName
+      data.totalVolume = totalVolume(data.exercises)
+      await saveSession(data)
+      allowNavRef.current = true
+      navigate('/history')
+    } catch (e) {
+      console.error('Save session failed:', e)
+      setSaveError(e?.message ?? 'Failed to save workout. Please try again.')
+      setSaving(false)
+    }
   }
 
   if (mode === 'program' && !session) {
@@ -386,6 +396,8 @@ export default function WorkoutScreen() {
         mode={mode}
         templateId={template?.id}
         templateName={template?.name}
+        externalSaving={saving}
+        externalSaveError={saveError}
       />
 
       {/* Confirm leave dialog */}

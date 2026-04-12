@@ -31,6 +31,7 @@ function inferTemplateExercises(exercises) {
 export default function WorkoutSummary({
   open, onClose, onSave, session, durationSeconds,
   mode = 'program', templateId, templateName,
+  externalSaving = false, externalSaveError = null,
 }) {
   const { data: allSessions = [] } = useSessions()
   const { mutateAsync: saveTemplate } = useSaveTemplate()
@@ -180,19 +181,26 @@ export default function WorkoutSummary({
             </button>
           </div>
         ) : (
-          <div className="flex gap-3 pt-2">
-            <button
-              onClick={onClose}
-              className="flex-1 py-3 border border-bg-tertiary rounded-xl text-sm text-text-secondary hover:border-accent/30 transition-colors"
-            >
-              Keep Going
-            </button>
-            <button
-              onClick={() => onSave(null)}
-              className="flex-1 py-3 bg-accent text-white font-semibold rounded-xl text-sm hover:bg-accent-hover transition-colors"
-            >
-              Save & Exit
-            </button>
+          <div className="space-y-2 pt-2">
+            {externalSaveError && (
+              <p className="text-xs text-danger text-center">{externalSaveError}</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                disabled={externalSaving}
+                className="flex-1 py-3 border border-bg-tertiary rounded-xl text-sm text-text-secondary hover:border-accent/30 transition-colors disabled:opacity-50"
+              >
+                Keep Going
+              </button>
+              <button
+                onClick={() => onSave(null)}
+                disabled={externalSaving}
+                className="flex-1 py-3 bg-accent text-white font-semibold rounded-xl text-sm hover:bg-accent-hover transition-colors disabled:opacity-50"
+              >
+                {externalSaving ? 'Saving…' : 'Save & Exit'}
+              </button>
+            </div>
           </div>
         )}
       </div>
