@@ -1,11 +1,13 @@
+// src/components/workout/WorkoutScreen.jsx
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import ExerciseBlock from './ExerciseBlock'
 import ExerciseSearchSheet from './ExerciseSearchSheet'
 import RestTimer from './RestTimer'
 import WorkoutSummary from './WorkoutSummary'
 import { useSessions, useSaveSession } from '@/hooks/useSessions'
+import { useProgram } from '@/hooks/useProgram'
 import { normalizeExerciseName } from '@/lib/exercises'
 import { totalVolume } from '@/lib/utils'
 
@@ -28,17 +30,18 @@ export default function WorkoutScreen() {
   const { state } = useLocation()
   const navigate = useNavigate()
 
-  // Derive mode: explicit state.mode, or 'program' if session present, else 'custom'
   const mode = state?.mode || (state?.session ? 'program' : 'custom')
-  const session = state?.session        // program mode only
-  const programId = state?.programId    // program mode only
-  const template = state?.template      // template mode only
+  const session = state?.session
+  const programId = state?.programId
+  const template = state?.template
 
   const elapsed = useElapsedTimer()
   const { data: allSessions = [] } = useSessions()
   const { mutateAsync: saveSession } = useSaveSession()
+  const { data: programData } = useProgram()
+  const { program, blockInfo } = programData || {}
 
-  // ─── Custom/template exercises (not used in program mode) ────────────────
+  // ─── Custom/template exercises ────────────────────────────────────────────
   const [customExercises, setCustomExercises] = useState(() => {
     if (mode === 'template' && template?.exercises) {
       return template.exercises.map(ex => ({
@@ -52,10 +55,9 @@ export default function WorkoutScreen() {
     return []
   })
 
-  // The exercises rendered — from session (program) or customExercises (custom/template)
   const activeExercises = mode === 'program' ? (session?.exercises ?? []) : customExercises
 
-  // ─── exerciseSets — indexed by exercise position ─────────────────────────
+  // ─── exerciseSets ─────────────────────────────────────────────────────────
   const [exerciseSets, setExerciseSets] = useState(() => {
     if (mode === 'program' && session) {
       const lastMatch = allSessions.find(s => s.sessionId === session.id)
@@ -95,7 +97,6 @@ export default function WorkoutScreen() {
     return {}
   })
 
-  // Async pre-fill for program mode (when allSessions loads after first render)
   const prefilledRef = useRef(false)
   useEffect(() => {
     if (mode !== 'program' || !session || prefilledRef.current || !allSessions.length) return
@@ -119,7 +120,6 @@ export default function WorkoutScreen() {
     })
   }, [allSessions, session, mode])
 
-  // Async pre-fill for template mode
   const templatePrefilledRef = useRef(false)
   useEffect(() => {
     if (mode !== 'template' || !template || templatePrefilledRef.current || !allSessions.length) return
@@ -143,7 +143,9 @@ export default function WorkoutScreen() {
     })
   }, [allSessions, template, mode])
 
-  const [restTimer, setRestTimer] = useState(null)
+  // ─── Rest timer ───────────────────────────────────────────────────────────
+  const [restTimer, setRestTimer] = useState(null)          // { duration, key }
+  const [restTimerFullScreen, setRestTimerFullScreen] = useState(false)
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [confirmBack, setConfirmBack] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -163,7 +165,9 @@ export default function WorkoutScreen() {
     const wasCompleted = sets[setIdx]?.completed
     if (!wasCompleted) {
       const restDuration = activeExercises[exIdx]?.rest ?? 90
-      setRestTimer({ duration: restDuration })
+      // key: Date.now() forces RestTimer remount — resets countdown if already running
+      setRestTimer({ duration: restDuration, key: Date.now() })
+      setRestTimerFullScreen(true)
     }
     setExerciseSets(prev => ({
       ...prev,
@@ -232,7 +236,6 @@ export default function WorkoutScreen() {
     navigate('/history')
   }
 
-  // Guards
   if (mode === 'program' && !session) {
     return (
       <div className="flex items-center justify-center h-screen text-text-muted">
@@ -248,35 +251,39 @@ export default function WorkoutScreen() {
     legs: 'text-legs bg-legs/15',
   }
 
+  const isCustomMode = mode === 'custom' || mode === 'template'
+
   const currentSessionState = {
     ...(mode === 'program' ? session : {}),
     exercises: activeExercises.map((ex, i) => ({ ...ex, sets: exerciseSets[i] ?? [] })),
   }
 
-  const isCustomMode = mode === 'custom' || mode === 'template'
-
   return (
-    <div className="safe-top pb-24">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-bg-primary/95 backdrop-blur border-b border-bg-tertiary px-4 py-3 flex items-center gap-3">
-        <button onClick={handleBack} className="text-text-muted hover:text-text-primary transition-colors p-1">
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex-1 flex items-center gap-2 min-w-0">
-          {mode === 'program' && session.tag && (
-            <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full flex-shrink-0 ${TAG_COLORS[session.tag] ?? ''}`}>
-              {session.tagLabel}
+    <div className="flex flex-col h-full">
+      {/* Static header — does not scroll */}
+      <div className="flex-shrink-0 bg-bg-primary/95 backdrop-blur border-b border-bg-tertiary px-4 py-3 flex items-center gap-3">
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex items-center gap-2">
+            {mode === 'program' && session.tag && (
+              <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full flex-shrink-0 ${TAG_COLORS[session.tag] ?? ''}`}>
+                {session.tagLabel}
+              </span>
+            )}
+            <span className="font-bold text-text-primary truncate">
+              {mode === 'program' ? session.name : 'Custom Workout'}
             </span>
+          </div>
+          {mode === 'program' && blockInfo && (
+            <div className="text-xs text-text-muted leading-none mt-0.5">
+              {program?.name} · Block {blockInfo.blockNumber} · Week {blockInfo.weekInBlock} · {blockInfo.phaseName}
+            </div>
           )}
-          <span className="font-bold text-text-primary truncate">
-            {mode === 'program' ? session.name : 'Custom Workout'}
-          </span>
         </div>
         <span className="font-mono text-sm text-text-muted flex-shrink-0">{formatElapsed(elapsed)}</span>
       </div>
 
-      {/* Exercise blocks */}
-      <div className="px-4 pt-4">
+      {/* Scrollable exercise list */}
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-36">
         {isCustomMode && activeExercises.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-4xl mb-3">💪</div>
@@ -299,6 +306,7 @@ export default function WorkoutScreen() {
             sets={exerciseSets[i] ?? []}
             onChange={sets => setExerciseSets(prev => ({ ...prev, [i]: sets }))}
             onSetComplete={handleSetComplete}
+            isProgramMode={mode === 'program'}
           />
         ))}
 
@@ -313,18 +321,32 @@ export default function WorkoutScreen() {
         )}
       </div>
 
-      {/* Finish Workout sticky button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 safe-bottom bg-bg-primary/95 backdrop-blur border-t border-bg-tertiary">
+      {/* Fixed bottom bar — Finish + Cancel */}
+      <div className="fixed bottom-0 left-0 right-0 px-4 pt-4 pb-4 safe-bottom bg-bg-primary/95 backdrop-blur border-t border-bg-tertiary">
         <button
           onClick={() => setSummaryOpen(true)}
-          className="w-full bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl py-3 transition-colors"
+          className="w-full bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl py-3 transition-colors mb-2"
         >
           Finish Workout
         </button>
+        <button
+          onClick={handleBack}
+          className="w-full text-danger text-sm font-medium py-1"
+        >
+          Cancel Workout
+        </button>
       </div>
 
-      {/* Rest timer overlay */}
-      {restTimer && <RestTimer duration={restTimer.duration} onDismiss={handleRestDismiss} />}
+      {/* Rest timer */}
+      {restTimer && (
+        <RestTimer
+          key={restTimer.key}
+          duration={restTimer.duration}
+          onDismiss={handleRestDismiss}
+          fullScreen={restTimerFullScreen}
+          onMinimize={() => setRestTimerFullScreen(false)}
+        />
+      )}
 
       {/* Exercise search sheet */}
       <ExerciseSearchSheet
@@ -354,11 +376,11 @@ export default function WorkoutScreen() {
             aria-labelledby="confirm-back-title"
             className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm"
           >
-            <h3 id="confirm-back-title" className="font-bold text-text-primary mb-2">Leave workout?</h3>
+            <h3 id="confirm-back-title" className="font-bold text-text-primary mb-2">Cancel workout?</h3>
             <p className="text-text-secondary text-sm mb-5">Your progress will be lost.</p>
             <div className="flex gap-3">
-              <button autoFocus onClick={() => setConfirmBack(false)} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Stay</button>
-              <button onClick={() => navigate(-1)} className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold">Leave</button>
+              <button autoFocus onClick={() => setConfirmBack(false)} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Keep going</button>
+              <button onClick={() => navigate(-1)} className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold">Cancel Workout</button>
             </div>
           </div>
         </div>
