@@ -1,9 +1,12 @@
-import { Check } from 'lucide-react'
+// src/components/workout/SetRow.jsx
+import { Check, Pencil } from 'lucide-react'
+import { useUnitPreference } from '@/hooks/useProfile'
 
 const RPE_VALUES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 
 export default function SetRow({ setNumber, set, onChange, onComplete }) {
   const { weight = '', reps = '', rpe = '', completed = false } = set
+  const unit = useUnitPreference()
 
   function handleComplete() {
     if (!completed) onComplete()
@@ -19,8 +22,9 @@ export default function SetRow({ setNumber, set, onChange, onComplete }) {
         inputMode="decimal"
         value={weight}
         onChange={e => onChange({ ...set, weight: e.target.value })}
-        placeholder="kg"
-        className="flex-1 min-w-0 bg-bg-tertiary rounded-lg px-2 py-2.5 text-center text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px]"
+        placeholder={unit}
+        readOnly={completed}
+        className={`flex-1 min-w-0 bg-bg-tertiary rounded-lg px-2 py-2.5 text-center text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px] ${completed ? 'pointer-events-none' : ''}`}
       />
 
       <input
@@ -29,13 +33,15 @@ export default function SetRow({ setNumber, set, onChange, onComplete }) {
         value={reps}
         onChange={e => onChange({ ...set, reps: e.target.value })}
         placeholder="reps"
-        className="flex-1 min-w-0 bg-bg-tertiary rounded-lg px-2 py-2.5 text-center text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px]"
+        readOnly={completed}
+        className={`flex-1 min-w-0 bg-bg-tertiary rounded-lg px-2 py-2.5 text-center text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px] ${completed ? 'pointer-events-none' : ''}`}
       />
 
       <select
         value={rpe}
         onChange={e => onChange({ ...set, rpe: e.target.value })}
-        className="w-16 bg-bg-tertiary rounded-lg px-1 py-2.5 text-center text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px]"
+        disabled={completed}
+        className={`w-16 bg-bg-tertiary rounded-lg px-1 py-2.5 text-center text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px] ${completed ? 'pointer-events-none' : ''}`}
       >
         <option value="">RPE</option>
         {RPE_VALUES.map(v => <option key={v} value={v}>{v}</option>)}
@@ -47,7 +53,7 @@ export default function SetRow({ setNumber, set, onChange, onComplete }) {
           completed ? 'bg-success text-white' : 'bg-bg-tertiary text-text-muted hover:bg-accent/20 hover:text-accent'
         }`}
       >
-        <Check size={16} />
+        {completed ? <Pencil size={16} /> : <Check size={16} />}
       </button>
     </div>
   )
