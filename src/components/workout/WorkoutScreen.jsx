@@ -1,6 +1,6 @@
 // src/components/workout/WorkoutScreen.jsx
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useBlocker } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import ExerciseBlock from './ExerciseBlock'
 import ExerciseSearchSheet from './ExerciseSearchSheet'
@@ -149,6 +149,19 @@ export default function WorkoutScreen() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [confirmBack, setConfirmBack] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [allowNav, setAllowNav] = useState(false)
+
+  // Block swipe-back and browser back button during workout
+  const blocker = useBlocker(() => !allowNav)
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      if (hasCompletedSets) {
+        setConfirmBack(true)
+      } else {
+        blocker.proceed()
+      }
+    }
+  }, [blocker.state])
 
   const handleRestDismiss = useCallback(() => {
     setRestTimer(null)
@@ -236,6 +249,7 @@ export default function WorkoutScreen() {
     if (sessionName) data.sessionName = sessionName
     data.totalVolume = totalVolume(data.exercises)
     await saveSession(data)
+    setAllowNav(true)
     navigate('/history')
   }
 
@@ -262,7 +276,7 @@ export default function WorkoutScreen() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen bg-bg-primary">
       {/* Static header — does not scroll */}
       <div className="flex-shrink-0 bg-bg-primary/95 backdrop-blur border-b border-bg-tertiary px-4 py-3 flex items-center gap-3">
         <div className="flex-1 flex flex-col min-w-0">
@@ -286,7 +300,7 @@ export default function WorkoutScreen() {
       </div>
 
       {/* Scrollable exercise list */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4" style={{ paddingBottom: 'calc(9rem + env(safe-area-inset-bottom))' }}>
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-36">
         {isCustomMode && activeExercises.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-4xl mb-3">💪</div>
@@ -325,7 +339,7 @@ export default function WorkoutScreen() {
       </div>
 
       {/* Fixed bottom bar — Finish + Cancel */}
-      <div className="fixed bottom-0 left-0 right-0 px-4 pt-4 pb-4 safe-bottom bg-bg-primary/95 backdrop-blur border-t border-bg-tertiary">
+      <div className="fixed bottom-0 left-0 right-0 px-4 pt-4 pb-6 bg-bg-primary/95 backdrop-blur border-t border-bg-tertiary">
         <button
           onClick={() => setSummaryOpen(true)}
           className="w-full bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl py-3 transition-colors mb-2"
@@ -382,8 +396,8 @@ export default function WorkoutScreen() {
             <h3 id="confirm-back-title" className="font-bold text-text-primary mb-2">Cancel workout?</h3>
             <p className="text-text-secondary text-sm mb-5">Your progress will be lost.</p>
             <div className="flex gap-3">
-              <button autoFocus onClick={() => setConfirmBack(false)} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Keep going</button>
-              <button onClick={() => navigate(-1)} className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold">Cancel Workout</button>
+              <button autoFocus onClick={() => { setConfirmBack(false); blocker.reset?.() }} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Keep going</button>
+              <button onClick={() => { setAllowNav(true); setConfirmBack(false); blocker.proceed?.() ?? navigate(-1) }} className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold">Cancel Workout</button>
             </div>
           </div>
         </div>

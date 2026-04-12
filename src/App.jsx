@@ -34,11 +34,11 @@ const router = createHashRouter([
       { path: 'progress', element: <ProgressTab /> },
       { path: 'groups', element: <GroupsTab /> },
       { path: 'settings', element: <SettingsTab /> },
-      { path: 'workout', element: <WorkoutScreen /> },
       { path: 'program-selector', element: <ProgramSelector /> },
     ],
   },
   { path: '/groups/:groupId', element: <GroupDetailScreen /> },
+  { path: '/workout', element: <WorkoutScreen /> },
 ])
 
 export default function App() {
