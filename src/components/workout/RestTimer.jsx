@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 
-export default function RestTimer({ duration, onDismiss }) {
+export default function RestTimer({ duration, onDismiss, fullScreen = false, onMinimize }) {
   const [remaining, setRemaining] = useState(duration)
   const endRef = useRef(Date.now() + duration * 1000)
 
@@ -17,11 +17,6 @@ export default function RestTimer({ duration, onDismiss }) {
     return () => clearInterval(id)
   }, [onDismiss])
 
-  const pct = remaining / duration
-  const r = 36, cx = 44, cy = 44
-  const circumference = 2 * Math.PI * r
-  const dashOffset = circumference * (1 - pct)
-
   function addTime(delta) {
     endRef.current += delta * 1000
     setRemaining(v => Math.max(0, v + delta))
@@ -29,6 +24,54 @@ export default function RestTimer({ duration, onDismiss }) {
 
   const mins = Math.floor(remaining / 60)
   const secs = remaining % 60
+
+  if (fullScreen) {
+    const pct = remaining / duration
+    const r = 80, cx = 96, cy = 96
+    const circumference = 2 * Math.PI * r
+    const dashOffset = circumference * (1 - pct)
+
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg-primary">
+        <div className="text-sm text-text-muted mb-8 uppercase tracking-widest font-medium">Rest</div>
+
+        <svg width="192" height="192" viewBox="0 0 192 192" className="mb-6">
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(108,99,255,0.15)" strokeWidth="8" />
+          <circle
+            cx={cx} cy={cy} r={r}
+            fill="none" stroke="#6c63ff" strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            transform={`rotate(-90 ${cx} ${cy})`}
+            style={{ transition: 'stroke-dashoffset 0.5s linear' }}
+          />
+          <text x={cx} y={cy + 12} textAnchor="middle" fill="#f0f2ff" fontSize="42" fontWeight="bold" fontFamily="Syne, sans-serif">
+            {mins}:{String(secs).padStart(2, '0')}
+          </text>
+        </svg>
+
+        <div className="flex items-center gap-4 mb-10">
+          <button onClick={() => addTime(-30)} className="px-5 py-3 text-sm text-text-secondary border border-bg-tertiary rounded-xl hover:border-accent/40 transition-colors">−30s</button>
+          <button onClick={onDismiss} className="px-7 py-3 text-sm font-semibold text-white bg-accent hover:bg-accent-hover rounded-xl transition-colors">Skip Rest</button>
+          <button onClick={() => addTime(30)} className="px-5 py-3 text-sm text-text-secondary border border-bg-tertiary rounded-xl hover:border-accent/40 transition-colors">+30s</button>
+        </div>
+
+        <button
+          onClick={onMinimize}
+          className="text-text-muted text-sm hover:text-text-primary transition-colors"
+        >
+          Minimize ↓
+        </button>
+      </div>
+    )
+  }
+
+  // Bottom sheet mode (minimized)
+  const pct = remaining / duration
+  const r = 36, cx = 44, cy = 44
+  const circumference = 2 * Math.PI * r
+  const dashOffset = circumference * (1 - pct)
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center pointer-events-none">
@@ -54,7 +97,7 @@ export default function RestTimer({ duration, onDismiss }) {
 
           <div className="flex items-center gap-3">
             <button onClick={() => addTime(-30)} className="px-4 py-2 text-sm text-text-secondary border border-bg-tertiary rounded-xl hover:border-accent/40 transition-colors">−30s</button>
-            <button onClick={onDismiss} className="px-6 py-2 text-sm font-semibold text-text-primary border border-bg-tertiary rounded-xl hover:border-accent/40 transition-colors">Skip</button>
+            <button onClick={onDismiss} className="px-6 py-2 text-sm font-semibold text-text-primary border border-bg-tertiary rounded-xl hover:border-accent/40 transition-colors">Skip Rest</button>
             <button onClick={() => addTime(30)} className="px-4 py-2 text-sm text-text-secondary border border-bg-tertiary rounded-xl hover:border-accent/40 transition-colors">+30s</button>
           </div>
         </div>
