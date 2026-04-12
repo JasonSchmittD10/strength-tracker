@@ -27,7 +27,7 @@ export default function SlideUpSheet({ open, onClose, title, children, footer, h
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div className="fixed inset-0 z-60 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div
         className={`relative bg-bg-secondary rounded-t-2xl ${heightClass} flex flex-col overflow-hidden`}
