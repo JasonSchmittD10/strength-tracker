@@ -47,7 +47,7 @@ export default function SlideUpSheet({ open, onClose, title, children, footer, h
           {children}
         </div>
         {footer && (
-          <div className="flex-shrink-0 px-5 pb-4 pt-3 border-t border-bg-tertiary">
+          <div className="flex-shrink-0 px-5 pt-3 pb-[88px] border-t border-bg-tertiary">
             {footer}
           </div>
         )}
