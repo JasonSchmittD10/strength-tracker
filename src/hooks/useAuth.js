@@ -2,13 +2,19 @@ import { useState, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
+const DEV_USER = import.meta.env.VITE_DEV_BYPASS_AUTH === 'true'
+  ? { id: '00000000-0000-0000-0000-000000000000', email: 'dev@localhost' }
+  : null
+
 export function useAuth() {
-  const [user, setUser] = useState(null)
-  const [session, setSession] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(DEV_USER)
+  const [session, setSession] = useState(DEV_USER ? { user: DEV_USER } : null)
+  const [loading, setLoading] = useState(!DEV_USER)
   const queryClient = useQueryClient()
 
   useEffect(() => {
+    if (DEV_USER) return
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
