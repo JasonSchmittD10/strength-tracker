@@ -364,6 +364,7 @@ export default function WorkoutScreen() {
           onDismiss={handleRestDismiss}
           fullScreen={restTimerFullScreen}
           onMinimize={() => setRestTimerFullScreen(false)}
+          onExpand={() => setRestTimerFullScreen(true)}
         />
       )}
 
