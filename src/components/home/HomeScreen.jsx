@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
-import { useAuth } from '@/hooks/useAuth'
 import { useWorkoutTemplates, useDeleteTemplate } from '@/hooks/useTemplates'
 import { useRecentActivity } from '@/hooks/useActivity'
 import WorkoutActivityCard from '@/components/groups/WorkoutActivityCard'
@@ -25,7 +24,6 @@ function TagPill({ tag, label }) {
 
 export default function HomeScreen() {
   const navigate = useNavigate()
-  const { user } = useAuth()
   const { data: sessions = [] } = useSessions()
   const { data: programData, isLoading } = useProgram()
   const { data: templates = [] } = useWorkoutTemplates()
@@ -59,30 +57,27 @@ export default function HomeScreen() {
     return match?.date ? formatDate(match.date, true) : 'Never used'
   }
 
-  const initial = user?.email?.[0]?.toUpperCase() || '?'
-
   return (
     <div className="safe-top px-4 pb-4 max-w-lg mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between py-4">
+      <div className="py-4">
         <h1 className="font-bold text-2xl text-text-primary tracking-tight">Hybrid</h1>
-        <button
-          onClick={() => navigate('/settings')}
-          className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-white text-sm font-bold"
-        >
-          {initial}
-        </button>
       </div>
 
-      {/* Block info badge */}
+      {/* Active program card */}
       {blockInfo && (
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xs text-text-muted font-medium">
-            Block {blockInfo.blockNumber} · Week {blockInfo.weekInBlock} ·{' '}
-            <span className={blockInfo.isDeload ? 'text-warning' : 'text-text-secondary'}>
-              {blockInfo.phaseName}
-            </span>
-          </span>
+        <div className="bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-3 mb-4 flex items-center justify-between">
+          <div>
+            <div className="text-xs text-text-muted font-medium uppercase tracking-wider mb-0.5">Active Program</div>
+            <div className="font-bold text-text-primary text-sm">{program?.name}</div>
+            <div className="text-xs text-text-secondary mt-0.5">
+              Block {blockInfo.blockNumber} · Week {blockInfo.weekInBlock} · {blockInfo.phaseName}
+              {blockInfo.isDeload && <span className="text-warning ml-1">· Deload</span>}
+            </div>
+          </div>
+          <button onClick={() => navigate('/program-selector')} className="text-xs text-accent font-medium flex-shrink-0 ml-4">
+            Change
+          </button>
         </div>
       )}
 
