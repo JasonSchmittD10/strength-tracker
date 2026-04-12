@@ -14,7 +14,7 @@ import GroupDetailScreen from '@/components/groups/GroupDetailScreen'
 
 function MainApp() {
   return (
-    <div className="flex flex-col h-full bg-bg-primary overflow-hidden">
+    <div className="flex flex-col h-screen bg-bg-primary overflow-hidden">
       <div className="flex-1 overflow-y-scroll overscroll-y-contain pb-[54px]">
         <Outlet />
       </div>
