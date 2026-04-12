@@ -13,17 +13,17 @@ const TABS = [
 export default function BottomNav() {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-bg-secondary border-t border-bg-tertiary"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-[#181818] backdrop-blur-[8px]"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="flex">
+      <div className="flex pt-[10px] px-2">
         {TABS.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center gap-1 py-2 text-xs font-medium transition-colors relative ${
-                isActive ? 'text-accent' : 'text-text-muted'
+              `flex-1 flex flex-col items-center gap-[2px] pb-2 text-[10px] font-medium transition-colors relative ${
+                isActive ? 'text-accent' : 'text-[#8b8b8b]'
               }`
             }
           >
@@ -32,7 +32,7 @@ export default function BottomNav() {
                 {isActive && (
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-accent" />
                 )}
-                <Icon size={20} />
+                <Icon size={18} />
                 <span>{label}</span>
               </>
             )}
