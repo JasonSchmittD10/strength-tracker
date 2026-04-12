@@ -1,68 +1,26 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import OtpInput from './OtpInput'
 
 export default function LoginScreen() {
-  const [step, setStep] = useState('email')
+  const [mode, setMode] = useState('signin') // 'signin' | 'signup'
   const [email, setEmail] = useState('')
-  const [otpCode, setOtpCode] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState('')
-  const [resent, setResent] = useState(false)
-  const emailRef = useRef(null)
 
-  useEffect(() => {
-    if (step === 'email') emailRef.current?.focus()
-    if (step === 'code') setOtpCode('')
-  }, [step])
-
-  async function sendCode(targetEmail) {
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!email.trim() || !password) return
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signInWithOtp({
-      email: targetEmail,
-      options: { shouldCreateUser: true },
-    })
+
+    const { error } = mode === 'signin'
+      ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
+      : await supabase.auth.signUp({ email: email.trim(), password })
+
     setLoading(false)
     if (error) setError(error.message)
-    else setStep('code')
-  }
-
-  function handleEmailSubmit(e) {
-    e.preventDefault()
-    if (!email.trim()) return
-    sendCode(email.trim())
-  }
-
-  async function verifyCode(code) {
-    setVerifying(true)
-    setError('')
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: code,
-      type: 'email',
-    })
-    setVerifying(false)
-    if (error) setError(error.message)
-    // On success: onAuthStateChange fires SIGNED_IN → App.jsx transitions automatically
-  }
-
-  async function resendCode() {
-    setResent(false)
-    setError('')
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    })
-    if (!error) setResent(true)
-    else setError(error.message)
-  }
-
-  function goBack() {
-    setStep('email')
-    setError('')
-    setResent(false)
+    // On success: onAuthStateChange in useAuth fires SIGNED_IN → App transitions automatically
   }
 
   return (
@@ -74,76 +32,66 @@ export default function LoginScreen() {
           <p className="text-text-secondary text-sm mt-1">Strength Tracker</p>
         </div>
 
-        {step === 'email' ? (
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
-            <div>
-              <h2 className="text-xl font-bold text-text-primary mb-1">Sign in</h2>
-              <p className="text-text-secondary text-sm mb-4">We'll send a code to your email</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <h2 className="text-xl font-bold text-text-primary mb-1">
+              {mode === 'signin' ? 'Sign in' : 'Create account'}
+            </h2>
+            <p className="text-text-secondary text-sm mb-4">
+              {mode === 'signin' ? 'Welcome back' : 'Start tracking your lifts'}
+            </p>
+
+            <div className="space-y-3">
               <input
-                ref={emailRef}
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 autoComplete="email"
+                autoFocus
                 className="w-full bg-bg-card border border-bg-tertiary rounded-xl px-4 py-3 text-text-primary placeholder-text-muted text-base focus:outline-none focus:border-accent transition-colors"
               />
-              {error && <p className="text-danger text-sm mt-2">{error}</p>}
-            </div>
-            <button
-              type="submit"
-              disabled={loading || !email.trim()}
-              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-base transition-colors"
-            >
-              {loading ? 'Sending…' : 'Send Code'}
-            </button>
-          </form>
-        ) : (
-          <div className="space-y-6">
-            <button
-              onClick={goBack}
-              className="flex items-center gap-1 text-text-secondary text-sm hover:text-text-primary transition-colors"
-            >
-              ← Back
-            </button>
-
-            <div>
-              <h2 className="text-xl font-bold text-text-primary mb-1">Check your email</h2>
-              <p className="text-text-secondary text-sm">
-                Enter the 6-digit code sent to{' '}
-                <span className="text-text-primary font-medium">{email}</span>
-              </p>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Password"
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                className="w-full bg-bg-card border border-bg-tertiary rounded-xl px-4 py-3 text-text-primary placeholder-text-muted text-base focus:outline-none focus:border-accent transition-colors"
+              />
             </div>
 
-            <OtpInput
-              onComplete={code => { setOtpCode(code); verifyCode(code) }}
-              disabled={verifying}
-            />
-
-            {error && <p className="text-danger text-sm text-center">{error}</p>}
-
-            <button
-              disabled={verifying || otpCode.length < 6}
-              onClick={() => otpCode.length === 6 && verifyCode(otpCode)}
-              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-base transition-colors"
-            >
-              {verifying ? 'Verifying…' : 'Verify'}
-            </button>
-
-            <div className="text-center">
-              {resent ? (
-                <p className="text-success text-sm">Code resent!</p>
-              ) : (
-                <button
-                  onClick={resendCode}
-                  className="text-accent text-sm hover:underline"
-                >
-                  Resend code
-                </button>
-              )}
-            </div>
+            {error && <p className="text-danger text-sm mt-2">{error}</p>}
           </div>
-        )}
+
+          <button
+            type="submit"
+            disabled={loading || !email.trim() || !password}
+            className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-base transition-colors"
+          >
+            {loading
+              ? (mode === 'signin' ? 'Signing in…' : 'Creating account…')
+              : (mode === 'signin' ? 'Sign In' : 'Create Account')}
+          </button>
+
+          <div className="text-center">
+            {mode === 'signin' ? (
+              <p className="text-text-secondary text-sm">
+                No account?{' '}
+                <button type="button" onClick={() => { setMode('signup'); setError('') }} className="text-accent hover:underline">
+                  Create one
+                </button>
+              </p>
+            ) : (
+              <p className="text-text-secondary text-sm">
+                Already have an account?{' '}
+                <button type="button" onClick={() => { setMode('signin'); setError('') }} className="text-accent hover:underline">
+                  Sign in
+                </button>
+              </p>
+            )}
+          </div>
+        </form>
       </div>
     </div>
   )
