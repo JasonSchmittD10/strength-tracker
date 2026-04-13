@@ -162,7 +162,7 @@ export default function WorkoutSummary({
             <button
               onClick={handleSaveWithTemplate}
               disabled={saving}
-              className="w-full py-3 bg-accent text-white font-semibold rounded-xl text-sm hover:bg-accent-hover transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-accent text-black font-semibold rounded-xl text-sm hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
               {saving ? 'Saving…' : templateId ? 'Update Template' : 'Save to My Workouts'}
             </button>
@@ -196,7 +196,7 @@ export default function WorkoutSummary({
               <button
                 onClick={() => onSave(null)}
                 disabled={externalSaving}
-                className="flex-1 py-3 bg-accent text-white font-semibold rounded-xl text-sm hover:bg-accent-hover transition-colors disabled:opacity-50"
+                className="flex-1 py-3 bg-accent text-black font-semibold rounded-xl text-sm hover:bg-accent-hover transition-colors disabled:opacity-50"
               >
                 {externalSaving ? 'Saving…' : 'Save & Exit'}
               </button>

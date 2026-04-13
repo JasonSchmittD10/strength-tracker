@@ -47,7 +47,7 @@ export default function RestTimer({ duration, onDismiss, fullScreen = false, onM
         </svg>
 
         <div className="flex items-center gap-4 mb-10">
-          <button onClick={onDismiss} className="px-7 py-3 text-sm font-semibold text-white bg-accent hover:bg-accent-hover rounded-xl transition-colors">Skip Rest</button>
+          <button onClick={onDismiss} className="px-7 py-3 text-sm font-semibold text-black bg-accent hover:bg-accent-hover rounded-xl transition-colors">Skip Rest</button>
         </div>
 
         <button onClick={onMinimize} className="text-text-muted text-sm hover:text-text-primary transition-colors">

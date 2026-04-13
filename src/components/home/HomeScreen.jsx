@@ -83,26 +83,23 @@ export default function HomeScreen() {
 
       {/* Next Up card */}
       {isLoading ? (
-        <div className="bg-bg-card rounded-2xl p-5 mb-4 h-32 animate-pulse" />
+        <div className="bg-bg-card rounded-[12px] p-4 mb-4 h-32 animate-pulse" />
       ) : nextSession && (
-        <div className="bg-bg-card rounded-2xl border border-bg-tertiary p-5 mb-4">
-          <div className="text-xs text-text-muted mb-2 font-medium uppercase tracking-wider">Up Next</div>
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <TagPill tag={nextSession.tag} label={nextSession.tagLabel} />
-              </div>
-              <div className="text-xl font-bold text-text-primary">{nextSession.name}</div>
-              <div className="text-sm text-text-secondary mt-0.5">{nextSession.focus}</div>
-              <div className="text-xs text-text-muted mt-1">{nextSession.exercises.length} exercises</div>
-            </div>
+        <div className="bg-[#1c1d21] rounded-[12px] p-4 mb-4 flex flex-col gap-4">
+          <div className="flex items-center justify-between text-xs font-medium uppercase tracking-[0.12em] text-text-muted">
+            <span>Up Next</span>
+            <span>{nextSession.exercises.length} Exercises</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="text-[26px] font-bold leading-tight text-text-primary">{nextSession.name}</div>
+            <div className="text-sm text-text-muted">{nextSession.focus}</div>
           </div>
           {blockInfo?.isDeload && (
-            <div className="text-xs text-warning mb-3">↓ Deload week — reduce loads ~10%</div>
+            <div className="text-xs text-warning">↓ Deload week — reduce loads ~10%</div>
           )}
           <button
             onClick={() => startSession(nextSession)}
-            className="w-full bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl py-3 text-sm transition-colors"
+            className="w-full bg-accent hover:bg-accent-hover text-black font-bold rounded-[6px] py-3 text-base transition-colors"
           >
             Start Workout
           </button>

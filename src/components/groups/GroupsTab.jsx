@@ -45,7 +45,7 @@ function CreateGroupDialog({ onClose, onCreated }) {
         </div>
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Cancel</button>
-          <button onClick={handleCreate} disabled={isPending} className="flex-1 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold disabled:opacity-50">
+          <button onClick={handleCreate} disabled={isPending} className="flex-1 py-2.5 bg-accent text-black rounded-xl text-sm font-semibold disabled:opacity-50">
             {isPending ? 'Creating…' : 'Create'}
           </button>
         </div>
@@ -87,7 +87,7 @@ function JoinGroupDialog({ onClose, onJoined }) {
         </div>
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Cancel</button>
-          <button onClick={handleJoin} disabled={isPending} className="flex-1 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold disabled:opacity-50">
+          <button onClick={handleJoin} disabled={isPending} className="flex-1 py-2.5 bg-accent text-black rounded-xl text-sm font-semibold disabled:opacity-50">
             {isPending ? 'Joining…' : 'Join'}
           </button>
         </div>
@@ -293,7 +293,7 @@ export default function GroupsTab() {
             <h2 className="text-xl font-bold text-text-primary mb-2">Train Together</h2>
             <p className="text-text-secondary text-sm mb-8">Join a group to share workouts and compete with friends.</p>
             <div className="flex flex-col gap-3 w-full max-w-xs">
-              <button onClick={() => setShowCreate(true)} className="w-full bg-accent text-white font-semibold rounded-xl py-3 text-sm hover:bg-accent-hover transition-colors">
+              <button onClick={() => setShowCreate(true)} className="w-full bg-accent text-black font-semibold rounded-xl py-3 text-sm hover:bg-accent-hover transition-colors">
                 Create a Group
               </button>
               <button onClick={() => setShowJoin(true)} className="w-full border border-accent text-accent font-semibold rounded-xl py-3 text-sm hover:bg-accent/10 transition-colors">

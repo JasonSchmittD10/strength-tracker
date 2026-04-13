@@ -92,7 +92,7 @@ export default function LoginScreen() {
             <button
               type="submit"
               disabled={loading || !email.trim() || (mode !== 'forgot' && !password)}
-              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-base transition-colors"
+              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-black font-semibold rounded-xl py-3 text-base transition-colors"
             >
               {loading
                 ? (mode === 'signin' ? 'Signing in…' : mode === 'signup' ? 'Creating account…' : 'Sending…')

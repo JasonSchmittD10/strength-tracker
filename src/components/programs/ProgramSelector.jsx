@@ -151,7 +151,7 @@ export default function ProgramSelector() {
               <button
                 onClick={handleStartProgram}
                 disabled={isPending}
-                className="flex-1 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+                className="flex-1 py-2.5 bg-accent text-black rounded-xl text-sm font-semibold disabled:opacity-50"
               >
                 {isPending ? 'Starting\u2026' : 'Start Program'}
               </button>

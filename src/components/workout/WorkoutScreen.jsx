@@ -320,7 +320,7 @@ export default function WorkoutScreen() {
             <p className="text-text-secondary text-sm mb-6">No exercises yet. Add one to get started.</p>
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl px-6 py-3 text-sm transition-colors"
+              className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-black font-semibold rounded-xl px-6 py-3 text-sm transition-colors"
             >
               <Plus size={18} />
               Add Exercise
@@ -354,7 +354,7 @@ export default function WorkoutScreen() {
         <div className="pt-4 mt-2 border-t border-bg-tertiary">
           <button
             onClick={() => setSummaryOpen(true)}
-            className="w-full bg-accent hover:bg-accent-hover text-white font-semibold rounded-xl py-3 transition-colors mb-2"
+            className="w-full bg-accent hover:bg-accent-hover text-black font-semibold rounded-xl py-3 transition-colors mb-2"
           >
             Finish Workout
           </button>
