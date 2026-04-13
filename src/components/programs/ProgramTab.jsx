@@ -1,14 +1,21 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProgram } from '@/hooks/useProgram'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import SlideUpSheet from '@/components/shared/SlideUpSheet'
 
 export default function ProgramTab() {
   const navigate = useNavigate()
   const { data, isLoading } = useProgram()
+  const [previewSession, setPreviewSession] = useState(null)
 
   if (isLoading) return <LoadingSpinner />
 
   const { program, blockInfo, nextSession } = data || {}
+
+  function startWorkout() {
+    navigate('/workout', { state: { session: previewSession, programId: program?.id } })
+  }
 
   return (
     <div className="safe-top px-4 pb-8 max-w-lg mx-auto">
@@ -58,9 +65,10 @@ export default function ProgramTab() {
               if (!session) return null
               const isNext = nextSession?.id === session.id
               return (
-                <div
+                <button
                   key={session.id}
-                  className={`bg-bg-card rounded-2xl p-4 border transition-colors ${
+                  onClick={() => setPreviewSession(session)}
+                  className={`w-full text-left bg-bg-card rounded-2xl p-4 border transition-colors active:scale-[0.98] ${
                     isNext
                       ? 'border-accent/60'
                       : 'border-bg-tertiary opacity-60'
@@ -81,7 +89,7 @@ export default function ProgramTab() {
                   </div>
                   <div className="text-xs text-text-secondary mb-1">{session.focus}</div>
                   <div className="text-xs text-text-muted">{session.exercises.length} exercises</div>
-                </div>
+                </button>
               )
             })}
           </div>
@@ -95,6 +103,50 @@ export default function ProgramTab() {
       >
         Switch Program
       </button>
+
+      {/* Session preview sheet */}
+      <SlideUpSheet
+        open={!!previewSession}
+        onClose={() => setPreviewSession(null)}
+        title={previewSession?.name ?? ''}
+        heightClass="h-[80vh]"
+      >
+        {previewSession && (
+          <div className="flex flex-col h-full">
+            {/* Session meta */}
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs font-semibold text-text-muted bg-bg-tertiary px-2 py-0.5 rounded-full">
+                {previewSession.tagLabel}
+              </span>
+              <span className="text-xs text-text-secondary">{previewSession.focus}</span>
+            </div>
+
+            {/* Exercise list */}
+            <div className="flex-1 space-y-2 overflow-y-auto pb-4">
+              {previewSession.exercises.map((ex, i) => (
+                <div key={i} className="bg-bg-card border border-bg-tertiary rounded-xl px-4 py-3">
+                  <div className="font-medium text-sm text-text-primary mb-1">{ex.name}</div>
+                  <div className="flex items-center gap-3 text-xs text-text-muted">
+                    <span>{ex.sets} sets × {ex.reps}</span>
+                    <span>·</span>
+                    <span>{ex.restLabel} rest</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Start button */}
+            <div className="pt-3 border-t border-bg-tertiary flex-shrink-0">
+              <button
+                onClick={startWorkout}
+                className="w-full py-3.5 bg-accent text-black font-bold rounded-xl text-sm active:opacity-80 transition-opacity"
+              >
+                Start Workout
+              </button>
+            </div>
+          </div>
+        )}
+      </SlideUpSheet>
     </div>
   )
 }

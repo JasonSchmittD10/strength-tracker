@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { Copy, Check, MoreHorizontal } from 'lucide-react'
+import { Copy, Check, Plus, Users, MoreHorizontal } from 'lucide-react'
 import { useGroups, useCreateGroup, useJoinGroup, useGroupDetail, useLeaveGroup } from '@/hooks/useGroups'
 import { useGroupActivity } from '@/hooks/useActivity'
 import { useAuth } from '@/hooks/useAuth'
 import WorkoutActivityCard from './WorkoutActivityCard'
+import SlideUpSheet from '@/components/shared/SlideUpSheet'
+
+// ─── Dialogs ──────────────────────────────────────────────────────────────────
 
 function CreateGroupDialog({ onClose, onCreated }) {
   const [name, setName] = useState('')
@@ -119,6 +122,8 @@ function LeaveConfirmDialog({ isAdmin, isLastMember, onConfirm, onCancel, isLeav
   )
 }
 
+// ─── Member row ───────────────────────────────────────────────────────────────
+
 function MemberRow({ member }) {
   const profile = member.profiles
   const name = profile?.display_name || member.user_id?.slice(0, 8) || '?'
@@ -143,19 +148,25 @@ function MemberRow({ member }) {
   )
 }
 
+// ─── Group view ───────────────────────────────────────────────────────────────
+
 function GroupView({ groupId, onLeft }) {
   const { user } = useAuth()
   const { data: group, isLoading } = useGroupDetail(groupId)
   const { data: activityFeed = [] } = useGroupActivity(groupId)
   const { mutateAsync: leaveGroup, isPending: isLeaving } = useLeaveGroup()
+
   const [copied, setCopied] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+  const [showMembers, setShowMembers] = useState(false)
+  const [showInvite, setShowInvite] = useState(false)
 
   const members = group?.group_members ?? []
   const myMembership = members.find(m => m.user_id === user?.id)
   const isAdmin = myMembership?.role === 'admin'
   const isLastMember = members.length === 1
+  const groupInitial = group?.name?.[0]?.toUpperCase() ?? '?'
 
   function copyInviteCode() {
     if (!group?.invite_code) return
@@ -177,78 +188,153 @@ function GroupView({ groupId, onLeft }) {
   }
 
   if (isLoading) {
-    return <div className="space-y-3">{[1, 2].map(i => <div key={i} className="bg-bg-card rounded-2xl h-16 animate-pulse" />)}</div>
+    return (
+      <div className="bg-bg-primary min-h-screen">
+        <div
+          className="h-[160px] bg-bg-secondary animate-pulse"
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        />
+        <div className="px-5 mt-12 space-y-3">
+          <div className="h-7 w-48 bg-bg-card rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-bg-card rounded-lg animate-pulse" />
+        </div>
+      </div>
+    )
   }
 
   if (!group) return null
 
   return (
-    <>
-      <div className="flex items-center justify-between py-4">
-        <div>
-          <h1 className="font-bold text-2xl text-text-primary">Groups</h1>
-          <p className="text-sm text-text-muted mt-0.5">{group.name}</p>
-        </div>
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen(v => !v)}
-            className="w-9 h-9 flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
-          >
-            <MoreHorizontal size={20} />
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-10 bg-bg-secondary border border-bg-tertiary rounded-xl overflow-hidden z-10 min-w-36 shadow-lg">
+    <div className="bg-bg-primary min-h-screen" onClick={() => menuOpen && setMenuOpen(false)}>
+
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <div className="relative">
+        {/* Background: dark gradient with subtle warm tint */}
+        <div
+          className="relative overflow-hidden"
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        >
+          <div className="h-[160px] relative overflow-hidden">
+            {/* Base gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#302c3e] via-[#1e1d2c] to-[#0f1117]" />
+            {/* Top-to-bottom darkening for text legibility */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-bg-primary/80" />
+
+            {/* Action buttons — bottom-right of visible hero */}
+            <div className="absolute right-4 bottom-3 flex items-center gap-1.5">
+              {/* Members */}
               <button
-                onClick={() => { setMenuOpen(false); setShowLeaveConfirm(true) }}
-                className="w-full text-left px-4 py-3 text-sm text-danger hover:bg-bg-tertiary transition-colors"
+                onClick={e => { e.stopPropagation(); setShowMembers(true) }}
+                className="w-6 h-6 bg-black/60 backdrop-blur-sm rounded-[4px] flex items-center justify-center"
+                aria-label="View members"
               >
-                Leave Group
+                <Users size={13} className="text-white" />
               </button>
+
+              {/* Invite */}
+              <button
+                onClick={e => { e.stopPropagation(); setShowInvite(true) }}
+                className="w-6 h-6 bg-black/60 backdrop-blur-sm rounded-[4px] flex items-center justify-center"
+                aria-label="Invite"
+              >
+                <Plus size={16} className="text-white" />
+              </button>
+
+              {/* More */}
+              <div className="relative">
+                <button
+                  onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
+                  className="w-6 h-6 bg-black/60 backdrop-blur-sm rounded-[4px] flex items-center justify-center"
+                  aria-label="More options"
+                >
+                  <MoreHorizontal size={13} className="text-white" />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-8 bg-bg-secondary border border-bg-tertiary rounded-xl overflow-hidden z-20 min-w-[140px] shadow-lg">
+                    <button
+                      onClick={e => { e.stopPropagation(); setMenuOpen(false); setShowLeaveConfirm(true) }}
+                      className="w-full text-left px-4 py-3 text-sm text-danger hover:bg-bg-tertiary transition-colors"
+                    >
+                      Leave Group
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Invite Code */}
-      <div className="mb-5 bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-4">
-        <div className="flex items-center justify-between mb-1">
-          <div>
-            <div className="text-xs text-text-muted font-medium uppercase tracking-wider mb-0.5">Invite Code</div>
-            <div className="text-lg font-bold text-text-primary tracking-widest">{group.invite_code}</div>
           </div>
-          <button
-            onClick={copyInviteCode}
-            className="flex items-center gap-1.5 text-xs text-accent border border-accent/40 rounded-lg px-3 py-1.5 hover:bg-accent/10 transition-colors"
-          >
-            {copied ? <Check size={12} /> : <Copy size={12} />}
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
         </div>
-        <p className="text-xs text-text-muted mt-1">Share this code with friends to let them join</p>
-      </div>
 
-      {/* Members */}
-      <div className="mb-5">
-        <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Members · {members.length}</div>
-        <div className="bg-bg-card border border-bg-tertiary rounded-2xl px-4 divide-y divide-bg-tertiary">
-          {members.map(member => <MemberRow key={member.user_id} member={member} />)}
+        {/* Group avatar — overlaps hero bottom */}
+        <div className="absolute left-4 bottom-0 translate-y-1/2">
+          <div className="w-[82px] h-[82px] bg-bg-card border-2 border-white rounded-xl flex items-center justify-center overflow-hidden shadow-lg">
+            <span className="text-[32px] font-bold text-text-primary leading-none">{groupInitial}</span>
+          </div>
         </div>
       </div>
 
-      {/* Activity Feed */}
-      <div>
-        <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Group Activity</div>
+      {/* Space for avatar overflow (half of 82px) */}
+      <div className="h-[41px]" />
+
+      {/* ── Group info ───────────────────────────────────────────────────── */}
+      <div className="px-5 mt-1 mb-5">
+        <h1 className="font-bold text-[26px] text-white leading-tight">{group.name}</h1>
+        {group.description ? (
+          <p className="text-sm text-text-secondary mt-1.5 leading-snug">{group.description}</p>
+        ) : null}
+      </div>
+
+      {/* ── Activity feed ─────────────────────────────────────────────────── */}
+      <div className="px-5 pb-8">
+        <h2 className="font-bold text-lg text-text-primary mb-3">{group.name} Activities</h2>
+
         {activityFeed.length === 0 ? (
-          <div className="bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-6 text-center">
+          <div className="py-8 text-center">
             <p className="text-text-muted text-sm">No workouts yet. Complete a workout to see it here.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {activityFeed.map(activity => <WorkoutActivityCard key={activity.id} activity={activity} />)}
+            {activityFeed.map(activity => (
+              <WorkoutActivityCard key={activity.id} activity={activity} />
+            ))}
           </div>
         )}
       </div>
 
+      {/* ── Members sheet ─────────────────────────────────────────────────── */}
+      <SlideUpSheet
+        open={showMembers}
+        onClose={() => setShowMembers(false)}
+        title={`Members · ${members.length}`}
+      >
+        <div className="divide-y divide-bg-tertiary">
+          {members.map(member => (
+            <MemberRow key={member.user_id} member={member} />
+          ))}
+        </div>
+      </SlideUpSheet>
+
+      {/* ── Invite code sheet ─────────────────────────────────────────────── */}
+      <SlideUpSheet
+        open={showInvite}
+        onClose={() => setShowInvite(false)}
+        title="Invite to Group"
+        heightClass="h-[38vh]"
+      >
+        <div>
+          <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Invite Code</div>
+          <div className="text-3xl font-bold text-text-primary tracking-[0.25em] mb-4">{group.invite_code}</div>
+          <button
+            onClick={copyInviteCode}
+            className="flex items-center gap-2 bg-accent/15 text-accent border border-accent/30 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors hover:bg-accent/25"
+          >
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? 'Copied!' : 'Copy Code'}
+          </button>
+          <p className="text-xs text-text-muted mt-4">Share this code with friends to let them join.</p>
+        </div>
+      </SlideUpSheet>
+
+      {/* ── Leave confirm ─────────────────────────────────────────────────── */}
       {showLeaveConfirm && (
         <LeaveConfirmDialog
           isAdmin={isAdmin}
@@ -258,9 +344,47 @@ function GroupView({ groupId, onLeft }) {
           isLeaving={isLeaving}
         />
       )}
-    </>
+    </div>
   )
 }
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
+function EmptyState({ onCreate, onJoin }) {
+  return (
+    <div className="safe-top px-4 pb-8 max-w-lg mx-auto">
+      <div className="py-4">
+        <h1 className="font-bold text-2xl text-text-primary">Groups</h1>
+      </div>
+      <div className="flex flex-col items-center justify-center pt-16 text-center px-6">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" className="mb-5 opacity-30">
+          <circle cx="26" cy="22" r="10" fill="currentColor" className="text-text-secondary" />
+          <path d="M6 54c0-11 9-18 20-18s20 7 20 18" fill="currentColor" className="text-text-secondary" />
+          <circle cx="50" cy="22" r="10" fill="currentColor" className="text-text-secondary" opacity="0.6" />
+          <path d="M34 54c2-8 8-14 16-14s14 6 16 14" fill="currentColor" className="text-text-secondary" opacity="0.6" />
+        </svg>
+        <h2 className="text-xl font-bold text-text-primary mb-2">Train Together</h2>
+        <p className="text-text-secondary text-sm mb-8">Join a group to share workouts and compete with friends.</p>
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <button
+            onClick={onCreate}
+            className="w-full bg-accent text-black font-semibold rounded-xl py-3 text-sm hover:bg-accent-hover transition-colors"
+          >
+            Create a Group
+          </button>
+          <button
+            onClick={onJoin}
+            className="w-full border border-accent text-accent font-semibold rounded-xl py-3 text-sm hover:bg-accent/10 transition-colors"
+          >
+            Join with Code
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main tab ─────────────────────────────────────────────────────────────────
 
 export default function GroupsTab() {
   const { data: groups = [], isLoading, refetch } = useGroups()
@@ -270,42 +394,32 @@ export default function GroupsTab() {
   const hasGroups = groups.length > 0
 
   return (
-    <div className="safe-top px-4 pb-8 max-w-lg mx-auto">
+    <>
       {isLoading ? (
-        <div className="py-4">
-          <h1 className="font-bold text-2xl text-text-primary mb-4">Groups</h1>
-          <div className="space-y-3">{[1, 2].map(i => <div key={i} className="bg-bg-card rounded-2xl h-16 animate-pulse" />)}</div>
+        <div className="safe-top px-4 pb-8 max-w-lg mx-auto">
+          <h1 className="font-bold text-2xl text-text-primary mb-4 py-4">Groups</h1>
+          <div className="space-y-3">
+            {[1, 2].map(i => <div key={i} className="bg-bg-card rounded-2xl h-16 animate-pulse" />)}
+          </div>
         </div>
       ) : hasGroups ? (
         <GroupView groupId={groups[0].id} onLeft={() => refetch()} />
       ) : (
-        <>
-          <div className="py-4">
-            <h1 className="font-bold text-2xl text-text-primary">Groups</h1>
-          </div>
-          <div className="flex flex-col items-center justify-center pt-16 text-center px-6">
-            <svg width="72" height="72" viewBox="0 0 72 72" fill="none" className="mb-5 opacity-30">
-              <circle cx="26" cy="22" r="10" fill="currentColor" className="text-text-secondary" />
-              <path d="M6 54c0-11 9-18 20-18s20 7 20 18" fill="currentColor" className="text-text-secondary" />
-              <circle cx="50" cy="22" r="10" fill="currentColor" className="text-text-secondary" opacity="0.6" />
-              <path d="M34 54c2-8 8-14 16-14s14 6 16 14" fill="currentColor" className="text-text-secondary" opacity="0.6" />
-            </svg>
-            <h2 className="text-xl font-bold text-text-primary mb-2">Train Together</h2>
-            <p className="text-text-secondary text-sm mb-8">Join a group to share workouts and compete with friends.</p>
-            <div className="flex flex-col gap-3 w-full max-w-xs">
-              <button onClick={() => setShowCreate(true)} className="w-full bg-accent text-black font-semibold rounded-xl py-3 text-sm hover:bg-accent-hover transition-colors">
-                Create a Group
-              </button>
-              <button onClick={() => setShowJoin(true)} className="w-full border border-accent text-accent font-semibold rounded-xl py-3 text-sm hover:bg-accent/10 transition-colors">
-                Join with Code
-              </button>
-            </div>
-          </div>
-        </>
+        <EmptyState onCreate={() => setShowCreate(true)} onJoin={() => setShowJoin(true)} />
       )}
 
-      {showCreate && <CreateGroupDialog onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); refetch() }} />}
-      {showJoin && <JoinGroupDialog onClose={() => setShowJoin(false)} onJoined={() => { setShowJoin(false); refetch() }} />}
-    </div>
+      {showCreate && (
+        <CreateGroupDialog
+          onClose={() => setShowCreate(false)}
+          onCreated={() => { setShowCreate(false); refetch() }}
+        />
+      )}
+      {showJoin && (
+        <JoinGroupDialog
+          onClose={() => setShowJoin(false)}
+          onJoined={() => { setShowJoin(false); refetch() }}
+        />
+      )}
+    </>
   )
 }
