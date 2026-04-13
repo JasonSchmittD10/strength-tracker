@@ -66,7 +66,7 @@ export default function ProgressTab() {
                 onClick={() => setMetric(m.key)}
                 className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
                   metric === m.key
-                    ? 'bg-accent text-white'
+                    ? 'bg-accent text-black'
                     : 'bg-bg-card border border-bg-tertiary text-text-muted hover:border-accent/30'
                 }`}
               >

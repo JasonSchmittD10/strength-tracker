@@ -73,7 +73,7 @@ export default function ResetPasswordScreen({ onDone }) {
             <button
               type="submit"
               disabled={loading || !password || !confirm}
-              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-base transition-colors"
+              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-black font-semibold rounded-xl py-3 text-base transition-colors"
             >
               {loading ? 'Updating…' : 'Update Password'}
             </button>

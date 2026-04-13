@@ -11,9 +11,9 @@ export default {
           card:      '#1e2235',
         },
         accent: {
-          DEFAULT: '#6c63ff',
-          hover:   '#5a52e0',
-          dim:     'rgba(108,99,255,0.15)',
+          DEFAULT: '#f2a655',
+          hover:   '#e3923b',
+          dim:     'rgba(242,166,85,0.15)',
         },
         text: {
           primary:   '#f0f2ff',

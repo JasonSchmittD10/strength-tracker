@@ -19,7 +19,7 @@ export default function BottomNav() {
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center gap-[2px] text-[10px] font-medium transition-colors ${
+              `flex-1 flex flex-col items-center gap-[3px] text-[12px] font-semibold transition-colors ${
                 isActive ? 'text-[#f2a655]' : 'text-[#8b8b8b]'
               }`
             }
