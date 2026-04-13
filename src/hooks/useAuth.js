@@ -10,6 +10,7 @@ export function useAuth() {
   const [user, setUser] = useState(DEV_USER)
   const [session, setSession] = useState(DEV_USER ? { user: DEV_USER } : null)
   const [loading, setLoading] = useState(!DEV_USER)
+  const [recoveryMode, setRecoveryMode] = useState(false)
   const queryClient = useQueryClient()
 
   useEffect(() => {
@@ -21,7 +22,14 @@ export function useAuth() {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryMode(true)
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+        return
+      }
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
@@ -35,5 +43,5 @@ export function useAuth() {
     queryClient.clear()
   }
 
-  return { user, session, loading, signOut }
+  return { user, session, loading, signOut, recoveryMode, setRecoveryMode }
 }
