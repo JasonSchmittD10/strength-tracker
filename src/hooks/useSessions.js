@@ -46,11 +46,15 @@ async function saveSession(session) {
 
 async function writeActivity({ sessionId, summary }) {
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
+  if (!user) { console.warn('[writeActivity] no authenticated user'); return }
   const { error } = await supabase
     .from('activity')
     .insert({ user_id: user.id, session_id: sessionId, type: 'workout', summary })
-  if (error) console.warn('activity write failed', error)
+  if (error) {
+    console.error('[writeActivity] insert failed:', error)
+  } else {
+    console.log('[writeActivity] wrote activity for session', sessionId)
+  }
 }
 
 // Compute PRs: for each exercise in the current session, find the best e1RM

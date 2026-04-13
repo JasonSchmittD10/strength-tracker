@@ -19,7 +19,8 @@ export function useRecentActivity(limit = 3) {
 }
 
 // Fetch activity for all members of a group, with profile info attached.
-// Requires Supabase RLS to allow reading activity rows for group members.
+// Profiles are fetched in a separate query to avoid relying on an auto-detected
+// FK join between activity.user_id → profiles.id (which may not exist).
 export function useGroupActivity(groupId) {
   return useQuery({
     queryKey: ['activity', 'group', groupId],
@@ -34,17 +35,35 @@ export function useGroupActivity(groupId) {
       const memberIds = (members || []).map(m => m.user_id)
       if (memberIds.length === 0) return []
 
-      // Step 2: fetch activity for those members with profile info
-      const { data, error } = await supabase
-        .from('activity')
-        .select('*, profiles ( display_name, avatar_url, is_private )')
-        .in('user_id', memberIds)
-        .order('created_at', { ascending: false })
-        .limit(50)
-      if (error) throw error
+      // Step 2: fetch activity + profiles in parallel (separate queries avoid FK dependency)
+      const [activityRes, profilesRes] = await Promise.all([
+        supabase
+          .from('activity')
+          .select('id, user_id, session_id, type, summary, created_at')
+          .in('user_id', memberIds)
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('profiles')
+          .select('id, display_name, avatar_url, is_private')
+          .in('id', memberIds),
+      ])
 
-      // Step 3: filter out private profiles (belt-and-suspenders on top of RLS)
-      return (data || []).filter(a => !a.profiles?.is_private)
+      if (activityRes.error) {
+        console.error('[useGroupActivity] activity fetch failed:', activityRes.error)
+        throw activityRes.error
+      }
+
+      // Build a lookup map from profiles (profilesRes errors are non-fatal — names just won't show)
+      const profilesMap = {}
+      for (const p of profilesRes.data || []) {
+        profilesMap[p.id] = p
+      }
+
+      // Merge profiles and filter private users
+      return (activityRes.data || [])
+        .map(a => ({ ...a, profiles: profilesMap[a.user_id] ?? null }))
+        .filter(a => !a.profiles?.is_private)
     },
     enabled: !!groupId,
     staleTime: 1000 * 60 * 2,

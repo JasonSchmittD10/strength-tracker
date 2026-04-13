@@ -153,7 +153,7 @@ function MemberRow({ member }) {
 function GroupView({ groupId, onLeft }) {
   const { user } = useAuth()
   const { data: group, isLoading } = useGroupDetail(groupId)
-  const { data: activityFeed = [] } = useGroupActivity(groupId)
+  const { data: activityFeed = [], error: activityError } = useGroupActivity(groupId)
   const { mutateAsync: leaveGroup, isPending: isLeaving } = useLeaveGroup()
 
   const [copied, setCopied] = useState(false)
@@ -287,7 +287,12 @@ function GroupView({ groupId, onLeft }) {
       <div className="px-5 pb-8">
         <h2 className="font-bold text-lg text-text-primary mb-3">{group.name} Activities</h2>
 
-        {activityFeed.length === 0 ? (
+        {activityError ? (
+          <div className="py-6 text-center space-y-1">
+            <p className="text-danger text-sm font-medium">Couldn't load activity</p>
+            <p className="text-text-muted text-xs">{activityError.message}</p>
+          </div>
+        ) : activityFeed.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-text-muted text-sm">No workouts yet. Complete a workout to see it here.</p>
           </div>
