@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Camera } from 'lucide-react'
+import { Camera, Clock, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile, useUpdateProfile, useUnitPreference } from '@/hooks/useProfile'
 import { useSessions, usePRs } from '@/hooks/useSessions'
@@ -142,6 +142,19 @@ export default function SettingsTab() {
           checked={isPrivate}
           onChange={togglePrivacy}
         />
+      </Section>
+
+      <Section title="Activity">
+        <button
+          onClick={() => navigate('/history')}
+          className="w-full flex items-center justify-between py-3 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <Clock size={16} className="text-text-muted" />
+            <div className="text-sm text-text-primary">History</div>
+          </div>
+          <ChevronRight size={16} className="text-text-muted" />
+        </button>
       </Section>
 
       <Section title="App Settings">

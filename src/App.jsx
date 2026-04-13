@@ -10,6 +10,7 @@ import ProgressTab from '@/components/progress/ProgressTab'
 import SettingsTab from '@/components/settings/SettingsTab'
 import WorkoutScreen from '@/components/workout/WorkoutScreen'
 import ProgramSelector from '@/components/programs/ProgramSelector'
+import ProgramTab from '@/components/programs/ProgramTab'
 import GroupsTab from '@/components/groups/GroupsTab'
 import GroupDetailScreen from '@/components/groups/GroupDetailScreen'
 
@@ -32,6 +33,7 @@ const router = createHashRouter([
       { index: true, element: <Navigate to="/home" replace /> },
       { path: 'home', element: <HomeScreen /> },
       { path: 'history', element: <HistoryTab /> },
+      { path: 'program', element: <ProgramTab /> },
       { path: 'progress', element: <ProgressTab /> },
       { path: 'groups', element: <GroupsTab /> },
       { path: 'settings', element: <SettingsTab /> },
