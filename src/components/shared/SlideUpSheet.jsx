@@ -1,17 +1,25 @@
 import { useEffect, useRef } from 'react'
 
 export default function SlideUpSheet({ open, onClose, title, children, heightClass = 'h-[70vh]' }) {
+  const contentRef = useRef(null)
   const dragStartY = useRef(null)
 
+  // Lock background scroll using a non-passive document listener (required for iOS)
   useEffect(() => {
-    if (open) document.body.style.overflow = 'hidden'
-    else document.body.style.overflow = ''
-    return () => { document.body.style.overflow = '' }
+    if (!open) return
+
+    function preventBgScroll(e) {
+      // Allow scrolling inside the sheet's content area
+      if (contentRef.current && contentRef.current.contains(e.target)) return
+      e.preventDefault()
+    }
+
+    document.addEventListener('touchmove', preventBgScroll, { passive: false })
+    return () => document.removeEventListener('touchmove', preventBgScroll)
   }, [open])
 
   if (!open) return null
 
-  // Swipe-down-to-close on the handle/header
   function onHandleTouchStart(e) {
     dragStartY.current = e.touches[0].clientY
   }
@@ -29,10 +37,7 @@ export default function SlideUpSheet({ open, onClose, title, children, heightCla
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div
-        className={`relative bg-bg-secondary rounded-t-2xl ${heightClass} flex flex-col overflow-hidden`}
-        onTouchMove={e => e.stopPropagation()}
-      >
+      <div className={`relative bg-bg-secondary rounded-t-2xl ${heightClass} flex flex-col overflow-hidden`}>
         <div
           className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-bg-tertiary flex-shrink-0 touch-none"
           onTouchStart={onHandleTouchStart}
@@ -43,7 +48,7 @@ export default function SlideUpSheet({ open, onClose, title, children, heightCla
           <h2 className="font-bold text-text-primary text-base">{title}</h2>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary text-xl leading-none">✕</button>
         </div>
-        <div className="flex-1 overflow-y-auto px-5 py-4">
+        <div ref={contentRef} className="flex-1 overflow-y-auto px-5 py-4">
           {children}
         </div>
       </div>
