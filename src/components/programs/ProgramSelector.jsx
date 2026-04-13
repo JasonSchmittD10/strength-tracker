@@ -21,6 +21,7 @@ const COMING_SOON = [
   },
 ]
 
+
 function deriveStructureSummary(program) {
   const tags = [...new Set(program.sessions.map(s => s.tagLabel))]
   return `${program.sessions.length} sessions · ${tags.join(' / ')}`
@@ -51,7 +52,7 @@ export default function ProgramSelector() {
         programStartDate: startDate,
       })
       setConfirmProgram(null)
-      navigate('/settings')
+      navigate('/program')
     } catch {
       setConfigError('Failed to update program. Please try again.')
     }
@@ -62,7 +63,7 @@ export default function ProgramSelector() {
       {/* Header */}
       <div className="flex items-center gap-3 py-4">
         <button
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate('/program')}
           className="text-text-muted hover:text-text-primary transition-colors p-1"
         >
           <ArrowLeft size={20} />

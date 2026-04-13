@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import SessionCard from './SessionCard'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
@@ -25,6 +27,7 @@ function groupByRelativeDate(sessions) {
 }
 
 export default function HistoryTab() {
+  const navigate = useNavigate()
   const { data: sessions = [], isLoading } = useSessions()
 
   if (isLoading) return <LoadingSpinner />
@@ -42,7 +45,15 @@ export default function HistoryTab() {
 
   return (
     <div className="safe-top px-4 pb-4 max-w-lg mx-auto">
-      <h1 className="font-bold text-2xl text-text-primary py-4">History</h1>
+      <div className="flex items-center gap-3 py-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-text-muted hover:text-text-primary transition-colors p-1"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="font-bold text-xl text-text-primary">History</h1>
+      </div>
       {Object.entries(groups).map(([label, items]) => (
         <div key={label} className="mb-5">
           <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{label}</div>

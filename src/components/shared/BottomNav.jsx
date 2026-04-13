@@ -1,10 +1,10 @@
 // src/components/shared/BottomNav.jsx
 import { NavLink } from 'react-router-dom'
-import { Home, Clock, TrendingUp, Users, Settings } from 'lucide-react'
+import { Home, Dumbbell, TrendingUp, Users, Settings } from 'lucide-react'
 
 const TABS = [
   { to: '/home',     icon: Home,       label: 'Home' },
-  { to: '/history',  icon: Clock,      label: 'History' },
+  { to: '/program',  icon: Dumbbell,   label: 'Program' },
   { to: '/progress', icon: TrendingUp, label: 'Progress' },
   { to: '/groups',   icon: Users,      label: 'Groups' },
   { to: '/settings', icon: Settings,   label: 'Settings' },
