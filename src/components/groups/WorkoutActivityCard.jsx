@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Trophy } from 'lucide-react'
 import { formatVolume, formatDuration } from '@/lib/utils'
 import { PROGRAMS } from '@/lib/programs'
 import SessionDetailSheet from './SessionDetailSheet'
@@ -15,6 +16,14 @@ function getSessionTag(sessionName) {
   if (lower.includes('pull')) return { tag: 'pull', label: 'PULL' }
   if (lower.includes('leg')) return { tag: 'legs', label: 'LEGS' }
   return null
+}
+
+function formatFullDate(isoString) {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  const date = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  return `${date} at ${time}`
 }
 
 function formatDisplayDate(isoString) {
@@ -59,7 +68,9 @@ export default function WorkoutActivityCard({ activity, compact = false }) {
     activity.profiles?.display_name ||
     (activity.user_id ? activity.user_id.slice(0, 8) : 'You')
   const initial = displayName[0]?.toUpperCase() || '?'
+  const avatarUrl = activity.profiles?.avatar_url || null
   const timeLabel = formatDisplayDate(displayDate || activity.created_at)
+  const fullDate = formatFullDate(displayDate || activity.created_at)
 
   if (compact) {
     return (
@@ -92,62 +103,49 @@ export default function WorkoutActivityCard({ activity, compact = false }) {
     <>
       <button
         onClick={() => setSheetOpen(true)}
-        className="w-full bg-bg-card border border-bg-tertiary rounded-2xl p-4 text-left hover:border-accent/30 transition-colors"
+        className="w-full bg-bg-deep rounded-[12px] p-4 text-left"
       >
-        {/* Header row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-              {initial}
-            </div>
-            <span className="text-sm font-medium text-text-primary">{displayName}</span>
+        {/* User + timestamp */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-bg-tertiary flex items-center justify-center">
+            {avatarUrl
+              ? <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+              : <span className="text-white text-sm font-bold">{initial}</span>
+            }
           </div>
-          <span className="text-xs text-text-muted">{timeLabel}</span>
+          <div className="min-w-0">
+            <div className="text-base font-commons text-text-primary leading-tight">{displayName}</div>
+            <div className="text-xs font-commons text-text-secondary tracking-[0.01em]">{fullDate}</div>
+          </div>
         </div>
 
-        {/* Session name + tag */}
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-base font-bold text-text-primary">{sessionName}</span>
-          {tagInfo && (
-            <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${TAG_COLORS[tagInfo.tag]}`}>
-              {tagInfo.label}
-            </span>
-          )}
+        {/* Session title + program */}
+        <div className="mb-4">
+          <div className="font-judge text-[26px] font-bold leading-tight text-text-primary">{sessionName}</div>
+          <div className="text-base font-commons text-text-secondary">{programLabel}</div>
         </div>
-
-        {/* Program label */}
-        <div className="text-xs text-text-muted mb-3">{programLabel}</div>
 
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-2 mb-3">
-          <div className="bg-bg-secondary rounded-xl py-2 text-center">
-            <div className="text-sm font-bold text-text-primary">{totalSets ?? 0}</div>
-            <div className="text-xs text-text-muted">Sets</div>
-          </div>
-          <div className="bg-bg-secondary rounded-xl py-2 text-center">
-            <div className="text-sm font-bold text-text-primary">{formatVolume(vol ?? 0)}</div>
-            <div className="text-xs text-text-muted">Volume</div>
-          </div>
-          <div className="bg-bg-secondary rounded-xl py-2 text-center">
-            <div className="text-sm font-bold text-text-primary">
-              {durationSeconds > 0 ? formatDuration(durationSeconds) : '—'}
+          {[
+            { value: formatVolume(vol ?? 0), label: 'Volume' },
+            { value: totalSets ?? 0, label: 'Sets' },
+            { value: durationSeconds > 0 ? formatDuration(durationSeconds) : '—', label: 'Duration' },
+          ].map(({ value, label }) => (
+            <div key={label} className="bg-bg-stat rounded-sm py-4 flex flex-col items-center justify-center gap-1">
+              <div className="font-judge text-[26px] font-bold leading-none text-text-primary">{value}</div>
+              <div className="text-sm font-commons text-text-secondary text-center">{label}</div>
             </div>
-            <div className="text-xs text-text-muted">Duration</div>
-          </div>
+          ))}
         </div>
 
-        {/* PR badges */}
+        {/* PR badge */}
         {prs.length > 0 && (
-          <div className="space-y-1">
-            {prs.slice(0, 2).map((pr, i) => (
-              <div key={i} className="flex items-center gap-1.5 text-xs text-warning">
-                <span>🏆</span>
-                <span className="font-medium">PR: {pr.exercise} — {pr.e1RM} kg e1RM</span>
-              </div>
-            ))}
-            {prs.length > 2 && (
-              <div className="text-xs text-text-muted">+{prs.length - 2} more PR{prs.length - 2 > 1 ? 's' : ''}</div>
-            )}
+          <div className="bg-bg-badge rounded-sm px-3 py-2 flex items-center gap-2">
+            <Trophy size={22} className="text-warning flex-shrink-0" />
+            <span className="font-commons font-semibold text-text-primary text-sm">
+              PR: {prs[0].exercise} - {prs[0].e1RM} kg e1RM
+            </span>
           </div>
         )}
       </button>

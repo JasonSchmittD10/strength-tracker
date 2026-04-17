@@ -9,6 +9,9 @@ export default {
           secondary: '#1a1d27',
           tertiary:  '#22263a',
           card:      '#1e2235',
+          deep:      '#0a0a0a',
+          stat:      '#181818',
+          badge:     '#2f2f2f',
         },
         accent: {
           DEFAULT: '#f2a655',
@@ -28,7 +31,9 @@ export default {
         danger:  '#f87171',
       },
       fontFamily: {
-        sans: ['Syne', 'system-ui', 'sans-serif'],
+        sans:    ['Syne', 'system-ui', 'sans-serif'],
+        judge:   ['"F37 Judge Trial"', 'system-ui', 'sans-serif'],
+        commons: ['"TT Commons"', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         xl:   '16px',
