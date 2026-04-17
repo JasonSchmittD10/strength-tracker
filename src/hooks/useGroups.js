@@ -130,6 +130,14 @@ async function leaveGroup({ groupId, userId, isAdmin }) {
   return { deleted: false }
 }
 
+async function updateGroupMedia({ groupId, avatarUrl, coverUrl }) {
+  const updates = {}
+  if (avatarUrl !== undefined) updates.avatar_url = avatarUrl
+  if (coverUrl !== undefined) updates.cover_url = coverUrl
+  const { error } = await supabase.from('groups').update(updates).eq('id', groupId)
+  if (error) throw error
+}
+
 export function useGroups() {
   return useQuery({ queryKey: ['groups'], queryFn: fetchUserGroups })
 }
@@ -163,5 +171,16 @@ export function useLeaveGroup() {
   return useMutation({
     mutationFn: leaveGroup,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['groups'] }),
+  })
+}
+
+export function useUpdateGroupMedia() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: updateGroupMedia,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['groups', variables.groupId] })
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+    },
   })
 }
