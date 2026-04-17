@@ -120,7 +120,7 @@ export default function GroupDetailScreen() {
   return (
     <div className="safe-top bg-bg-primary min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-bg-tertiary">
+      <div className="flex items-center justify-between px-4 py-4 border-b border-bg-tertiary relative z-10">
         <button
           onClick={() => navigate('/groups')}
           className="flex items-center gap-1 text-text-secondary hover:text-text-primary transition-colors"
