@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Copy, MoreHorizontal, Check } from 'lucide-react'
-import { useGroupDetail, useLeaveGroup } from '@/hooks/useGroups'
+import { ArrowLeft, Copy, MoreHorizontal, Check, Camera } from 'lucide-react'
+import { useGroupDetail, useLeaveGroup, useUpdateGroupMedia } from '@/hooks/useGroups'
 import { useGroupActivity } from '@/hooks/useActivity'
 import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
 import WorkoutActivityCard from './WorkoutActivityCard'
 
 function MemberRow({ member }) {
@@ -71,10 +72,17 @@ export default function GroupDetailScreen() {
   const { data: group, isLoading, error: groupError } = useGroupDetail(groupId)
   const { data: activityFeed = [] } = useGroupActivity(groupId)
   const { mutateAsync: leaveGroup, isPending: isLeaving } = useLeaveGroup()
+  const { mutateAsync: updateGroupMedia } = useUpdateGroupMedia()
 
   const [copied, setCopied] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
+
+  const coverInputRef = useRef(null)
+  const avatarInputRef = useRef(null)
 
   const members = group?.group_members ?? []
   const myMembership = members.find(m => m.user_id === user?.id)
@@ -100,6 +108,34 @@ export default function GroupDetailScreen() {
     }
   }
 
+  async function handleMediaUpload(file, type) {
+    if (!file || !groupId) return
+    const ext = file.name.split('.').pop()
+    const path = `${groupId}/${type}-${Date.now()}.${ext}`
+    const setStat = type === 'cover' ? setCoverUploading : setAvatarUploading
+    setStat(true)
+    setUploadError(null)
+    try {
+      const { error: storageError } = await supabase.storage
+        .from('group-media')
+        .upload(path, file, { upsert: true })
+      if (storageError) throw storageError
+      const { data: { publicUrl } } = supabase.storage
+        .from('group-media')
+        .getPublicUrl(path)
+      await updateGroupMedia(
+        type === 'cover'
+          ? { groupId, coverUrl: publicUrl }
+          : { groupId, avatarUrl: publicUrl }
+      )
+    } catch (e) {
+      console.error(`${type} upload failed`, e)
+      setUploadError(`Failed to upload ${type} photo. Please try again.`)
+    } finally {
+      setStat(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-bg-primary">
@@ -119,37 +155,120 @@ export default function GroupDetailScreen() {
 
   return (
     <div className="safe-top bg-bg-primary min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-bg-tertiary relative z-10">
-        <button
-          onClick={() => navigate('/groups')}
-          className="flex items-center gap-1 text-text-secondary hover:text-text-primary transition-colors"
-        >
-          <ArrowLeft size={18} />
-          <span className="text-sm">Groups</span>
-        </button>
-        <h1 className="font-bold text-text-primary text-base">{group.name}</h1>
-        <button
-          onClick={() => setMenuOpen(v => !v)}
-          className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-text-primary transition-colors relative"
-        >
-          <MoreHorizontal size={18} />
-          {menuOpen && (
-            <div className="absolute right-0 top-10 bg-bg-secondary border border-bg-tertiary rounded-xl overflow-hidden z-10 min-w-36 shadow-lg">
-              <button
-                onClick={() => { setMenuOpen(false); setShowLeaveConfirm(true) }}
-                className="w-full text-left px-4 py-3 text-sm text-danger hover:bg-bg-tertiary transition-colors"
-              >
-                Leave Group
-              </button>
-            </div>
-          )}
-        </button>
+      {/* Hidden file inputs */}
+      <input
+        ref={coverInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => { if (e.target.files?.[0]) handleMediaUpload(e.target.files[0], 'cover') }}
+      />
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => { if (e.target.files?.[0]) handleMediaUpload(e.target.files[0], 'avatar') }}
+      />
+
+      {/* Cover photo zone */}
+      <div className="relative w-full h-40 bg-bg-tertiary flex-shrink-0">
+        {group.cover_url && !coverUploading && (
+          <img
+            src={group.cover_url}
+            alt="Group cover"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+        {coverUploading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-bg-tertiary/80">
+            <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+        {/* Nav row overlaid on cover */}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-4">
+          <div className="bg-black/40 rounded-full p-1.5">
+            <button
+              onClick={() => navigate('/groups')}
+              className="flex items-center gap-1 text-white"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          </div>
+          <div className="bg-black/40 rounded-full">
+            <button
+              onClick={() => setMenuOpen(v => !v)}
+              className="w-8 h-8 flex items-center justify-center text-white relative"
+            >
+              <MoreHorizontal size={18} />
+              {menuOpen && (
+                <div className="absolute right-0 top-10 bg-bg-secondary border border-bg-tertiary rounded-xl overflow-hidden z-10 min-w-36 shadow-lg">
+                  <button
+                    onClick={() => { setMenuOpen(false); setShowLeaveConfirm(true) }}
+                    className="w-full text-left px-4 py-3 text-sm text-danger hover:bg-bg-tertiary transition-colors"
+                  >
+                    Leave Group
+                  </button>
+                </div>
+              )}
+            </button>
+          </div>
+        </div>
+        {/* Cover upload button (admin only) */}
+        {isAdmin && !coverUploading && (
+          <button
+            onClick={() => coverInputRef.current?.click()}
+            className="absolute bottom-2 right-2 bg-black/50 rounded-full p-2 text-white"
+          >
+            <Camera size={14} />
+          </button>
+        )}
       </div>
 
-      <div className="px-4 pb-8 max-w-lg mx-auto">
+      {/* Avatar + group name row */}
+      <div className="px-4 -mt-8 flex items-end gap-3 relative z-10">
+        <div className="relative flex-shrink-0">
+          <div className="w-16 h-16 rounded-full border-2 border-bg-primary overflow-hidden bg-accent/20 flex items-center justify-center">
+            {group.avatar_url && !avatarUploading ? (
+              <img
+                src={group.avatar_url}
+                alt={group.name}
+                className="w-full h-full object-cover"
+              />
+            ) : avatarUploading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <span className="text-accent font-bold text-xl">
+                {group.name?.[0]?.toUpperCase() || '?'}
+              </span>
+            )}
+          </div>
+          {isAdmin && !avatarUploading && (
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              className="absolute bottom-0 right-0 bg-accent rounded-full p-1 text-white"
+            >
+              <Camera size={10} />
+            </button>
+          )}
+        </div>
+        <div className="pb-1 min-w-0 flex-1">
+          <h1 className="font-bold text-text-primary text-lg leading-tight truncate">{group.name}</h1>
+          {group.description && (
+            <p className="text-xs text-text-secondary mt-0.5 line-clamp-2">{group.description}</p>
+          )}
+        </div>
+      </div>
+
+      {uploadError && (
+        <div className="mx-4 mt-2 text-xs text-danger">{uploadError}</div>
+      )}
+
+      <div className="px-4 pb-8 max-w-lg mx-auto mt-4">
         {/* Invite Code banner */}
-        <div className="mt-4 mb-5 bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-4">
+        <div className="mb-5 bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-4">
           <div className="flex items-center justify-between mb-1">
             <div>
               <div className="text-xs text-text-muted font-medium uppercase tracking-wider mb-0.5">Invite Code</div>
