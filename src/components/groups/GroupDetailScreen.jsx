@@ -161,14 +161,14 @@ export default function GroupDetailScreen() {
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={e => { if (e.target.files?.[0]) handleMediaUpload(e.target.files[0], 'cover') }}
+        onChange={e => { if (e.target.files?.[0]) { handleMediaUpload(e.target.files[0], 'cover'); e.target.value = '' } }}
       />
       <input
         ref={avatarInputRef}
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={e => { if (e.target.files?.[0]) handleMediaUpload(e.target.files[0], 'avatar') }}
+        onChange={e => { if (e.target.files?.[0]) { handleMediaUpload(e.target.files[0], 'avatar'); e.target.value = '' } }}
       />
 
       {/* Cover photo zone */}
@@ -218,7 +218,7 @@ export default function GroupDetailScreen() {
         {isAdmin && !coverUploading && (
           <button
             onClick={() => coverInputRef.current?.click()}
-            className="absolute bottom-2 right-2 bg-black/50 rounded-full p-2 text-white"
+            className="absolute bottom-2 right-2 bg-black/40 rounded-full p-2 text-white"
           >
             <Camera size={14} />
           </button>
