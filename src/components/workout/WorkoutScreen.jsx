@@ -1,7 +1,7 @@
 // src/components/workout/WorkoutScreen.jsx
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate, useBlocker } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, Pause, Play } from 'lucide-react'
 import ExerciseBlock from './ExerciseBlock'
 import ExerciseSearchSheet from './ExerciseSearchSheet'
 import RestTimer from './RestTimer'
@@ -11,13 +11,21 @@ import { useProgram } from '@/hooks/useProgram'
 import { normalizeExerciseName } from '@/lib/exercises'
 import { totalVolume } from '@/lib/utils'
 
-function useElapsedTimer() {
+function useElapsedTimer(isPaused) {
   const [elapsed, setElapsed] = useState(0)
-  const startRef = useRef(Date.now())
+  const accumulatedRef = useRef(0)
+  const segmentStartRef = useRef(Date.now())
   useEffect(() => {
-    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startRef.current) / 1000)), 1000)
+    if (isPaused) {
+      accumulatedRef.current += Math.floor((Date.now() - segmentStartRef.current) / 1000)
+      return
+    }
+    segmentStartRef.current = Date.now()
+    const id = setInterval(() => {
+      setElapsed(accumulatedRef.current + Math.floor((Date.now() - segmentStartRef.current) / 1000))
+    }, 1000)
     return () => clearInterval(id)
-  }, [])
+  }, [isPaused])
   return elapsed
 }
 
@@ -35,7 +43,9 @@ export default function WorkoutScreen() {
   const programId = state?.programId
   const template = state?.template
 
-  const elapsed = useElapsedTimer()
+  const [isPaused, setIsPaused] = useState(false)
+  const pausedRestRemainingRef = useRef(null)
+  const elapsed = useElapsedTimer(isPaused)
   const { data: allSessions = [] } = useSessions()
   const { mutateAsync: saveSession } = useSaveSession()
   const { data: programData } = useProgram()
@@ -147,6 +157,7 @@ export default function WorkoutScreen() {
   const [restTimer, setRestTimer] = useState(null)          // { duration, key }
   const [restTimerFullScreen, setRestTimerFullScreen] = useState(false)
   const [summaryOpen, setSummaryOpen] = useState(false)
+  const [selectedExercises, setSelectedExercises] = useState(new Set())
   const [confirmBack, setConfirmBack] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [saveError, setSaveError] = useState(null)
@@ -194,6 +205,33 @@ export default function WorkoutScreen() {
       ...prev,
       [exIdx]: (prev[exIdx] ?? []).map((s, i) => i === setIdx ? { ...s, completed: !wasCompleted } : s),
     }))
+  }
+
+  function handleTogglePause() {
+    if (!isPaused) {
+      if (restTimer) {
+        const endTime = restTimer.key + restTimer.duration * 1000
+        const remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000))
+        pausedRestRemainingRef.current = remaining > 0 ? remaining : null
+        setRestTimer(null)
+        setRestTimerFullScreen(false)
+      }
+      setIsPaused(true)
+    } else {
+      if (pausedRestRemainingRef.current !== null) {
+        setRestTimer({ duration: pausedRestRemainingRef.current, key: Date.now() })
+        pausedRestRemainingRef.current = null
+      }
+      setIsPaused(false)
+    }
+  }
+
+  function removeSet(exIdx, setIdx) {
+    setExerciseSets(prev => {
+      const sets = prev[exIdx] ?? []
+      if (sets.length <= 1) return prev
+      return { ...prev, [exIdx]: sets.filter((_, i) => i !== setIdx) }
+    })
   }
 
   function handleAddExercise(exerciseName) {
@@ -309,7 +347,19 @@ export default function WorkoutScreen() {
             </div>
           )}
         </div>
-        <span className="font-mono text-sm text-text-muted flex-shrink-0">{formatElapsed(elapsed)}</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isPaused
+            ? <span className="text-sm text-text-muted italic">Paused</span>
+            : <span className="font-mono text-sm text-text-muted">{formatElapsed(elapsed)}</span>
+          }
+          <button
+            onClick={handleTogglePause}
+            className="w-8 h-8 rounded-full bg-bg-tertiary flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
+            aria-label={isPaused ? 'Resume workout' : 'Pause workout'}
+          >
+            {isPaused ? <Play size={15} /> : <Pause size={15} />}
+          </button>
+        </div>
       </div>
 
       {/* Scrollable exercise list */}
@@ -337,18 +387,15 @@ export default function WorkoutScreen() {
             onChange={sets => setExerciseSets(prev => ({ ...prev, [i]: sets }))}
             onSetComplete={handleSetComplete}
             isProgramMode={mode === 'program'}
+            onRemoveSet={isCustomMode ? (setIdx) => removeSet(i, setIdx) : undefined}
+            isSelected={selectedExercises.has(i)}
+            onSelectToggle={isCustomMode ? () => setSelectedExercises(prev => {
+              const next = new Set(prev)
+              next.has(i) ? next.delete(i) : next.add(i)
+              return next
+            }) : undefined}
           />
         ))}
-
-        {isCustomMode && activeExercises.length > 0 && (
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 mb-4 border border-dashed border-bg-tertiary rounded-xl text-text-muted text-sm hover:border-accent/50 hover:text-accent transition-colors"
-          >
-            <Plus size={16} />
-            Add Exercise
-          </button>
-        )}
 
         {/* Finish + Cancel — inline at bottom of scroll area */}
         <div className="pt-4 mt-2 border-t border-bg-tertiary">
@@ -366,6 +413,34 @@ export default function WorkoutScreen() {
           </button>
         </div>
       </div>
+
+      {/* Sticky footer — Add Exercise / Add Superset (custom mode only, when exercises exist) */}
+      {isCustomMode && activeExercises.length > 0 && (
+        <div className="flex-shrink-0 border-t border-bg-tertiary bg-bg-primary px-4 py-3 flex gap-3">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-bg-card border border-bg-tertiary rounded-xl text-sm text-text-primary hover:border-accent/50 transition-colors"
+          >
+            <Plus size={15} />
+            Add Exercise
+          </button>
+          <button
+            onClick={() => {
+              if (selectedExercises.size >= 2) {
+                console.log('superset:', [...selectedExercises])
+                setSelectedExercises(new Set())
+              }
+            }}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-colors ${
+              selectedExercises.size >= 2
+                ? 'bg-accent text-black'
+                : 'bg-bg-card border border-bg-tertiary text-text-muted pointer-events-none'
+            }`}
+          >
+            Add Superset
+          </button>
+        </div>
+      )}
 
       {/* Rest timer */}
       {restTimer && (

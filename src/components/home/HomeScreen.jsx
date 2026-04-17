@@ -5,6 +5,7 @@ import { useSessions } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
 import { useWorkoutTemplates, useDeleteTemplate } from '@/hooks/useTemplates'
 import { useRecentActivity } from '@/hooks/useActivity'
+import { useProfile } from '@/hooks/useProfile'
 import WorkoutActivityCard from '@/components/groups/WorkoutActivityCard'
 import { formatDate } from '@/lib/utils'
 
@@ -24,6 +25,8 @@ function TagPill({ tag, label }) {
 
 export default function HomeScreen() {
   const navigate = useNavigate()
+  const { data: profile } = useProfile()
+  const firstName = profile?.display_name?.split(' ')[0] || null
   const { data: sessions = [] } = useSessions()
   const { data: programData, isLoading } = useProgram()
   const { data: templates = [] } = useWorkoutTemplates()
@@ -61,7 +64,9 @@ export default function HomeScreen() {
     <div className="safe-top px-4 pb-4 max-w-lg mx-auto">
       {/* Header */}
       <div className="py-4">
-        <h1 className="font-bold text-2xl text-text-primary tracking-tight">Hybrid</h1>
+        <h1 className="font-bold text-2xl text-text-primary tracking-tight">
+          {firstName ? `Hello, ${firstName}` : 'Hello'}
+        </h1>
       </div>
 
       {/* Active program card */}
