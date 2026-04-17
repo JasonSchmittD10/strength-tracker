@@ -8,7 +8,7 @@ async function fetchUserGroups() {
       role,
       joined_at,
       groups (
-        id, name, description, invite_code, created_by, created_at,
+        id, name, description, invite_code, created_by, created_at, avatar_url, cover_url,
         group_members ( count )
       )
     `)
@@ -27,7 +27,7 @@ async function fetchGroupDetail(groupId) {
     .from('group_members')
     .select(`
       user_id, role, joined_at,
-      groups ( id, name, description, invite_code, created_by, created_at )
+      groups ( id, name, description, invite_code, created_by, created_at, avatar_url, cover_url )
     `)
     .eq('group_id', groupId)
   if (error) throw error
