@@ -157,7 +157,6 @@ export default function WorkoutScreen() {
   const [restTimer, setRestTimer] = useState(null)          // { duration, key }
   const [restTimerFullScreen, setRestTimerFullScreen] = useState(false)
   const [summaryOpen, setSummaryOpen] = useState(false)
-  const [selectedExercises, setSelectedExercises] = useState(new Set())
   const [confirmBack, setConfirmBack] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [saveError, setSaveError] = useState(null)
@@ -388,12 +387,6 @@ export default function WorkoutScreen() {
             onSetComplete={handleSetComplete}
             isProgramMode={mode === 'program'}
             onRemoveSet={isCustomMode ? (setIdx) => removeSet(i, setIdx) : undefined}
-            isSelected={selectedExercises.has(i)}
-            onSelectToggle={isCustomMode ? () => setSelectedExercises(prev => {
-              const next = new Set(prev)
-              next.has(i) ? next.delete(i) : next.add(i)
-              return next
-            }) : undefined}
           />
         ))}
 
@@ -414,30 +407,15 @@ export default function WorkoutScreen() {
         </div>
       </div>
 
-      {/* Sticky footer — Add Exercise / Add Superset (custom mode only, when exercises exist) */}
+      {/* Sticky Add Exercise button (custom mode only, when exercises exist) */}
       {isCustomMode && activeExercises.length > 0 && (
-        <div className="flex-shrink-0 border-t border-bg-tertiary bg-bg-primary px-4 py-3 flex gap-3">
+        <div className="flex-shrink-0 border-t border-bg-tertiary bg-bg-primary px-4 py-3">
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-bg-card border border-bg-tertiary rounded-xl text-sm text-text-primary hover:border-accent/50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 bg-bg-card border border-bg-tertiary rounded-xl text-sm text-text-primary hover:border-accent/50 transition-colors"
           >
             <Plus size={15} />
             Add Exercise
-          </button>
-          <button
-            onClick={() => {
-              if (selectedExercises.size >= 2) {
-                console.log('superset:', [...selectedExercises])
-                setSelectedExercises(new Set())
-              }
-            }}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-colors ${
-              selectedExercises.size >= 2
-                ? 'bg-accent text-black'
-                : 'bg-bg-card border border-bg-tertiary text-text-muted pointer-events-none'
-            }`}
-          >
-            Add Superset
           </button>
         </div>
       )}

@@ -1,11 +1,11 @@
 // src/components/workout/ExerciseBlock.jsx
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Clock, Check } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
 
-export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isSelected = false, onSelectToggle }) {
+export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet }) {
   const [cuesOpen, setCuesOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const info = EXERCISE_LIBRARY[exercise.name] || {}
@@ -22,7 +22,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
   }
 
   return (
-    <div className={`bg-bg-card rounded-2xl border p-4 mb-3 ${isSelected ? 'border-accent' : 'border-bg-tertiary'}`}>
+    <div className="bg-bg-card rounded-2xl border border-bg-tertiary p-4 mb-3">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
@@ -34,22 +34,9 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
             </div>
           )}
         </div>
-        <div className="flex items-center gap-1">
-          {!isProgramMode && onSelectToggle && (
-            <button
-              onClick={onSelectToggle}
-              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                isSelected ? 'bg-accent border-accent' : 'border-text-muted'
-              }`}
-              aria-label={isSelected ? 'Deselect exercise' : 'Select exercise'}
-            >
-              {isSelected && <Check size={10} className="text-black" />}
-            </button>
-          )}
-          <button onClick={() => setHistoryOpen(true)} className="p-2 text-text-muted hover:text-accent transition-colors">
-            <Clock size={16} />
-          </button>
-        </div>
+        <button onClick={() => setHistoryOpen(true)} className="p-2 text-text-muted hover:text-accent transition-colors">
+          <Clock size={16} />
+        </button>
       </div>
 
       {/* Cues toggle */}
