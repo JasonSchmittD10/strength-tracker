@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Copy, MoreHorizontal, Check, Camera } from 'lucide-react'
 import { useGroupDetail, useLeaveGroup, useUpdateGroupMedia } from '@/hooks/useGroups'
@@ -81,9 +81,6 @@ export default function GroupDetailScreen() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [uploadError, setUploadError] = useState(null)
 
-  const coverInputRef = useRef(null)
-  const avatarInputRef = useRef(null)
-
   const members = group?.group_members ?? []
   const myMembership = members.find(m => m.user_id === user?.id)
   const isAdmin = myMembership?.role === 'admin'
@@ -155,21 +152,6 @@ export default function GroupDetailScreen() {
 
   return (
     <div className="safe-top bg-bg-primary min-h-screen">
-      {/* Hidden file inputs */}
-      <input
-        ref={coverInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={e => { if (e.target.files?.[0]) { handleMediaUpload(e.target.files[0], 'cover'); e.target.value = '' } }}
-      />
-      <input
-        ref={avatarInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={e => { if (e.target.files?.[0]) { handleMediaUpload(e.target.files[0], 'avatar'); e.target.value = '' } }}
-      />
 
       {/* Cover photo zone */}
       <div className="relative w-full h-40 bg-bg-tertiary flex-shrink-0">
@@ -186,7 +168,7 @@ export default function GroupDetailScreen() {
           </div>
         )}
         {/* Nav row overlaid on cover */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-4">
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-4 z-30">
           <div className="bg-black/40 rounded-full p-1.5">
             <button
               onClick={() => navigate('/groups')}
@@ -202,7 +184,7 @@ export default function GroupDetailScreen() {
             >
               <MoreHorizontal size={18} />
               {menuOpen && (
-                <div className="absolute right-0 top-10 bg-bg-secondary border border-bg-tertiary rounded-xl overflow-hidden z-10 min-w-36 shadow-lg">
+                <div className="absolute right-0 top-10 bg-bg-secondary border border-bg-tertiary rounded-xl overflow-hidden z-50 min-w-36 shadow-lg">
                   <button
                     onClick={() => { setMenuOpen(false); setShowLeaveConfirm(true) }}
                     className="w-full text-left px-4 py-3 text-sm text-danger hover:bg-bg-tertiary transition-colors"
@@ -216,12 +198,15 @@ export default function GroupDetailScreen() {
         </div>
         {/* Cover upload button (admin only) */}
         {isAdmin && !coverUploading && (
-          <button
-            onClick={() => coverInputRef.current?.click()}
-            className="absolute bottom-2 right-2 bg-black/40 rounded-full p-2 text-white"
-          >
+          <label className="absolute bottom-2 right-2 bg-black/40 rounded-full p-2 text-white cursor-pointer">
             <Camera size={14} />
-          </button>
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={e => { if (e.target.files?.[0]) { handleMediaUpload(e.target.files[0], 'cover'); e.target.value = '' } }}
+            />
+          </label>
         )}
       </div>
 
@@ -246,12 +231,15 @@ export default function GroupDetailScreen() {
             )}
           </div>
           {isAdmin && !avatarUploading && (
-            <button
-              onClick={() => avatarInputRef.current?.click()}
-              className="absolute bottom-0 right-0 bg-accent rounded-full p-1 text-white"
-            >
+            <label className="absolute bottom-0 right-0 bg-accent rounded-full p-1 text-white cursor-pointer">
               <Camera size={10} />
-            </button>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={e => { if (e.target.files?.[0]) { handleMediaUpload(e.target.files[0], 'avatar'); e.target.value = '' } }}
+              />
+            </label>
           )}
         </div>
         <div className="pb-1 min-w-0 flex-1">
