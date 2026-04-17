@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Copy, Check, Plus, Users, MoreHorizontal } from 'lucide-react'
-import { useGroups, useCreateGroup, useJoinGroup, useGroupDetail, useLeaveGroup } from '@/hooks/useGroups'
+import { Copy, Check, Plus, Users, MoreHorizontal, Camera } from 'lucide-react'
+import { useGroups, useCreateGroup, useJoinGroup, useGroupDetail, useLeaveGroup, useUpdateGroupMedia } from '@/hooks/useGroups'
 import { useGroupActivity } from '@/hooks/useActivity'
 import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/lib/supabase'
 import WorkoutActivityCard from './WorkoutActivityCard'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 
@@ -155,12 +156,16 @@ function GroupView({ groupId, onLeft }) {
   const { data: group, isLoading } = useGroupDetail(groupId)
   const { data: activityFeed = [], error: activityError } = useGroupActivity(groupId)
   const { mutateAsync: leaveGroup, isPending: isLeaving } = useLeaveGroup()
+  const { mutateAsync: updateGroupMedia } = useUpdateGroupMedia()
 
   const [copied, setCopied] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [uploadError, setUploadError] = useState(null)
 
   const members = group?.group_members ?? []
   const myMembership = members.find(m => m.user_id === user?.id)
@@ -187,6 +192,34 @@ function GroupView({ groupId, onLeft }) {
     }
   }
 
+  async function handleMediaUpload(file, type) {
+    if (!file || !groupId) return
+    const ext = file.name.split('.').pop()
+    const path = `${groupId}/${type}-${Date.now()}.${ext}`
+    const setStat = type === 'cover' ? setCoverUploading : setAvatarUploading
+    setStat(true)
+    setUploadError(null)
+    try {
+      const { error: storageError } = await supabase.storage
+        .from('group-media')
+        .upload(path, file, { upsert: true })
+      if (storageError) throw storageError
+      const { data: { publicUrl } } = supabase.storage
+        .from('group-media')
+        .getPublicUrl(path)
+      await updateGroupMedia(
+        type === 'cover'
+          ? { groupId, coverUrl: publicUrl }
+          : { groupId, avatarUrl: publicUrl }
+      )
+    } catch (e) {
+      console.error(`${type} upload failed`, e)
+      setUploadError(`Failed to upload ${type} photo. Please try again.`)
+    } finally {
+      setStat(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="bg-bg-primary min-h-screen">
@@ -209,20 +242,29 @@ function GroupView({ groupId, onLeft }) {
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div className="relative">
-        {/* Background: dark gradient with subtle warm tint */}
-        <div
-          className="relative overflow-hidden"
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
-        >
-          <div className="h-[160px] relative overflow-hidden">
-            {/* Base gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#302c3e] via-[#1e1d2c] to-[#0f1117]" />
-            {/* Top-to-bottom darkening for text legibility */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-bg-primary/80" />
+        <div style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          {/* h-[160px] has NO overflow-hidden so the dropdown can escape downward */}
+          <div className="h-[160px] relative">
+            {/* Inner clip — contains gradient + cover photo */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#302c3e] via-[#1e1d2c] to-[#0f1117]" />
+              {group.cover_url && !coverUploading && (
+                <img
+                  src={group.cover_url}
+                  alt="Group cover"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )}
+              {coverUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-bg-secondary/80">
+                  <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-bg-primary/80" />
+            </div>
 
-            {/* Action buttons — bottom-right of visible hero */}
-            <div className="absolute right-4 bottom-3 flex items-center gap-1.5">
-              {/* Members */}
+            {/* Action buttons — outside overflow clip so dropdown is never cut off */}
+            <div className="absolute right-4 bottom-3 flex items-center gap-1.5 z-30">
               <button
                 onClick={e => { e.stopPropagation(); setShowMembers(true) }}
                 className="w-6 h-6 bg-black/60 backdrop-blur-sm rounded-[4px] flex items-center justify-center"
@@ -230,8 +272,6 @@ function GroupView({ groupId, onLeft }) {
               >
                 <Users size={13} className="text-white" />
               </button>
-
-              {/* Invite */}
               <button
                 onClick={e => { e.stopPropagation(); setShowInvite(true) }}
                 className="w-6 h-6 bg-black/60 backdrop-blur-sm rounded-[4px] flex items-center justify-center"
@@ -239,8 +279,6 @@ function GroupView({ groupId, onLeft }) {
               >
                 <Plus size={16} className="text-white" />
               </button>
-
-              {/* More */}
               <div className="relative">
                 <button
                   onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
@@ -250,7 +288,7 @@ function GroupView({ groupId, onLeft }) {
                   <MoreHorizontal size={13} className="text-white" />
                 </button>
                 {menuOpen && (
-                  <div className="absolute right-0 top-8 bg-bg-secondary border border-bg-tertiary rounded-xl overflow-hidden z-20 min-w-[140px] shadow-lg">
+                  <div className="absolute right-0 top-8 bg-bg-secondary border border-bg-tertiary rounded-xl overflow-hidden z-50 min-w-[140px] shadow-lg">
                     <button
                       onClick={e => { e.stopPropagation(); setMenuOpen(false); setShowLeaveConfirm(true) }}
                       className="w-full text-left px-4 py-3 text-sm text-danger hover:bg-bg-tertiary transition-colors"
@@ -261,19 +299,57 @@ function GroupView({ groupId, onLeft }) {
                 )}
               </div>
             </div>
+
+            {/* Cover upload (admin only) */}
+            {isAdmin && !coverUploading && (
+              <label className="absolute bottom-3 left-[106px] bg-black/40 rounded-full p-1.5 text-white cursor-pointer z-10">
+                <Camera size={12} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={e => { if (e.target.files?.[0]) { handleMediaUpload(e.target.files[0], 'cover'); e.target.value = '' } }}
+                />
+              </label>
+            )}
           </div>
         </div>
 
         {/* Group avatar — overlaps hero bottom */}
-        <div className="absolute left-4 bottom-0 translate-y-1/2">
-          <div className="w-[82px] h-[82px] bg-bg-card border-2 border-white rounded-xl flex items-center justify-center overflow-hidden shadow-lg">
-            <span className="text-[32px] font-bold text-text-primary leading-none">{groupInitial}</span>
+        <div className="absolute left-4 bottom-0 translate-y-1/2 z-10">
+          <div className="relative">
+            <div className="w-[82px] h-[82px] bg-bg-card border-2 border-white rounded-xl flex items-center justify-center overflow-hidden shadow-lg">
+              {group.avatar_url && !avatarUploading ? (
+                <img src={group.avatar_url} alt={group.name} className="w-full h-full object-cover" />
+              ) : avatarUploading ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <span className="text-[32px] font-bold text-text-primary leading-none">{groupInitial}</span>
+              )}
+            </div>
+            {isAdmin && !avatarUploading && (
+              <label className="absolute bottom-0 right-0 bg-accent rounded-full p-1 text-white cursor-pointer">
+                <Camera size={10} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={e => { if (e.target.files?.[0]) { handleMediaUpload(e.target.files[0], 'avatar'); e.target.value = '' } }}
+                />
+              </label>
+            )}
           </div>
         </div>
       </div>
 
       {/* Space for avatar overflow (half of 82px) */}
       <div className="h-[41px]" />
+
+      {uploadError && (
+        <div className="px-5 mb-2 text-xs text-danger">{uploadError}</div>
+      )}
 
       {/* ── Group info ───────────────────────────────────────────────────── */}
       <div className="px-5 mt-1 mb-5">
