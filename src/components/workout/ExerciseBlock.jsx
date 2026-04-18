@@ -1,11 +1,11 @@
 // src/components/workout/ExerciseBlock.jsx
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Clock } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock, Check } from 'lucide-react'
 import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
 
-export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet }) {
+export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect }) {
   const [cuesOpen, setCuesOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const info = EXERCISE_LIBRARY[exercise.name] || {}
@@ -22,10 +22,18 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
   }
 
   return (
-    <div className="bg-bg-card rounded-2xl border border-bg-tertiary p-4 mb-3">
+    <div className={`bg-bg-card rounded-2xl border border-bg-tertiary p-4 ${isInSuperset ? 'mb-0' : 'mb-3'}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <div>
+        {onSelect && (
+          <button
+            onClick={onSelect}
+            className={`mr-3 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-accent border-accent' : 'border-text-muted'}`}
+          >
+            {isSelected && <Check size={10} className="text-black" />}
+          </button>
+        )}
+        <div className="flex-1">
           <div className="font-bold text-text-primary text-base">{exercise.name}</div>
           {primaryMuscle && <div className="text-xs text-text-secondary">{primaryMuscle}</div>}
           {exercise.reps && (

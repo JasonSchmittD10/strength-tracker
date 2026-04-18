@@ -60,6 +60,7 @@ export default function WorkoutScreen() {
         reps: ex.reps,
         rest: ex.rest ?? 90,
         restLabel: ex.restLabel ?? '90 sec',
+        supersetId: null,
       }))
     }
     return []
@@ -161,6 +162,8 @@ export default function WorkoutScreen() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [selectedExercises, setSelectedExercises] = useState(new Set())
+  const [isSelectingSuperset, setIsSelectingSuperset] = useState(false)
   const allowNavRef = useRef(false)
 
   // Block swipe-back and browser back button during workout
@@ -225,6 +228,27 @@ export default function WorkoutScreen() {
     }
   }
 
+  function handleToggleSelect(i) {
+    setSelectedExercises(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+  }
+
+  function handleAddSuperset() {
+    if (selectedExercises.size < 2) return
+    const id = Date.now().toString()
+    setCustomExercises(prev =>
+      prev.map((ex, i) =>
+        selectedExercises.has(i) ? { ...ex, supersetId: id } : ex
+      )
+    )
+    setSelectedExercises(new Set())
+    setIsSelectingSuperset(false)
+  }
+
   function removeSet(exIdx, setIdx) {
     setExerciseSets(prev => {
       const sets = prev[exIdx] ?? []
@@ -237,7 +261,7 @@ export default function WorkoutScreen() {
     const newIdx = customExercises.length
     setCustomExercises(prev => [
       ...prev,
-      { name: exerciseName, sets: 3, reps: '8–12', rest: 90, restLabel: '90 sec' },
+      { name: exerciseName, sets: 3, reps: '8–12', rest: 90, restLabel: '90 sec', supersetId: null },
     ])
     setExerciseSets(prev => ({
       ...prev,
@@ -248,6 +272,7 @@ export default function WorkoutScreen() {
   const buildSessionData = useCallback(() => {
     const exercises = activeExercises.map((ex, i) => ({
       name: ex.name,
+      supersetId: ex.supersetId ?? null,
       sets: (exerciseSets[i] ?? []).map((s, j) => ({
         setNumber: j + 1,
         weight: parseFloat(s.weight) || 0,
@@ -320,6 +345,24 @@ export default function WorkoutScreen() {
 
   const isCustomMode = mode === 'custom' || mode === 'template'
 
+  const displayGroups = []
+  let gIdx = 0
+  while (gIdx < activeExercises.length) {
+    const ex = activeExercises[gIdx]
+    if (ex.supersetId && activeExercises[gIdx + 1]?.supersetId === ex.supersetId) {
+      const group = { type: 'superset', id: ex.supersetId, indices: [] }
+      while (gIdx < activeExercises.length && activeExercises[gIdx].supersetId === ex.supersetId) {
+        group.indices.push(gIdx++)
+      }
+      displayGroups.push(group)
+    } else {
+      displayGroups.push({ type: 'single', exIdx: gIdx++ })
+    }
+  }
+
+  const canAddSuperset = selectedExercises.size >= 2 &&
+    ![...selectedExercises].some(i => activeExercises[i]?.supersetId)
+
   const currentSessionState = {
     ...(mode === 'program' ? session : {}),
     exercises: activeExercises.map((ex, i) => ({ ...ex, sets: exerciseSets[i] ?? [] })),
@@ -377,18 +420,47 @@ export default function WorkoutScreen() {
           </div>
         )}
 
-        {activeExercises.map((ex, i) => (
-          <ExerciseBlock
-            key={i}
-            exercise={ex}
-            exIdx={i}
-            sets={exerciseSets[i] ?? []}
-            onChange={sets => setExerciseSets(prev => ({ ...prev, [i]: sets }))}
-            onSetComplete={handleSetComplete}
-            isProgramMode={mode === 'program'}
-            onRemoveSet={isCustomMode ? (setIdx) => removeSet(i, setIdx) : undefined}
-          />
-        ))}
+        {displayGroups.map((group, gi) => {
+          if (group.type === 'single') {
+            const { exIdx } = group
+            return (
+              <ExerciseBlock
+                key={exIdx}
+                exercise={activeExercises[exIdx]}
+                exIdx={exIdx}
+                sets={exerciseSets[exIdx] ?? []}
+                onChange={sets => setExerciseSets(prev => ({ ...prev, [exIdx]: sets }))}
+                onSetComplete={handleSetComplete}
+                isProgramMode={mode === 'program'}
+                onRemoveSet={isCustomMode ? (setIdx) => removeSet(exIdx, setIdx) : undefined}
+                isSelected={selectedExercises.has(exIdx)}
+                onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
+              />
+            )
+          }
+          return (
+            <div key={group.id} className="mb-3">
+              <span className="text-[10px] font-bold text-accent uppercase tracking-widest ml-0.5 mb-1.5 block">Superset</span>
+              <div className="border-l-2 border-accent pl-2.5 space-y-1.5">
+                {group.indices.map(exIdx => (
+                  <ExerciseBlock
+                    key={exIdx}
+                    exercise={activeExercises[exIdx]}
+                    exIdx={exIdx}
+                    sets={exerciseSets[exIdx] ?? []}
+                    onChange={sets => setExerciseSets(prev => ({ ...prev, [exIdx]: sets }))}
+                    onSetComplete={handleSetComplete}
+                    isProgramMode={mode === 'program'}
+                    onRemoveSet={isCustomMode ? (setIdx) => removeSet(exIdx, setIdx) : undefined}
+                    isInSuperset={true}
+                    isSelected={selectedExercises.has(exIdx)}
+                    onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
 
         {/* Finish + Cancel — inline at bottom of scroll area */}
         <div className="pt-4 mt-2 border-t border-bg-tertiary">
@@ -407,16 +479,42 @@ export default function WorkoutScreen() {
         </div>
       </div>
 
-      {/* Sticky Add Exercise button (custom mode only, when exercises exist) */}
+      {/* Sticky footer (custom mode only, when exercises exist) */}
       {isCustomMode && activeExercises.length > 0 && (
         <div className="flex-shrink-0 border-t border-bg-tertiary bg-bg-primary px-4 py-3">
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-bg-card border border-bg-tertiary rounded-xl text-sm text-text-primary hover:border-accent/50 transition-colors"
-          >
-            <Plus size={15} />
-            Add Exercise
-          </button>
+          {isSelectingSuperset ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setIsSelectingSuperset(false); setSelectedExercises(new Set()) }}
+                className="flex-1 py-3 border border-bg-tertiary rounded-xl text-sm text-text-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddSuperset}
+                disabled={!canAddSuperset}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-colors ${canAddSuperset ? 'bg-accent text-black' : 'bg-bg-tertiary text-text-muted'}`}
+              >
+                Add Superset{selectedExercises.size >= 2 ? ` (${selectedExercises.size})` : ''}
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="flex-1 flex items-center justify-center gap-2 py-3 bg-bg-card border border-bg-tertiary rounded-xl text-sm text-text-primary hover:border-accent/50 transition-colors"
+              >
+                <Plus size={15} />
+                Add Exercise
+              </button>
+              <button
+                onClick={() => setIsSelectingSuperset(true)}
+                className="flex-1 flex items-center justify-center py-3 bg-bg-card border border-bg-tertiary rounded-xl text-sm text-text-primary hover:border-accent/50 transition-colors"
+              >
+                Superset
+              </button>
+            </div>
+          )}
         </div>
       )}
 
