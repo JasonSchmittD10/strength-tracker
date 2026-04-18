@@ -39,7 +39,7 @@ const GROUPED_EXERCISES = GROUP_ORDER.reduce((acc, group) => {
   return acc
 }, {})
 
-export default function ExerciseSearchSheet({ open, onClose, onAdd }) {
+export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperset }) {
   const [query, setQuery] = useState('')
   const [mode, setMode] = useState('single')          // 'single' | 'superset'
   const [supersetSelections, setSupersetSelections] = useState(new Set())
@@ -78,7 +78,7 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd }) {
   }
 
   function handleSupersetConfirm() {
-    console.log('superset:', [...supersetSelections])
+    onAddSuperset([...supersetSelections])
     setSupersetSelections(new Set())
     setMode('single')
     onClose()

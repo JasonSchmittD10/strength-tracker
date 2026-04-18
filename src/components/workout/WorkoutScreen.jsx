@@ -269,6 +269,23 @@ export default function WorkoutScreen() {
     }))
   }
 
+  function handleAddSupersetFromSheet(exerciseNames) {
+    if (exerciseNames.length < 2) return
+    const id = Date.now().toString()
+    const startIdx = customExercises.length
+    setCustomExercises(prev => [
+      ...prev,
+      ...exerciseNames.map(name => ({ name, sets: 3, reps: '8–12', rest: 90, restLabel: '90 sec', supersetId: id })),
+    ])
+    setExerciseSets(prev => {
+      const next = { ...prev }
+      exerciseNames.forEach((_, i) => {
+        next[startIdx + i] = Array.from({ length: 3 }, () => ({ weight: '', reps: '', rpe: '', completed: false }))
+      })
+      return next
+    })
+  }
+
   const buildSessionData = useCallback(() => {
     const exercises = activeExercises.map((ex, i) => ({
       name: ex.name,
@@ -543,6 +560,7 @@ export default function WorkoutScreen() {
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
         onAdd={handleAddExercise}
+        onAddSuperset={handleAddSupersetFromSheet}
       />
 
       {/* Workout summary sheet */}
