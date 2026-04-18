@@ -346,17 +346,22 @@ export default function WorkoutScreen() {
   const isCustomMode = mode === 'custom' || mode === 'template'
 
   const displayGroups = []
-  let gIdx = 0
-  while (gIdx < activeExercises.length) {
-    const ex = activeExercises[gIdx]
-    if (ex.supersetId && activeExercises[gIdx + 1]?.supersetId === ex.supersetId) {
-      const group = { type: 'superset', id: ex.supersetId, indices: [] }
-      while (gIdx < activeExercises.length && activeExercises[gIdx].supersetId === ex.supersetId) {
-        group.indices.push(gIdx++)
+  const groupedIndices = new Set()
+  for (let i = 0; i < activeExercises.length; i++) {
+    if (groupedIndices.has(i)) continue
+    const ex = activeExercises[i]
+    if (ex.supersetId) {
+      const indices = activeExercises
+        .map((e, j) => e.supersetId === ex.supersetId ? j : -1)
+        .filter(j => j !== -1)
+      if (indices.length >= 2) {
+        indices.forEach(j => groupedIndices.add(j))
+        displayGroups.push({ type: 'superset', id: ex.supersetId, indices })
+      } else {
+        displayGroups.push({ type: 'single', exIdx: i })
       }
-      displayGroups.push(group)
     } else {
-      displayGroups.push({ type: 'single', exIdx: gIdx++ })
+      displayGroups.push({ type: 'single', exIdx: i })
     }
   }
 
@@ -440,7 +445,10 @@ export default function WorkoutScreen() {
           }
           return (
             <div key={group.id} className="mb-3">
-              <span className="text-[10px] font-bold text-accent uppercase tracking-widest ml-0.5 mb-1.5 block">Superset</span>
+              <div className="flex items-center gap-2 mb-1.5 ml-0.5">
+                <span className="text-xs font-bold text-accent uppercase tracking-wider">Superset</span>
+                <div className="flex-1 h-px bg-accent/20" />
+              </div>
               <div className="border-l-2 border-accent pl-2.5 space-y-1.5">
                 {group.indices.map(exIdx => (
                   <ExerciseBlock
@@ -495,7 +503,7 @@ export default function WorkoutScreen() {
                 disabled={!canAddSuperset}
                 className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-colors ${canAddSuperset ? 'bg-accent text-black' : 'bg-bg-tertiary text-text-muted'}`}
               >
-                Add Superset{selectedExercises.size >= 2 ? ` (${selectedExercises.size})` : ''}
+                Add Superset{canAddSuperset && selectedExercises.size >= 2 ? ` (${selectedExercises.size})` : ''}
               </button>
             </div>
           ) : (
