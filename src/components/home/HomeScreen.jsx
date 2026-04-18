@@ -1,248 +1,235 @@
-import { useState, useRef } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
-import { useWorkoutTemplates, useDeleteTemplate } from '@/hooks/useTemplates'
-import { useRecentActivity } from '@/hooks/useActivity'
-import { useProfile } from '@/hooks/useProfile'
-import WorkoutActivityCard from '@/components/groups/WorkoutActivityCard'
-import { formatDate } from '@/lib/utils'
+import { totalVolume, formatVolume } from '@/lib/utils'
 
-const TAG_COLORS = {
-  push: 'bg-push/15 text-push border-push/30',
-  pull: 'bg-pull/15 text-pull border-pull/30',
-  legs: 'bg-legs/15 text-legs border-legs/30',
+function getMonday(date = new Date()) {
+  const d = new Date(date)
+  const day = d.getDay()
+  d.setDate(d.getDate() - ((day + 6) % 7))
+  d.setHours(0, 0, 0, 0)
+  return d
 }
 
-function TagPill({ tag, label }) {
-  return (
-    <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${TAG_COLORS[tag] || 'bg-accent/15 text-accent border-accent/30'}`}>
-      {label}
-    </span>
-  )
+function computeWeekStreak(sessions) {
+  if (!sessions.length) return 0
+  const monday = getMonday()
+  let streak = 0
+  for (let w = 0; w < 52; w++) {
+    const start = new Date(monday)
+    start.setDate(monday.getDate() - w * 7)
+    const end = new Date(start)
+    end.setDate(start.getDate() + 7)
+    if (sessions.some(s => { const d = new Date(s.date + 'T00:00:00'); return d >= start && d < end })) {
+      streak++
+    } else {
+      break
+    }
+  }
+  return streak
 }
+
+function computePRsThisMonth(sessions) {
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const thisMonth = sessions.filter(s => new Date(s.date + 'T00:00:00') >= monthStart)
+  const prior = sessions.filter(s => new Date(s.date + 'T00:00:00') < monthStart)
+
+  const best = {}
+  prior.forEach(s => (s.exercises || []).forEach(ex => {
+    ;(ex.sets || []).forEach(set => {
+      const w = parseFloat(set.weight), r = parseFloat(set.reps)
+      if (w && r) {
+        const e1rm = w * (1 + r / 30)
+        if (e1rm > (best[ex.name] ?? 0)) best[ex.name] = e1rm
+      }
+    })
+  }))
+
+  let count = 0
+  thisMonth.forEach(s => (s.exercises || []).forEach(ex => {
+    let top = 0
+    ;(ex.sets || []).filter(set => set.completed).forEach(set => {
+      const w = parseFloat(set.weight), r = parseFloat(set.reps)
+      if (w && r) { const e1rm = w * (1 + r / 30); if (e1rm > top) top = e1rm }
+    })
+    if (top > (best[ex.name] ?? 0)) count++
+  }))
+  return count
+}
+
+function computeWeeklyVolumeBars(sessions) {
+  const monday = getMonday()
+  const days = Array(7).fill(0)
+  sessions.forEach(s => {
+    const d = new Date(s.date + 'T00:00:00')
+    const diff = Math.floor((d - monday) / 86400000)
+    if (diff >= 0 && diff < 7) {
+      days[diff] += totalVolume(s.exercises)
+    }
+  })
+  return days
+}
+
+function getThisWeekSessions(sessions) {
+  const monday = getMonday()
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 7)
+  return sessions
+    .filter(s => { const d = new Date(s.date + 'T00:00:00'); return d >= monday && d < sunday })
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+}
+
+const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
 export default function HomeScreen() {
   const navigate = useNavigate()
-  const { data: profile } = useProfile()
-  const firstName = profile?.display_name?.split(' ')[0] || null
   const { data: sessions = [] } = useSessions()
   const { data: programData, isLoading } = useProgram()
-  const { data: templates = [] } = useWorkoutTemplates()
-  const { mutateAsync: deleteTemplate, isPending: deletePending } = useDeleteTemplate()
-  const { data: recentActivity = [] } = useRecentActivity(3)
-
-  const [templateToDelete, setTemplateToDelete] = useState(null)
-
   const { program, blockInfo, nextSession } = programData || {}
 
-  function startSession(session) {
-    navigate('/workout', { state: { session, programId: program?.id } })
-  }
+  const streak = useMemo(() => computeWeekStreak(sessions), [sessions])
+  const prsThisMonth = useMemo(() => computePRsThisMonth(sessions), [sessions])
+  const weekBars = useMemo(() => computeWeeklyVolumeBars(sessions), [sessions])
+  const thisWeekSessions = useMemo(() => getThisWeekSessions(sessions), [sessions])
 
-  function startCustomWorkout() {
-    navigate('/workout', { state: { mode: 'custom' } })
-  }
+  const today = new Date()
+  const dateLabel = today.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'long',
+    day: 'numeric',
+  }).toUpperCase()
 
-  function startTemplateWorkout(template) {
-    navigate('/workout', { state: { mode: 'template', template } })
-  }
+  const weeksPerBlock = program?.blockStructure?.weeksPerBlock ?? 4
+  const sessionTypeName = nextSession?.name
+    ? nextSession.name.split(' ')[0] + '.'
+    : null
 
-  async function confirmDelete() {
-    if (!templateToDelete) return
-    await deleteTemplate(templateToDelete.id)
-    setTemplateToDelete(null)
-  }
+  const muscles = nextSession?.focus?.includes('·')
+    ? nextSession.focus.split('·').slice(1).join('·').trim()
+    : nextSession?.focus || ''
 
-  function getLastUsed(templateName) {
-    const match = sessions.find(s => s.sessionName === templateName)
-    return match?.date ? formatDate(match.date, true) : 'Never used'
+  const estimatedMins = nextSession ? Math.round(nextSession.exercises.length * 8) : 0
+
+  const totalWeekVol = weekBars.reduce((s, v) => s + v, 0)
+  const maxBar = Math.max(...weekBars, 1)
+
+  function startWorkout() {
+    if (nextSession) {
+      navigate('/workout', { state: { session: nextSession, programId: program?.id } })
+    } else {
+      navigate('/workout', { state: { mode: 'custom' } })
+    }
   }
 
   return (
-    <div className="safe-top px-4 pb-4 max-w-lg mx-auto">
-      {/* Header */}
-      <div className="py-4">
-        <h1 className="font-bold text-2xl text-text-primary tracking-tight">
-          {firstName ? `Hello, ${firstName}` : 'Hello'}
-        </h1>
-      </div>
-
-      {/* Active program card */}
-      {blockInfo && (
-        <div className="bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-3 mb-4 flex items-center justify-between">
-          <div>
-            <div className="text-xs text-text-muted font-medium uppercase tracking-wider mb-0.5">Active Program</div>
-            <div className="font-bold text-text-primary text-sm">{program.name}</div>
-            <div className="text-xs text-text-secondary mt-0.5">
-              Block {blockInfo.blockNumber} · Week {blockInfo.weekInBlock} · {blockInfo.phaseName}
-              {blockInfo.isDeload && <span className="text-warning ml-1">· Deload</span>}
+    <div className="safe-top bg-bg-deep min-h-full px-4 pb-6">
+      {/* Header row */}
+      <div className="flex items-center justify-between pt-4 pb-5">
+        <span className="text-xs text-text-muted font-medium tracking-widest">{dateLabel}</span>
+        {blockInfo && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-muted">{program.name} · Wk {blockInfo.weekInBlock}</span>
+            <div className="flex gap-0.5">
+              {Array.from({ length: weeksPerBlock }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-1.5 h-1.5 rounded-full ${i < blockInfo.weekInBlock ? 'bg-accent' : 'bg-bg-badge'}`}
+                />
+              ))}
             </div>
-          </div>
-          <button onClick={() => navigate('/program-selector')} className="text-xs text-accent font-medium flex-shrink-0 ml-4">
-            Change
-          </button>
-        </div>
-      )}
-
-      {/* Next Up card */}
-      {isLoading ? (
-        <div className="bg-bg-card rounded-[12px] p-4 mb-4 h-32 animate-pulse" />
-      ) : nextSession && (
-        <div className="bg-[#1c1d21] rounded-[12px] p-4 mb-4 flex flex-col gap-4">
-          <div className="flex items-center justify-between text-xs font-medium uppercase tracking-[0.12em] text-text-muted">
-            <span>Up Next</span>
-            <span>{nextSession.exercises.length} Exercises</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <div className="text-[26px] font-bold leading-tight text-text-primary">{nextSession.name}</div>
-            <div className="text-sm text-text-muted">{nextSession.focus}</div>
-          </div>
-          {blockInfo?.isDeload && (
-            <div className="text-xs text-warning">↓ Deload week — reduce loads ~10%</div>
-          )}
-          <button
-            onClick={() => startSession(nextSession)}
-            className="w-full bg-accent hover:bg-accent-hover text-black font-bold rounded-[6px] py-3 text-base transition-colors"
-          >
-            Start Workout
-          </button>
-        </div>
-      )}
-
-      {/* Quick Start */}
-      {program && (
-        <div className="mb-4">
-          <div className="text-sm font-semibold text-text-secondary mb-2">Quick Start</div>
-          <div className="grid grid-cols-3 gap-2">
-            {program.sessions.map(s => (
-              <button
-                key={s.id}
-                onClick={() => startSession(s)}
-                className="bg-bg-card border border-bg-tertiary rounded-xl p-3 text-left hover:border-accent/50 transition-colors"
-              >
-                <TagPill tag={s.tag} label={s.tagLabel} />
-                <div className="text-xs font-semibold text-text-primary mt-1.5">{s.name}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Start Custom Workout */}
-      <button
-        onClick={startCustomWorkout}
-        className="w-full mb-4 py-3 border border-accent text-accent font-semibold rounded-xl text-sm hover:bg-accent/10 transition-colors"
-      >
-        Start Custom Workout
-      </button>
-
-      {/* My Workouts section */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-semibold text-text-secondary">My Workouts</div>
-          <button
-            onClick={startCustomWorkout}
-            className="w-7 h-7 rounded-full bg-bg-tertiary flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
-            aria-label="Start custom workout"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
-
-        {templates.length === 0 ? (
-          <div className="bg-bg-card border border-bg-tertiary rounded-2xl px-4 py-5 text-center">
-            <p className="text-text-muted text-sm">
-              No saved workouts yet. Start a custom workout and save it when you're done.
-            </p>
-          </div>
-        ) : (
-          <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
-            {templates.map(template => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                lastUsed={getLastUsed(template.name)}
-                onStart={() => startTemplateWorkout(template)}
-                onDeleteRequest={() => setTemplateToDelete(template)}
-              />
-            ))}
           </div>
         )}
       </div>
 
-      {/* Recent activity — from activity table */}
-      {recentActivity.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-semibold text-text-secondary">Recent</div>
-            <button onClick={() => navigate('/history')} className="text-xs text-accent">See all</button>
+      {/* Hero */}
+      {isLoading ? (
+        <div className="h-36 animate-pulse rounded-2xl bg-bg-card mb-6" />
+      ) : (
+        <div className="mb-6">
+          <p className="text-text-muted text-sm mb-1">Today we</p>
+          <h1 className="font-judge text-[72px] leading-[0.9] text-text-primary mb-3">
+            {sessionTypeName ?? 'Rest.'}
+          </h1>
+          {nextSession && (
+            <p className="text-text-muted text-sm">
+              {nextSession.exercises.length} exercises · ~{estimatedMins} min · {muscles}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Start Workout */}
+      <button
+        onClick={startWorkout}
+        className="w-full py-4 bg-accent hover:bg-accent-hover text-black font-bold text-base rounded-xl mb-5 transition-colors"
+      >
+        Start Workout
+      </button>
+
+      {/* Stats row */}
+      <div className="bg-bg-stat rounded-2xl flex items-stretch mb-4">
+        <div className="flex-1 py-4 flex flex-col items-center justify-center">
+          <div className="font-judge text-[42px] leading-none text-text-primary">{streak}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-widest mt-1">Streak · Wks</div>
+        </div>
+        <div className="w-px bg-bg-tertiary my-4" />
+        <div className="flex-1 py-4 flex flex-col items-center justify-center">
+          <div className="font-judge text-[42px] leading-none text-text-primary">{prsThisMonth}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-widest mt-1">PRs This Month</div>
+        </div>
+      </div>
+
+      {/* Volume This Week */}
+      <div className="bg-bg-stat rounded-2xl p-4 mb-4">
+        <div className="flex items-baseline justify-between mb-4">
+          <span className="text-[10px] text-text-muted uppercase tracking-widest">Volume This Week</span>
+          <div className="flex items-baseline gap-1">
+            <span className="font-judge text-2xl text-text-primary">{formatVolume(totalWeekVol)}</span>
+            <span className="text-xs text-text-muted uppercase">lbs</span>
           </div>
+        </div>
+        <div className="flex items-end gap-1.5 h-14">
+          {weekBars.map((v, i) => (
+            <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+              <div
+                className="w-full rounded-sm"
+                style={{
+                  height: `${v > 0 ? Math.max((v / maxBar) * 40, 6) : 0}px`,
+                  backgroundColor: v > 0 ? '#f2a655' : undefined,
+                }}
+              />
+              {v === 0 && <div className="w-full h-1 rounded-sm bg-bg-badge" />}
+              <span className="text-[9px] text-text-muted">{DAY_LABELS[i]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* This Week sessions */}
+      {thisWeekSessions.length > 0 && (
+        <div>
+          <div className="text-[10px] text-text-muted uppercase tracking-widest mb-3">This Week</div>
           <div className="space-y-2">
-            {recentActivity.map(activity => (
-              <WorkoutActivityCard key={activity.id} activity={activity} compact />
+            {thisWeekSessions.map(s => (
+              <div
+                key={s._id}
+                className="bg-[#161616] rounded-xl px-4 py-3 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-text-muted w-7">
+                    {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
+                  </span>
+                  <span className="text-sm text-text-primary font-medium">{s.sessionName}</span>
+                </div>
+                <ChevronRight size={15} className="text-text-muted flex-shrink-0" />
+              </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Delete confirmation dialog */}
-      {templateToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm"
-          >
-            <h3 className="font-bold text-text-primary mb-2">Delete "{templateToDelete.name}"?</h3>
-            <p className="text-text-secondary text-sm mb-5">This workout template will be permanently removed.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setTemplateToDelete(null)}
-                className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={deletePending}
-                className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50"
-              >
-                {deletePending ? 'Deleting…' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  )
-}
-
-function TemplateCard({ template, lastUsed, onStart, onDeleteRequest }) {
-  const longPressTimer = useRef(null)
-
-  function handleTouchStart() {
-    longPressTimer.current = setTimeout(onDeleteRequest, 600)
-  }
-  function handleTouchEnd() {
-    clearTimeout(longPressTimer.current)
-  }
-
-  return (
-    <button
-      onClick={onStart}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchMove={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-      onContextMenu={e => { e.preventDefault(); onDeleteRequest() }}
-      aria-label={`Start ${template.name} workout`}
-      className="flex-shrink-0 w-36 bg-bg-card border border-bg-tertiary rounded-xl p-3 text-left hover:border-accent/50 transition-colors"
-    >
-      <div className="text-xs font-semibold text-text-primary mb-1 truncate">{template.name}</div>
-      <div className="text-xs text-text-muted">{template.exercises?.length ?? 0} exercises</div>
-      <div className="text-xs text-text-muted mt-0.5">{lastUsed}</div>
-    </button>
   )
 }
