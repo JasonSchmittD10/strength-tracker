@@ -5,7 +5,7 @@ import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
 
-export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect }) {
+export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect, onAddSet }) {
   const [cuesOpen, setCuesOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const info = EXERCISE_LIBRARY[exercise.name] || {}
@@ -17,8 +17,12 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
   }
 
   function addSet() {
-    const last = sets[sets.length - 1] || {}
-    onChange([...sets, { weight: last.weight || '', reps: last.reps || '', rpe: '', completed: false }])
+    if (onAddSet) {
+      onAddSet()
+    } else {
+      const last = sets[sets.length - 1] || {}
+      onChange([...sets, { weight: last.weight || '', reps: last.reps || '', rpe: '', completed: false }])
+    }
   }
 
   return (
