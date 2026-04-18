@@ -269,6 +269,18 @@ export default function WorkoutScreen() {
     }))
   }
 
+  function handleAddSetToSuperset(groupIndices) {
+    setExerciseSets(prev => {
+      const next = { ...prev }
+      groupIndices.forEach(exIdx => {
+        const sets = prev[exIdx] ?? []
+        const last = sets[sets.length - 1] || {}
+        next[exIdx] = [...sets, { weight: last.weight || '', reps: last.reps || '', rpe: '', completed: false }]
+      })
+      return next
+    })
+  }
+
   function handleAddSupersetFromSheet(exerciseNames) {
     if (exerciseNames.length < 2) return
     const id = Date.now().toString()
@@ -480,6 +492,7 @@ export default function WorkoutScreen() {
                     isInSuperset={true}
                     isSelected={selectedExercises.has(exIdx)}
                     onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
+                    onAddSet={isCustomMode ? () => handleAddSetToSuperset(group.indices) : undefined}
                   />
                 ))}
               </div>
