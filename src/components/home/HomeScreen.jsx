@@ -82,8 +82,6 @@ function getThisWeekSessions(sessions) {
     .sort((a, b) => new Date(a.date) - new Date(b.date))
 }
 
-const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-
 export default function HomeScreen() {
   const navigate = useNavigate()
   const { data: sessions = [] } = useSessions()
@@ -125,106 +123,121 @@ export default function HomeScreen() {
   }
 
   return (
-    <div className="safe-top bg-bg-deep min-h-full px-4 pb-6">
+    <div className="safe-top bg-bg-deep min-h-full pb-6">
       {/* Header row */}
-      <div className="flex items-center justify-between pt-4 pb-5">
-        <span className="text-xs text-text-muted font-medium tracking-widest">{dateLabel}</span>
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <span className="text-sm text-text-muted">{dateLabel}</span>
         {blockInfo && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted">{program.name} · Wk {blockInfo.weekInBlock}</span>
-            <div className="flex gap-0.5">
+          <div className="flex items-center gap-2 bg-white/10 rounded-full px-2.5 py-1.5">
+            <span className="text-xs text-text-muted">{program.name}</span>
+            <div className="w-0.5 h-0.5 rounded-full bg-accent flex-shrink-0" />
+            <span className="text-xs text-white">Wk {blockInfo.weekInBlock}</span>
+            <div className="flex items-end gap-1.5 h-1">
               {Array.from({ length: weeksPerBlock }).map((_, i) => (
                 <div
                   key={i}
-                  className={`w-1.5 h-1.5 rounded-full ${i < blockInfo.weekInBlock ? 'bg-accent' : 'bg-bg-badge'}`}
+                  className="w-px h-full flex-shrink-0"
+                  style={{ backgroundColor: i < blockInfo.weekInBlock ? '#f2a655' : '#3f3f3f' }}
                 />
               ))}
             </div>
+            <span className="text-xs text-text-muted">{blockInfo.weekInBlock}/{weeksPerBlock}</span>
           </div>
         )}
       </div>
 
+      {/* Horizontal rule */}
+      <div className="h-px bg-[#3e3e3e] w-full" />
+
       {/* Hero */}
-      {isLoading ? (
-        <div className="h-36 animate-pulse rounded-2xl bg-bg-card mb-6" />
-      ) : (
-        <div className="mb-6">
-          <p className="text-text-muted text-sm mb-1">Today we</p>
-          <h1 className="font-judge text-[72px] leading-[0.9] text-text-primary mb-3">
-            {sessionTypeName ?? 'Rest.'}
-          </h1>
-          {nextSession && (
-            <p className="text-text-muted text-sm">
-              {nextSession.exercises.length} exercises · ~{estimatedMins} min · {muscles}
-            </p>
-          )}
-        </div>
-      )}
+      <div className="px-4 pt-5 pb-4">
+        {isLoading ? (
+          <div className="h-36 animate-pulse rounded-xl bg-bg-card" />
+        ) : (
+          <>
+            <p className="text-base text-text-muted mb-0">Today we</p>
+            <h1 className="font-judge text-[72px] leading-[0.95] text-white mb-2">
+              {sessionTypeName ?? 'Rest.'}
+            </h1>
+            {nextSession && (
+              <p className="text-base text-text-muted">
+                {nextSession.exercises.length} exercises · ~{estimatedMins} min · {muscles}
+              </p>
+            )}
+          </>
+        )}
+      </div>
 
-      {/* Start Workout */}
-      <button
-        onClick={startWorkout}
-        className="w-full py-4 bg-accent hover:bg-accent-hover text-black font-bold text-base rounded-xl mb-5 transition-colors"
-      >
-        Start Workout
-      </button>
+      {/* Start Workout button */}
+      <div className="px-4 pb-4">
+        <button
+          onClick={startWorkout}
+          className="w-full py-3 bg-accent hover:bg-accent-hover text-black font-bold text-lg rounded-[6px] transition-colors"
+        >
+          Start Workout
+        </button>
+      </div>
 
-      {/* Stats row */}
-      <div className="bg-bg-stat rounded-2xl flex items-stretch mb-4">
-        <div className="flex-1 py-4 flex flex-col items-center justify-center">
-          <div className="font-judge text-[42px] leading-none text-text-primary">{streak}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-widest mt-1">Streak · Wks</div>
+      {/* Horizontal rule */}
+      <div className="h-px bg-[#3e3e3e] w-full" />
+
+      {/* Stats: STREAK | PRS THIS MONTH */}
+      <div className="flex items-start px-4 pt-4 pb-6">
+        <div className="flex-1">
+          <div className="text-sm text-text-muted mb-1">STREAK</div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-judge text-[36px] leading-none text-white">{streak}</span>
+            <span className="text-sm text-text-muted">WKS</span>
+          </div>
         </div>
-        <div className="w-px bg-bg-tertiary my-4" />
-        <div className="flex-1 py-4 flex flex-col items-center justify-center">
-          <div className="font-judge text-[42px] leading-none text-text-primary">{prsThisMonth}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-widest mt-1">PRs This Month</div>
+        <div className="flex-1">
+          <div className="text-sm text-text-muted mb-1">PRS THIS MONTH</div>
+          <span className="font-judge text-[36px] leading-none text-white">{prsThisMonth}</span>
         </div>
       </div>
 
-      {/* Volume This Week */}
-      <div className="bg-bg-stat rounded-2xl p-4 mb-4">
-        <div className="flex items-baseline justify-between mb-4">
-          <span className="text-[10px] text-text-muted uppercase tracking-widest">Volume This Week</span>
-          <div className="flex items-baseline gap-1">
-            <span className="font-judge text-2xl text-text-primary">{formatVolume(totalWeekVol)}</span>
-            <span className="text-xs text-text-muted uppercase">lbs</span>
+      {/* Volume This Week + bar chart */}
+      <div className="flex items-end gap-4 px-4 pb-8">
+        <div className="flex-shrink-0">
+          <div className="text-sm text-text-muted mb-1">VOLUME THIS WEEK</div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-judge text-[36px] leading-none text-white">{formatVolume(totalWeekVol)}</span>
+            <span className="text-sm text-text-muted">LBs</span>
           </div>
         </div>
-        <div className="flex items-end gap-1.5 h-14">
+        <div className="flex-1 flex items-end gap-1 h-6">
           {weekBars.map((v, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-              <div
-                className="w-full rounded-sm"
-                style={{
-                  height: `${v > 0 ? Math.max((v / maxBar) * 40, 6) : 0}px`,
-                  backgroundColor: v > 0 ? '#f2a655' : undefined,
-                }}
-              />
-              {v === 0 && <div className="w-full h-1 rounded-sm bg-bg-badge" />}
-              <span className="text-[9px] text-text-muted">{DAY_LABELS[i]}</span>
-            </div>
+            <div
+              key={i}
+              className="flex-1 rounded-sm"
+              style={{
+                height: v > 0 ? `${Math.max((v / maxBar) * 22, 4)}px` : '2px',
+                backgroundColor: v > 0 ? '#f2a655' : '#2b2b2c',
+              }}
+            />
           ))}
         </div>
       </div>
 
-      {/* This Week sessions */}
+      {/* This Week */}
       {thisWeekSessions.length > 0 && (
         <div>
-          <div className="text-[10px] text-text-muted uppercase tracking-widest mb-3">This Week</div>
-          <div className="space-y-2">
+          <div className="px-4 pb-3">
+            <span className="text-lg font-semibold text-white/60 tracking-[-0.36px]">This Week</span>
+          </div>
+          <div className="flex flex-col gap-px">
             {thisWeekSessions.map(s => (
               <div
                 key={s._id}
-                className="bg-[#161616] rounded-xl px-4 py-3 flex items-center justify-between"
+                className="bg-[#161616] flex items-center justify-between px-[11px] py-[10px]"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-text-muted w-7">
-                    {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-text-muted w-[26px]">
+                    {new Date(s.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' })}
                   </span>
-                  <span className="text-sm text-text-primary font-medium">{s.sessionName}</span>
+                  <span className="text-base font-semibold text-white/60 tracking-[-0.32px]">{s.sessionName}</span>
                 </div>
-                <ChevronRight size={15} className="text-text-muted flex-shrink-0" />
+                <ChevronRight size={16} className="text-text-muted flex-shrink-0" />
               </div>
             ))}
           </div>
