@@ -100,7 +100,7 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove 
 
         <button
           onClick={handleComplete}
-          className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+          className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
             completed ? 'bg-success text-white' : 'bg-bg-tertiary text-text-muted hover:bg-accent/20 hover:text-accent'
           }`}
         >
