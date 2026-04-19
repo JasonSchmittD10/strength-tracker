@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
 async function fetchUserGroups() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
   const { data, error } = await supabase
     .from('group_members')
     .select(`
@@ -12,6 +14,7 @@ async function fetchUserGroups() {
         group_members ( count )
       )
     `)
+    .eq('user_id', user.id)
   if (error) throw error
   return (data || []).map(row => ({
     role: row.role,
