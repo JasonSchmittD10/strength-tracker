@@ -82,6 +82,79 @@ function getThisWeekSessions(sessions) {
     .sort((a, b) => new Date(a.date) - new Date(b.date))
 }
 
+// ---------- Hero variants ----------
+
+function HeroInPlan({ sessionTypeName, exerciseCount, estimatedMins, muscles, onStart }) {
+  return (
+    <div className="flex flex-col items-start">
+      <p className="text-base text-text-muted">Today we</p>
+      <h1 className="font-judge text-[72px] leading-[0.95] text-white">{sessionTypeName}</h1>
+      <p className="text-base text-text-muted mb-4">
+        {exerciseCount} exercises · ~{estimatedMins} min · {muscles}
+      </p>
+      <button
+        onClick={onStart}
+        className="w-full py-3 bg-accent hover:bg-accent-hover text-black font-bold text-lg rounded-[6px] transition-colors"
+      >
+        Start Workout
+      </button>
+    </div>
+  )
+}
+
+function HeroRest({ daysThisWeek, nextSessionName, onLogRecovery, onMobility }) {
+  const tomorrowText = nextSessionName ? ` Tomorrow: ${nextSessionName}.` : ''
+  return (
+    <div className="flex flex-col items-start">
+      <p className="text-base text-text-muted">Today we</p>
+      <h1 className="font-judge text-[72px] leading-[0.95] text-white">Rest.</h1>
+      <p className="text-base text-text-muted mb-4">
+        You've trained {daysThisWeek} day{daysThisWeek !== 1 ? 's' : ''} this week. Muscles grow when you let them.{tomorrowText}
+      </p>
+      <div className="flex flex-col gap-3 w-full">
+        <button
+          onClick={onLogRecovery}
+          className="w-full py-3 bg-bg-stat text-white font-bold text-lg rounded-[6px] hover:bg-bg-badge transition-colors"
+        >
+          Log Recovery
+        </button>
+        <button
+          onClick={onMobility}
+          className="w-full py-3 bg-bg-stat text-white font-bold text-lg rounded-[6px] hover:bg-bg-badge transition-colors"
+        >
+          Mobility
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function HeroNoPlan({ onStartCustom, onStartPlan }) {
+  return (
+    <div className="flex flex-col items-start">
+      <p className="text-base text-text-muted">Today we</p>
+      <h1 className="font-judge text-[72px] leading-[0.95] text-white">Lift.</h1>
+      <p className="text-base text-text-muted mb-4">What are you going to go for today?</p>
+      <div className="flex flex-col gap-4 w-full">
+        <button
+          onClick={onStartCustom}
+          className="w-full py-3 bg-accent hover:bg-accent-hover text-black font-bold text-lg rounded-[6px] transition-colors"
+        >
+          Start Custom Workout
+        </button>
+        <button
+          onClick={onStartPlan}
+          className="w-full py-3 bg-bg-stat text-white font-bold text-lg rounded-[6px] hover:bg-bg-badge transition-colors"
+        >
+          Start New Plan
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ---------- Main screen ----------
+
 export default function HomeScreen() {
   const navigate = useNavigate()
   const { data: sessions = [] } = useSessions()
@@ -101,6 +174,12 @@ export default function HomeScreen() {
   }).toUpperCase()
 
   const weeksPerBlock = program?.blockStructure?.weeksPerBlock ?? 4
+
+  // "In Plan": program + nextSession exist
+  // "Rest": program exists but no nextSession (all sessions done this week)
+  // "No Plan": no program
+  const heroVariant = isLoading ? null : !program ? 'no-plan' : nextSession ? 'in-plan' : 'rest'
+
   const sessionTypeName = nextSession?.name
     ? nextSession.name.split(' ')[0] + '.'
     : null
@@ -114,13 +193,12 @@ export default function HomeScreen() {
   const totalWeekVol = weekBars.reduce((s, v) => s + v, 0)
   const maxBar = Math.max(...weekBars, 1)
 
-  function startWorkout() {
-    if (nextSession) {
-      navigate('/workout', { state: { session: nextSession, programId: program?.id } })
-    } else {
-      navigate('/workout', { state: { mode: 'custom' } })
-    }
-  }
+  // For rest variant: find next upcoming session name from program order
+  const nextAfterRest = useMemo(() => {
+    if (!program || nextSession) return null
+    const completedThisWeek = new Set(thisWeekSessions.map(s => s.sessionId))
+    return program.sessions.find(s => !completedThisWeek.has(s.id))?.name ?? null
+  }, [program, nextSession, thisWeekSessions])
 
   return (
     <div className="safe-top bg-bg-deep min-h-full pb-6">
@@ -152,34 +230,32 @@ export default function HomeScreen() {
       {/* Hero */}
       <div className="px-4 pt-5 pb-4">
         {isLoading ? (
-          <div className="h-36 animate-pulse rounded-xl bg-bg-card" />
+          <div className="h-48 animate-pulse rounded-xl bg-bg-card" />
+        ) : heroVariant === 'in-plan' ? (
+          <HeroInPlan
+            sessionTypeName={sessionTypeName}
+            exerciseCount={nextSession.exercises.length}
+            estimatedMins={estimatedMins}
+            muscles={muscles}
+            onStart={() => navigate('/workout', { state: { session: nextSession, programId: program?.id } })}
+          />
+        ) : heroVariant === 'rest' ? (
+          <HeroRest
+            daysThisWeek={thisWeekSessions.length}
+            nextSessionName={nextAfterRest}
+            onLogRecovery={() => navigate('/workout', { state: { mode: 'custom', preset: 'recovery' } })}
+            onMobility={() => navigate('/workout', { state: { mode: 'custom', preset: 'mobility' } })}
+          />
         ) : (
-          <>
-            <p className="text-base text-text-muted mb-0">Today we</p>
-            <h1 className="font-judge text-[72px] leading-[0.95] text-white mb-2">
-              {sessionTypeName ?? 'Rest.'}
-            </h1>
-            {nextSession && (
-              <p className="text-base text-text-muted">
-                {nextSession.exercises.length} exercises · ~{estimatedMins} min · {muscles}
-              </p>
-            )}
-          </>
+          <HeroNoPlan
+            onStartCustom={() => navigate('/workout', { state: { mode: 'custom' } })}
+            onStartPlan={() => navigate('/program-selector')}
+          />
         )}
       </div>
 
-      {/* Start Workout button */}
-      <div className="px-4 pb-4">
-        <button
-          onClick={startWorkout}
-          className="w-full py-3 bg-accent hover:bg-accent-hover text-black font-bold text-lg rounded-[6px] transition-colors"
-        >
-          Start Workout
-        </button>
-      </div>
-
-      {/* Horizontal rule */}
-      <div className="h-px bg-[#3e3e3e] w-full" />
+      {/* Horizontal rule — only shown when hero has its own CTA (in-plan) */}
+      {heroVariant === 'in-plan' && <div className="h-px bg-[#3e3e3e] w-full" />}
 
       {/* Stats: STREAK | PRS THIS MONTH */}
       <div className="flex items-start px-4 pt-4 pb-6">
