@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 
 export default function ExerciseInfoSheet({ open, onClose, exerciseName, initialTab = 'info' }) {
   const [activeTab, setActiveTab] = useState(initialTab)
+  useEffect(() => { setActiveTab(initialTab) }, [initialTab])
   const info = EXERCISE_LIBRARY[exerciseName] || {}
   const hasPattern = !!info.pattern
   const hasMuscles = !!info.muscles
@@ -42,8 +43,8 @@ export default function ExerciseInfoSheet({ open, onClose, exerciseName, initial
             <div>
               <div className="text-xs text-text-muted uppercase tracking-wider mb-2">Coaching Cues</div>
               <ul className="space-y-2">
-                {info.cues.map((cue, i) => (
-                  <li key={i} className="text-sm text-text-secondary pl-3 border-l-2 border-accent/40">{cue}</li>
+                {info.cues.map((cue) => (
+                  <li key={cue} className="text-sm text-text-secondary pl-3 border-l-2 border-accent/40">{cue}</li>
                 ))}
               </ul>
             </div>
