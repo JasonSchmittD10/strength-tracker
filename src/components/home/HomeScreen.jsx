@@ -179,7 +179,7 @@ export default function HomeScreen() {
   return (
     <div className="safe-top bg-bg-deep min-h-full pb-6">
       {/* Header row */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+      <div className="flex items-center justify-between px-4 pt-4">
         <span className="text-sm text-text-muted">{dateLabel}</span>
         {blockInfo && (
           <div className="flex items-center gap-2 bg-white/10 rounded-full px-2.5 py-1.5">
@@ -200,11 +200,8 @@ export default function HomeScreen() {
         )}
       </div>
 
-      {/* Horizontal rule */}
-      <div className="h-px bg-[#3e3e3e] w-full" />
-
-      {/* Hero */}
-      <div className="px-4 pt-5 pb-4">
+      {/* Hero — 36px below header */}
+      <div className="px-4 mt-9">
         {isLoading ? (
           <div className="h-48 animate-pulse rounded-xl bg-bg-card" />
         ) : heroVariant === 'in-plan' ? (
@@ -230,11 +227,11 @@ export default function HomeScreen() {
         )}
       </div>
 
-      {/* Horizontal rule — only after in-plan hero (which has its own Start Workout CTA) */}
-      {heroVariant === 'in-plan' && <div className="h-px bg-[#3e3e3e] w-full" />}
+      {/* Horizontal rule — only after in-plan hero, 36px below hero */}
+      {heroVariant === 'in-plan' && <div className="h-px bg-[#3e3e3e] mt-9" />}
 
-      {/* Stats + Volume block — 36px from rule, 32px gap between rows */}
-      <div className="px-4 pt-9 flex flex-col gap-8">
+      {/* Stats + Volume block — 36px from rule (or hero), 32px gap between rows */}
+      <div className="px-4 mt-9 flex flex-col gap-8">
 
         {/* STREAK | PRS THIS MONTH */}
         <div className="flex items-start justify-between w-[302px]">
@@ -276,7 +273,7 @@ export default function HomeScreen() {
       </div>
 
       {/* Start Custom Workout — outline button, 36px below volume */}
-      <div className="px-4 pt-9">
+      <div className="px-4 mt-9">
         <PrimaryButton variant="outline" onClick={() => navigate('/workout', { state: { mode: 'custom' } })}>
           Start Custom Workout
         </PrimaryButton>
@@ -284,11 +281,11 @@ export default function HomeScreen() {
 
       {/* This Week — 36px below button */}
       {thisWeekSessions.length > 0 && (
-        <div className="pt-9">
+        <div className="mt-9">
           <div className="px-4 pb-[13px]">
             <span className="text-lg font-semibold text-white/60 tracking-[-0.36px]">This Week</span>
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 px-4">
             {thisWeekSessions.map(s => (
               <div
                 key={s._id}
