@@ -12,7 +12,12 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
   const primaryMuscle = info.muscles?.primary?.[0] || ''
 
   function updateSet(setIdx, updated) {
-    const next = sets.map((s, i) => i === setIdx ? updated : s)
+    let next = sets.map((s, i) => i === setIdx ? updated : s)
+    if (updated.weight !== sets[setIdx]?.weight) {
+      next = next.map((s, i) =>
+        i > setIdx && !s.completed ? { ...s, weight: updated.weight } : s
+      )
+    }
     onChange(next)
   }
 
