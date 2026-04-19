@@ -401,8 +401,51 @@ export const PROGRAMS = {
       },
     ],
   },
+  'gvt-6wk': {
+    id: 'gvt-6wk',
+    name: 'German Volume Training',
+    description: 'Classic Poliquin 10×10 hypertrophy block. Main lifts start at 60% 1RM (weeks 1–2), advance to 62.5% (weeks 3–4), then 65% (weeks 5–6). Only increase load when all 10×10 reps are completed with clean tempo. Set your weights manually based on your 1RM.',
+    blockStructure: {
+      weeksPerBlock: 6,
+      deloadWeek: null,
+      blockNames: ['GVT Block'],
+      phaseByWeek: { 1: '60% Phase', 2: '60% Phase', 3: '62.5% Phase', 4: '62.5% Phase', 5: '65% Phase', 6: '65% Phase' },
+    },
+    sessionOrder: ['gvt-chest-back', 'gvt-legs-abs', 'gvt-arms-shoulders'],
+    sessions: [
+      {
+        id: 'gvt-chest-back', name: 'Chest & Back', tag: 'push', tagLabel: 'GVT',
+        focus: 'Volume · Chest, Back — Main lifts at 60% 1RM. Rest 90 sec between A-pair sets, 60 sec between B-pair sets.',
+        exercises: [
+          { name: 'Barbell Bench Press',     sets: 10, reps: '10', rest: 90, restLabel: '90 sec', tempo: '4-0-2-0', supersetId: 'gvt-cb-a' },
+          { name: 'Chest-Supported Row (DB)', sets: 10, reps: '10', rest: 90, restLabel: '90 sec', tempo: '4-0-2-0', supersetId: 'gvt-cb-a' },
+          { name: 'Incline Dumbbell Flye',   sets: 3,  reps: '10–12', rest: 60, restLabel: '1 min', supersetId: 'gvt-cb-b' },
+          { name: 'Lat Pulldown (Wide Grip)', sets: 3,  reps: '10–12', rest: 60, restLabel: '1 min', supersetId: 'gvt-cb-b' },
+        ],
+      },
+      {
+        id: 'gvt-legs-abs', name: 'Legs & Abs', tag: 'legs', tagLabel: 'GVT',
+        focus: 'Volume · Quads, Hamstrings, Abs — Main lifts at 60% 1RM. Rest 90 sec between A-pair sets, 60 sec between B-pair sets.',
+        exercises: [
+          { name: 'Back Squat (Barbell)',   sets: 10, reps: '10', rest: 90, restLabel: '90 sec', tempo: '4-0-2-0', supersetId: 'gvt-la-a' },
+          { name: 'Leg Curl (Machine)',      sets: 10, reps: '10', rest: 90, restLabel: '90 sec', tempo: '4-0-2-0', supersetId: 'gvt-la-a' },
+          { name: 'Standing Calf Raise',    sets: 3,  reps: '15–20', rest: 60, restLabel: '1 min', supersetId: 'gvt-la-b' },
+          { name: 'Hanging Leg Raise',      sets: 3,  reps: '12–15', rest: 60, restLabel: '1 min', supersetId: 'gvt-la-b' },
+        ],
+      },
+      {
+        id: 'gvt-arms-shoulders', name: 'Arms & Shoulders', tag: 'push', tagLabel: 'GVT',
+        focus: 'Volume · Triceps, Biceps, Shoulders — Main lifts bodyweight or loaded. Rest 90 sec between A-pair sets, 60 sec between B-pair sets.',
+        exercises: [
+          { name: 'Parallel Bar Dip',          sets: 10, reps: '10', rest: 90, restLabel: '90 sec', tempo: '4-0-2-0', supersetId: 'gvt-as-a' },
+          { name: 'Chin-Up',                   sets: 10, reps: '10', rest: 90, restLabel: '90 sec', tempo: '4-0-2-0', supersetId: 'gvt-as-a' },
+          { name: 'Lateral Raise (DB)',         sets: 3,  reps: '10–12', rest: 60, restLabel: '1 min', supersetId: 'gvt-as-b' },
+          { name: 'Bent-Over Rear Delt Raise',  sets: 3,  reps: '10–12', rest: 60, restLabel: '1 min', supersetId: 'gvt-as-b' },
+        ],
+      },
+    ],
+  },
 }
-
 export function getActiveProgram(config) {
   if (!config?.activeProgramId) return null
   return PROGRAMS[config.activeProgramId] ?? null

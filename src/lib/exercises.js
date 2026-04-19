@@ -37,6 +37,11 @@ export const NAME_ALIASES = {
   'Nordic Hamstring Curl':              'Nordic Curl / Lying Leg Curl',
   'Dumbbell Goblet Squat':              'Goblet Squat (Tempo)',
   'Barbell Seated Calf Raise':          'Seated Calf Raise',
+  // GVT exercise name variants
+  'Chest-Supported Row':                'Chest-Supported Row (DB)',
+  'Wide-Grip Lat Pulldown':             'Lat Pulldown (Wide Grip)',
+  'Back Squat':                         'Back Squat (Barbell)',
+  'Lying Leg Curl':                     'Leg Curl (Machine)',
   // Known freeform historical variants
   'Pull-Up':                            'Weighted Pull-Up',
   'Pull Up':                            'Weighted Pull-Up',
@@ -291,6 +296,36 @@ export const EXERCISE_LIBRARY = {
     cues: ['Legs straight and parallel to floor', 'Depress scapulae — push shoulders down', 'Point toes', 'Tuck version acceptable for beginners'],
     notes: 'Advanced isometric requiring hip flexor strength and tricep/shoulder stability. Use parallettes or dip bars.',
     inputType: 'time',
+  },
+  'Incline Dumbbell Flye': {
+    muscles: { primary: ['Chest'], secondary: ['Front Delts'] },
+    pattern: 'Chest Isolation',
+    cues: ['Bench at 30–45°', 'Slight bend in elbows — maintain throughout', 'Arc down wide, feel the stretch at the bottom', 'Squeeze chest at top — do not press'],
+    notes: 'Isolation move — lighter than pressing. The stretch at the bottom is the stimulus. Do not straighten arms or it becomes a press.',
+  },
+  'Hanging Leg Raise': {
+    muscles: { primary: ['Hip Flexors', 'Lower Abs'], secondary: ['Core'] },
+    pattern: 'Core Flexion',
+    cues: ['Dead hang start — no swinging', 'Posterior pelvic tilt at the top to engage abs fully', 'Control the descent — do not just drop', 'Bent-knee version acceptable if hip flexors limit straight-leg form'],
+    notes: 'Best lower ab exercise. The key is the posterior tilt at the top — without it, it is mostly hip flexors. Slow eccentric is essential.',
+  },
+  'Parallel Bar Dip': {
+    muscles: { primary: ['Triceps', 'Chest'], secondary: ['Front Delts'] },
+    pattern: 'Vertical Push',
+    cues: ['Upright torso = more tricep; forward lean = more chest', 'Lower until upper arms are parallel to floor', 'No shoulder shrug at the bottom — keep blades down', 'Squeeze triceps at lockout'],
+    notes: 'GVT main lift. Use bodyweight to start; add weight via belt once 10×10 is clean. Strict tempo matters more than load.',
+  },
+  'Chin-Up': {
+    muscles: { primary: ['Biceps', 'Lats'], secondary: ['Rear Delts', 'Core'] },
+    pattern: 'Vertical Pull',
+    cues: ['Supinated grip (palms facing you), shoulder-width', 'Full dead hang at the bottom', 'Pull chest to bar — chin is secondary', 'Control the descent — 3–4 sec'],
+    notes: 'Supinated grip gives greater bicep involvement than pull-up. GVT main lift paired with dips — expect cumulative fatigue by set 7+.',
+  },
+  'Bent-Over Rear Delt Raise': {
+    muscles: { primary: ['Rear Delts'], secondary: ['Mid Traps', 'Rhomboids'] },
+    pattern: 'Rear Delt / Rotator',
+    cues: ['Hinge to ~45° or rest chest on incline bench', 'Lead with elbows, not hands', 'Raise to just above shoulder height', 'Pause at top — feel the rear delt contract'],
+    notes: 'Excellent rear delt isolator. Keep weight light — rear delts are small. The pause at the top is critical for muscle connection.',
   },
 }
 

@@ -69,6 +69,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
             )}
           </div>
           {primaryMuscle && <div className="text-xs text-text-secondary">{primaryMuscle}</div>}
+          {exercise.tempo && <div className="text-xs text-text-muted">Tempo: {exercise.tempo}</div>}
           {exercise.reps && (
             <div className="text-xs text-text-muted mt-0.5">
               {exercise.sets} × {exercise.reps} {inputType === 'time' ? 'sec' : 'reps'}
