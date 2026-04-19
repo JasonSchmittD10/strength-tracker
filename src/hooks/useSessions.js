@@ -26,18 +26,23 @@ function normalizeSession(row) {
 }
 
 async function fetchSessions() {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
   const { data, error } = await supabase
     .from('sessions')
     .select('id, data, created_at')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
   if (error) throw error
   return (data || []).map(normalizeSession)
 }
 
 async function saveSession(session) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
   const { data, error } = await supabase
     .from('sessions')
-    .insert({ data: session })
+    .insert({ user_id: user.id, data: session })
     .select()
     .single()
   if (error) throw error
