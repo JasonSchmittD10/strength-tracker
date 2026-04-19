@@ -1,12 +1,13 @@
 // src/components/workout/ExerciseBlock.jsx
 import { useState, useEffect } from 'react'
-import { ChevronDown, ChevronUp, Clock, Check, Trash2 } from 'lucide-react'
+import { Clock, Check, Trash2 } from 'lucide-react'
 import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
+import ExerciseInfoSheet from './ExerciseInfoSheet'
 
 export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect, onAddSet, isActive = false, onRemove }) {
-  const [cuesOpen, setCuesOpen] = useState(false)
+  const [infoOpen, setInfoOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const info = EXERCISE_LIBRARY[exercise.name] || {}
@@ -56,7 +57,12 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
         )}
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <div className="font-bold text-text-primary text-base">{exercise.name}</div>
+            <div
+              className="font-bold text-text-primary text-base cursor-pointer hover:text-accent transition-colors"
+              onClick={e => { e.stopPropagation(); setInfoOpen(true) }}
+            >
+              {exercise.name}
+            </div>
             {collapsed && sets.every(s => s.completed) && (
               <span className="text-xs text-success font-semibold">Done</span>
             )}
@@ -86,25 +92,6 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
 
       {!collapsed && (
         <>
-          {/* Cues toggle */}
-          {info.cues?.length > 0 && (
-            <div className="mb-3">
-              <button
-                onClick={() => setCuesOpen(v => !v)}
-                className="flex items-center gap-1 text-xs text-text-muted hover:text-text-secondary transition-colors"
-              >
-                Coaching cues {cuesOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-              </button>
-              {cuesOpen && (
-                <ul className="mt-2 space-y-1">
-                  {info.cues.map((cue, i) => (
-                    <li key={i} className="text-xs text-text-secondary pl-2 border-l border-accent/30">{cue}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
           {/* Column headers */}
           <div className="flex items-center gap-2 mb-1">
             <span className="w-6" />
@@ -141,6 +128,12 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
       <ExerciseHistorySheet
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}
+        exerciseName={exercise.name}
+      />
+
+      <ExerciseInfoSheet
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
         exerciseName={exercise.name}
       />
     </div>
