@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
 import { totalVolume, formatVolume } from '@/lib/utils'
+import PrimaryButton from '@/components/shared/PrimaryButton'
 
 function getMonday(date = new Date()) {
   const d = new Date(date)
@@ -92,12 +93,7 @@ function HeroInPlan({ sessionTypeName, exerciseCount, estimatedMins, muscles, on
       <p className="text-base text-text-muted mb-4">
         {exerciseCount} exercises · ~{estimatedMins} min · {muscles}
       </p>
-      <button
-        onClick={onStart}
-        className="w-full py-3 bg-accent hover:bg-accent-hover text-black font-bold text-lg rounded-[6px] transition-colors"
-      >
-        Start Workout
-      </button>
+      <PrimaryButton onClick={onStart}>Start Workout</PrimaryButton>
     </div>
   )
 }
@@ -112,18 +108,8 @@ function HeroRest({ daysThisWeek, nextSessionName, onLogRecovery, onMobility }) 
         You've trained {daysThisWeek} day{daysThisWeek !== 1 ? 's' : ''} this week. Muscles grow when you let them.{tomorrowText}
       </p>
       <div className="flex flex-col gap-3 w-full">
-        <button
-          onClick={onLogRecovery}
-          className="w-full py-3 bg-bg-stat text-white font-bold text-lg rounded-[6px] hover:bg-bg-badge transition-colors"
-        >
-          Log Recovery
-        </button>
-        <button
-          onClick={onMobility}
-          className="w-full py-3 bg-bg-stat text-white font-bold text-lg rounded-[6px] hover:bg-bg-badge transition-colors"
-        >
-          Mobility
-        </button>
+        <PrimaryButton variant="dark" onClick={onLogRecovery}>Log Recovery</PrimaryButton>
+        <PrimaryButton variant="dark" onClick={onMobility}>Mobility</PrimaryButton>
       </div>
     </div>
   )
@@ -136,18 +122,8 @@ function HeroNoPlan({ onStartCustom, onStartPlan }) {
       <h1 className="font-judge text-[72px] leading-[0.95] text-white">Lift.</h1>
       <p className="text-base text-text-muted mb-4">What are you going to go for today?</p>
       <div className="flex flex-col gap-4 w-full">
-        <button
-          onClick={onStartCustom}
-          className="w-full py-3 bg-accent hover:bg-accent-hover text-black font-bold text-lg rounded-[6px] transition-colors"
-        >
-          Start Custom Workout
-        </button>
-        <button
-          onClick={onStartPlan}
-          className="w-full py-3 bg-bg-stat text-white font-bold text-lg rounded-[6px] hover:bg-bg-badge transition-colors"
-        >
-          Start New Plan
-        </button>
+        <PrimaryButton onClick={onStartCustom}>Start Custom Workout</PrimaryButton>
+        <PrimaryButton variant="dark" onClick={onStartPlan}>Start New Plan</PrimaryButton>
       </div>
     </div>
   )
@@ -301,12 +277,9 @@ export default function HomeScreen() {
 
       {/* Start Custom Workout — outline button, 36px below volume */}
       <div className="px-4 pt-9">
-        <button
-          onClick={() => navigate('/workout', { state: { mode: 'custom' } })}
-          className="w-full py-3 bg-bg-deep border border-accent text-accent font-bold text-lg rounded-[6px] hover:bg-accent/5 transition-colors tracking-[-0.36px]"
-        >
+        <PrimaryButton variant="outline" onClick={() => navigate('/workout', { state: { mode: 'custom' } })}>
           Start Custom Workout
-        </button>
+        </PrimaryButton>
       </div>
 
       {/* This Week — 36px below button */}

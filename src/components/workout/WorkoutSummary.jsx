@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { epley, formatDuration, formatVolume, totalVolume } from '@/lib/utils'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
+import PrimaryButton from '@/components/shared/PrimaryButton'
 import { useSessions } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
 import { useUnitPreference } from '@/hooks/useProfile'
@@ -159,13 +160,12 @@ export default function WorkoutSummary({
             {saveError && (
               <p className="text-xs text-danger">{saveError}</p>
             )}
-            <button
+            <PrimaryButton
               onClick={handleSaveWithTemplate}
               disabled={saving}
-              className="w-full py-3 bg-accent text-black font-semibold rounded-xl text-sm hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
               {saving ? 'Saving…' : templateId ? 'Update Template' : 'Save to My Workouts'}
-            </button>
+            </PrimaryButton>
             <button
               onClick={handleSaveWithoutTemplate}
               disabled={saving}
@@ -193,13 +193,13 @@ export default function WorkoutSummary({
               >
                 Keep Going
               </button>
-              <button
+              <PrimaryButton
                 onClick={() => onSave(null)}
                 disabled={externalSaving}
-                className="flex-1 py-3 bg-accent text-black font-semibold rounded-xl text-sm hover:bg-accent-hover transition-colors disabled:opacity-50"
+                className="flex-1"
               >
                 {externalSaving ? 'Saving…' : 'Save & Exit'}
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         )}

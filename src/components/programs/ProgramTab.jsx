@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useProgram } from '@/hooks/useProgram'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
+import PrimaryButton from '@/components/shared/PrimaryButton'
 
 export default function ProgramTab() {
   const navigate = useNavigate()
@@ -137,12 +138,9 @@ export default function ProgramTab() {
 
             {/* Start button */}
             <div className="pt-3 border-t border-bg-tertiary flex-shrink-0">
-              <button
-                onClick={startWorkout}
-                className="w-full py-3.5 bg-accent text-black font-bold rounded-xl text-sm active:opacity-80 transition-opacity"
-              >
+              <PrimaryButton onClick={startWorkout}>
                 Start Workout
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         )}
