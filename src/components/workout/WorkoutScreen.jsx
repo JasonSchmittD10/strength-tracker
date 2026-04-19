@@ -10,6 +10,7 @@ import { useSessions, useSaveSession } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
 import { normalizeExerciseName } from '@/lib/exercises'
 import { totalVolume } from '@/lib/utils'
+import PrimaryButton from '@/components/shared/PrimaryButton'
 
 function useElapsedTimer(isPaused) {
   const [elapsed, setElapsed] = useState(0)
@@ -502,12 +503,9 @@ export default function WorkoutScreen() {
 
         {/* Finish + Cancel — inline at bottom of scroll area */}
         <div className="pt-4 mt-2 border-t border-bg-tertiary">
-          <button
-            onClick={() => setSummaryOpen(true)}
-            className="w-full bg-accent hover:bg-accent-hover text-black font-semibold rounded-xl py-3 transition-colors mb-2"
-          >
+          <PrimaryButton onClick={() => setSummaryOpen(true)} className="mb-2">
             Finish Workout
-          </button>
+          </PrimaryButton>
           <button
             onClick={handleBack}
             className="w-full text-danger text-sm font-medium py-2"
