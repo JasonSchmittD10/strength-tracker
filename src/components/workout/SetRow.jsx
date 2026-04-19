@@ -7,7 +7,7 @@ const RPE_VALUES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 const SWIPE_THRESHOLD = 60
 const REMOVE_ZONE_WIDTH = 80
 
-export default function SetRow({ setNumber, set, onChange, onComplete, onRemove, highlighted = false, hideComplete = false }) {
+export default function SetRow({ setNumber, set, onChange, onComplete, onRemove, highlighted = false, hideComplete = false, inputType = 'reps' }) {
   const { weight = '', reps = '', rpe = '', completed = false } = set
   const unit = useUnitPreference()
   const [swipeX, setSwipeX] = useState(0)
@@ -81,9 +81,13 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
         <input
           type="number"
           inputMode="numeric"
-          value={reps}
-          onChange={e => onChange({ ...set, reps: e.target.value })}
-          placeholder="reps"
+          value={inputType === 'time' ? (set.duration_seconds ?? '') : reps}
+          onChange={e => onChange(
+            inputType === 'time'
+              ? { ...set, duration_seconds: e.target.value }
+              : { ...set, reps: e.target.value }
+          )}
+          placeholder={inputType === 'time' ? 'sec' : 'reps'}
           readOnly={completed}
           className={`flex-1 min-w-0 bg-bg-tertiary rounded-lg px-2 py-2.5 text-center text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px] ${completed ? 'pointer-events-none' : ''}`}
         />
