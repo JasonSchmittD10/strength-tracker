@@ -12,6 +12,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
   const [collapsed, setCollapsed] = useState(false)
   const info = EXERCISE_LIBRARY[exercise.name] || {}
   const primaryMuscle = info.muscles?.primary?.[0] || ''
+  const inputType = info.inputType || 'reps'
 
   useEffect(() => {
     if (sets.length > 0 && sets.every(s => s.completed)) {
@@ -70,7 +71,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
           {primaryMuscle && <div className="text-xs text-text-secondary">{primaryMuscle}</div>}
           {exercise.reps && (
             <div className="text-xs text-text-muted mt-0.5">
-              {exercise.sets} × {exercise.reps} reps
+              {exercise.sets} × {exercise.reps} {inputType === 'time' ? 'sec' : 'reps'}
             </div>
           )}
         </div>
@@ -96,7 +97,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
           <div className="flex items-center gap-2 mb-1">
             <span className="w-6" />
             <span className="flex-1 text-center text-xs text-text-muted">Weight</span>
-            <span className="flex-1 text-center text-xs text-text-muted">Reps</span>
+            <span className="flex-1 text-center text-xs text-text-muted">{inputType === 'time' ? 'Sec' : 'Reps'}</span>
             <span className="w-16 text-center text-xs text-text-muted">RPE</span>
             <span className="w-11" />
           </div>
@@ -112,6 +113,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
               onRemove={onRemoveSet && sets.length > 1 ? () => onRemoveSet(i) : undefined}
               highlighted={i === firstUncompletedIdx}
               hideComplete={isBuilderMode}
+              inputType={inputType}
             />
           ))}
 
