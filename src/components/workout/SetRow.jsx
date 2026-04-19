@@ -7,7 +7,7 @@ const RPE_VALUES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 const SWIPE_THRESHOLD = 60
 const REMOVE_ZONE_WIDTH = 80
 
-export default function SetRow({ setNumber, set, onChange, onComplete, onRemove, highlighted = false }) {
+export default function SetRow({ setNumber, set, onChange, onComplete, onRemove, highlighted = false, hideComplete = false }) {
   const { weight = '', reps = '', rpe = '', completed = false } = set
   const unit = useUnitPreference()
   const [swipeX, setSwipeX] = useState(0)
@@ -98,14 +98,18 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
           {RPE_VALUES.map(v => <option key={v} value={v}>{v}</option>)}
         </select>
 
-        <button
-          onClick={handleComplete}
-          className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-            completed ? 'bg-success text-white' : 'bg-bg-tertiary text-text-muted hover:bg-accent/20 hover:text-accent'
-          }`}
-        >
-          {completed ? <Pencil size={16} /> : <Check size={16} />}
-        </button>
+        {!hideComplete ? (
+          <button
+            onClick={handleComplete}
+            className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+              completed ? 'bg-success text-white' : 'bg-bg-tertiary text-text-muted hover:bg-accent/20 hover:text-accent'
+            }`}
+          >
+            {completed ? <Pencil size={16} /> : <Check size={16} />}
+          </button>
+        ) : (
+          <div className="w-11 flex-shrink-0" />
+        )}
       </div>
     </div>
   )
