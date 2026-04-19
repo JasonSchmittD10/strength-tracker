@@ -159,13 +159,14 @@ export const PROGRAMS = {
 }
 
 export function getActiveProgram(config) {
-  const id = config?.activeProgramId || 'ppl-x2'
-  return PROGRAMS[id] || PROGRAMS['ppl-x2']
+  if (!config?.activeProgramId) return null
+  return PROGRAMS[config.activeProgramId] ?? null
 }
 
 export function getBlockAndWeek(config) {
   if (!config?.programStartDate) return null
   const program = getActiveProgram(config)
+  if (!program) return null
   const { weeksPerBlock, deloadWeek, phaseByWeek } = program.blockStructure
   const start = new Date(config.programStartDate + 'T00:00:00')
   const daysSinceStart = Math.floor((Date.now() - start) / 86400000)
@@ -179,6 +180,7 @@ export function getBlockAndWeek(config) {
 
 export function getNextSession(config, recentSessions) {
   const program = getActiveProgram(config)
+  if (!program) return null
   const order = program.sessionOrder
   if (!recentSessions?.length) return program.sessions[0]
   const last = recentSessions[0]
