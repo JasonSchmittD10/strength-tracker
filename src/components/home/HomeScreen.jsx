@@ -254,54 +254,68 @@ export default function HomeScreen() {
         )}
       </div>
 
-      {/* Horizontal rule — only shown when hero has its own CTA (in-plan) */}
+      {/* Horizontal rule — only after in-plan hero (which has its own Start Workout CTA) */}
       {heroVariant === 'in-plan' && <div className="h-px bg-[#3e3e3e] w-full" />}
 
-      {/* Stats: STREAK | PRS THIS MONTH */}
-      <div className="flex items-start px-4 pt-4 pb-6">
-        <div className="flex-1">
-          <div className="text-sm text-text-muted mb-1">STREAK</div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-judge text-[36px] leading-none text-white">{streak}</span>
-            <span className="text-sm text-text-muted">WKS</span>
+      {/* Stats + Volume block — 36px from rule, 32px gap between rows */}
+      <div className="px-4 pt-9 flex flex-col gap-8">
+
+        {/* STREAK | PRS THIS MONTH */}
+        <div className="flex items-start justify-between w-[302px]">
+          <div className="flex flex-col gap-[5px]">
+            <span className="text-sm text-text-muted leading-[14px]">STREAK</span>
+            <div className="flex items-center gap-1">
+              <span className="font-judge text-[36px] leading-none text-white">{streak}</span>
+              <span className="text-sm text-text-muted leading-[14px]">WKS</span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-[5px]">
+            <span className="text-sm text-text-muted leading-[14px]">PRS THIS MONTH</span>
+            <span className="font-judge text-[36px] leading-none text-white">{prsThisMonth}</span>
           </div>
         </div>
-        <div className="flex-1">
-          <div className="text-sm text-text-muted mb-1">PRS THIS MONTH</div>
-          <span className="font-judge text-[36px] leading-none text-white">{prsThisMonth}</span>
+
+        {/* VOLUME THIS WEEK + bars */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-[5px]">
+            <span className="text-sm text-text-muted leading-[14px]">VOLUME THIS WEEK</span>
+            <div className="flex items-center gap-[5px]">
+              <span className="font-judge text-[36px] leading-none text-white">{formatVolume(totalWeekVol)}</span>
+              <span className="text-sm text-text-muted leading-[14px]">LBs</span>
+            </div>
+          </div>
+          <div className="flex items-end gap-1 w-[185px]">
+            {weekBars.map((v, i) => (
+              <div
+                key={i}
+                className="flex-1 rounded-sm"
+                style={{
+                  height: v > 0 ? `${Math.max((v / maxBar) * 23, 4)}px` : '2px',
+                  backgroundColor: v > 0 ? '#f2a655' : '#2b2b2c',
+                }}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Volume This Week + bar chart */}
-      <div className="flex items-end gap-4 px-4 pb-8">
-        <div className="flex-shrink-0">
-          <div className="text-sm text-text-muted mb-1">VOLUME THIS WEEK</div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-judge text-[36px] leading-none text-white">{formatVolume(totalWeekVol)}</span>
-            <span className="text-sm text-text-muted">LBs</span>
-          </div>
-        </div>
-        <div className="flex-1 flex items-end gap-1 h-6">
-          {weekBars.map((v, i) => (
-            <div
-              key={i}
-              className="flex-1 rounded-sm"
-              style={{
-                height: v > 0 ? `${Math.max((v / maxBar) * 22, 4)}px` : '2px',
-                backgroundColor: v > 0 ? '#f2a655' : '#2b2b2c',
-              }}
-            />
-          ))}
-        </div>
+      {/* Start Custom Workout — outline button, 36px below volume */}
+      <div className="px-4 pt-9">
+        <button
+          onClick={() => navigate('/workout', { state: { mode: 'custom' } })}
+          className="w-full py-3 bg-bg-deep border border-accent text-accent font-bold text-lg rounded-[6px] hover:bg-accent/5 transition-colors tracking-[-0.36px]"
+        >
+          Start Custom Workout
+        </button>
       </div>
 
-      {/* This Week */}
+      {/* This Week — 36px below button */}
       {thisWeekSessions.length > 0 && (
-        <div>
-          <div className="px-4 pb-3">
+        <div className="pt-9">
+          <div className="px-4 pb-[13px]">
             <span className="text-lg font-semibold text-white/60 tracking-[-0.36px]">This Week</span>
           </div>
-          <div className="flex flex-col gap-px">
+          <div className="flex flex-col gap-0.5">
             {thisWeekSessions.map(s => (
               <div
                 key={s._id}
