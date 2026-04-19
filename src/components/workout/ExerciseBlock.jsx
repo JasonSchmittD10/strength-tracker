@@ -6,7 +6,7 @@ import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
 import ExerciseInfoSheet from './ExerciseInfoSheet'
 
-export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect, onAddSet, isActive = false, onRemove }) {
+export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect, onAddSet, isActive = false, onRemove, isBuilderMode = false }) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -111,6 +111,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
               onComplete={() => onSetComplete(exIdx, i)}
               onRemove={onRemoveSet && sets.length > 1 ? () => onRemoveSet(i) : undefined}
               highlighted={i === firstUncompletedIdx}
+              hideComplete={isBuilderMode}
             />
           ))}
 
