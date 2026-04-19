@@ -1,11 +1,11 @@
 // src/components/workout/ExerciseBlock.jsx
 import { useState, useEffect } from 'react'
-import { ChevronDown, ChevronUp, Clock, Check } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock, Check, Trash2 } from 'lucide-react'
 import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
 
-export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect, onAddSet, isActive = false }) {
+export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect, onAddSet, isActive = false, onRemove }) {
   const [cuesOpen, setCuesOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -74,6 +74,14 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
         >
           <Clock size={16} />
         </button>
+        {onRemove && (
+          <button
+            onClick={e => { e.stopPropagation(); onRemove() }}
+            className="p-2 text-text-muted hover:text-danger transition-colors flex-shrink-0"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
 
       {!collapsed && (

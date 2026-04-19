@@ -303,6 +303,19 @@ export default function WorkoutScreen() {
     })
   }
 
+  function handleRemoveExercise(exIdx) {
+    setCustomExercises(prev => prev.filter((_, i) => i !== exIdx))
+    setExerciseSets(prev => {
+      const next = {}
+      Object.entries(prev).forEach(([key, sets]) => {
+        const k = parseInt(key)
+        if (k < exIdx) next[k] = sets
+        else if (k > exIdx) next[k - 1] = sets
+      })
+      return next
+    })
+  }
+
   const buildSessionData = useCallback(() => {
     const exercises = activeExercises.map((ex, i) => ({
       name: ex.name,
@@ -479,6 +492,7 @@ export default function WorkoutScreen() {
                 isSelected={selectedExercises.has(exIdx)}
                 onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
                 isActive={exIdx === activeExIdx}
+                onRemove={isCustomMode ? () => handleRemoveExercise(exIdx) : undefined}
               />
             )
           }
@@ -504,6 +518,7 @@ export default function WorkoutScreen() {
                     onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
                     onAddSet={isCustomMode ? () => handleAddSetToSuperset(group.indices) : undefined}
                     isActive={exIdx === activeExIdx}
+                    onRemove={isCustomMode ? () => handleRemoveExercise(exIdx) : undefined}
                   />
                 ))}
               </div>
