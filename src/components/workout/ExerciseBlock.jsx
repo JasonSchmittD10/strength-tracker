@@ -12,7 +12,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
   const [collapsed, setCollapsed] = useState(false)
   const info = EXERCISE_LIBRARY[exercise.name] || {}
   const primaryMuscle = info.muscles?.primary?.[0] || ''
-  const inputType = info.inputType || 'reps'
+  const inputType = info.inputType ?? 'reps'
 
   useEffect(() => {
     if (sets.length > 0 && sets.every(s => s.completed)) {
