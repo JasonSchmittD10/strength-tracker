@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
 import { totalVolume, formatVolume } from '@/lib/utils'
 import PrimaryButton from '@/components/shared/PrimaryButton'
+import TemplatePickerSheet from '@/components/workout/TemplatePickerSheet'
 
 function getMonday(date = new Date()) {
   const d = new Date(date)
@@ -133,6 +134,7 @@ function HeroNoPlan({ onStartCustom, onStartPlan }) {
 
 export default function HomeScreen() {
   const navigate = useNavigate()
+  const [pickerOpen, setPickerOpen] = useState(false)
   const { data: sessions = [] } = useSessions()
   const { data: programData, isLoading } = useProgram()
   const { program, blockInfo, nextSession } = programData || {}
@@ -221,7 +223,7 @@ export default function HomeScreen() {
           />
         ) : (
           <HeroNoPlan
-            onStartCustom={() => navigate('/workout', { state: { mode: 'custom' } })}
+            onStartCustom={() => setPickerOpen(true)}
             onStartPlan={() => navigate('/program-selector')}
           />
         )}
@@ -272,10 +274,13 @@ export default function HomeScreen() {
         </div>
       </div>
 
-      {/* Start Custom Workout — outline button, 36px below volume */}
-      <div className="px-4 mt-9">
-        <PrimaryButton variant="outline" onClick={() => navigate('/workout', { state: { mode: 'custom' } })}>
-          Start Custom Workout
+      {/* My Workouts + Build Workout — 36px below volume */}
+      <div className="px-4 mt-9 flex flex-col gap-3">
+        <PrimaryButton onClick={() => setPickerOpen(true)}>
+          My Workouts
+        </PrimaryButton>
+        <PrimaryButton variant="outline" onClick={() => navigate('/workout', { state: { mode: 'builder' } })}>
+          Build Workout
         </PrimaryButton>
       </div>
 
@@ -303,6 +308,8 @@ export default function HomeScreen() {
           </div>
         </div>
       )}
+
+      <TemplatePickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />
     </div>
   )
 }
