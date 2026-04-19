@@ -3,6 +3,7 @@ import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 
 export default function ExerciseInfoSheet({ open, onClose, exerciseName, initialTab = 'info' }) {
+  // reserved for future tab expansion (History, Notes, PRs)
   const [activeTab, setActiveTab] = useState(initialTab)
   useEffect(() => { setActiveTab(initialTab) }, [initialTab])
   const info = EXERCISE_LIBRARY[exerciseName] || {}
