@@ -176,9 +176,9 @@ async function handleSaveBuilder() {
   setBuilderSaveError(null)
   try {
     const name = builderName.trim() || 'Custom Workout'
-    const exercises = activeExercises.map(ex => ({
+    const exercises = activeExercises.map((ex, i) => ({
       name: ex.name,
-      sets: (exerciseSets[Object.keys(exerciseSets).find(k => activeExercises[parseInt(k)] === ex)] ?? []).length || ex.sets || 3,
+      sets: (exerciseSets[i] ?? []).length || ex.sets || 3,
       reps: ex.reps || '8–12',
       rest: ex.rest ?? 90,
       restLabel: ex.restLabel ?? '90 sec',
