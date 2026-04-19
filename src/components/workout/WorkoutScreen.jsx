@@ -7,6 +7,7 @@ import ExerciseSearchSheet from './ExerciseSearchSheet'
 import RestTimer from './RestTimer'
 import WorkoutSummary from './WorkoutSummary'
 import { useSessions, useSaveSession } from '@/hooks/useSessions'
+import { useSaveTemplate } from '@/hooks/useTemplates'
 import { useProgram } from '@/hooks/useProgram'
 import { normalizeExerciseName } from '@/lib/exercises'
 import { totalVolume } from '@/lib/utils'
@@ -49,6 +50,7 @@ export default function WorkoutScreen() {
   const elapsed = useElapsedTimer(isPaused)
   const { data: allSessions = [] } = useSessions()
   const { mutateAsync: saveSession } = useSaveSession()
+  const { mutateAsync: saveTemplate } = useSaveTemplate()
   const { data: programData } = useProgram()
   const { program, blockInfo } = programData || {}
 
@@ -165,6 +167,9 @@ export default function WorkoutScreen() {
   const [saving, setSaving] = useState(false)
   const [selectedExercises, setSelectedExercises] = useState(new Set())
   const [isSelectingSuperset, setIsSelectingSuperset] = useState(false)
+  const [builderName, setBuilderName] = useState('')
+  const [builderSaving, setBuilderSaving] = useState(false)
+  const [builderSaveError, setBuilderSaveError] = useState(null)
   const allowNavRef = useRef(false)
 
   // Block swipe-back and browser back button during workout
@@ -358,6 +363,29 @@ export default function WorkoutScreen() {
     }
   }, [mode, session, programId, elapsed, exerciseSets, activeExercises])
 
+  async function handleSaveBuilder() {
+    if (activeExercises.length === 0) return
+    setBuilderSaving(true)
+    setBuilderSaveError(null)
+    try {
+      const name = builderName.trim() || 'Custom Workout'
+      const exercises = activeExercises.map((ex, i) => ({
+        name: ex.name,
+        sets: (exerciseSets[i] ?? []).length || ex.sets || 3,
+        reps: ex.reps || '8–12',
+        rest: ex.rest ?? 90,
+        restLabel: ex.restLabel ?? '90 sec',
+      }))
+      await saveTemplate({ name, exercises })
+      allowNavRef.current = true
+      navigate('/home')
+    } catch (e) {
+      setBuilderSaveError('Failed to save. Please try again.')
+    } finally {
+      setBuilderSaving(false)
+    }
+  }
+
   async function handleSave(sessionName) {
     setSaving(true)
     setSaveError(null)
@@ -390,7 +418,7 @@ export default function WorkoutScreen() {
     legs: 'text-legs bg-legs/15',
   }
 
-  const isCustomMode = mode === 'custom' || mode === 'template'
+  const isCustomMode = mode === 'custom' || mode === 'template' || mode === 'builder'
 
   const displayGroups = []
   const groupedIndices = new Set()
@@ -436,7 +464,7 @@ export default function WorkoutScreen() {
               </span>
             )}
             <span className="font-bold text-text-primary truncate">
-              {mode === 'program' ? session.name : 'Custom Workout'}
+              {mode === 'program' ? session.name : mode === 'builder' ? 'Build Workout' : 'Custom Workout'}
             </span>
           </div>
           {mode === 'program' && blockInfo && (
@@ -445,19 +473,21 @@ export default function WorkoutScreen() {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {isPaused
-            ? <span className="text-sm text-text-muted italic">Paused</span>
-            : <span className="font-mono text-sm text-text-muted">{formatElapsed(elapsed)}</span>
-          }
-          <button
-            onClick={handleTogglePause}
-            className="w-8 h-8 rounded-full bg-bg-tertiary flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
-            aria-label={isPaused ? 'Resume workout' : 'Pause workout'}
-          >
-            {isPaused ? <Play size={15} /> : <Pause size={15} />}
-          </button>
-        </div>
+        {mode !== 'builder' && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {isPaused
+              ? <span className="text-sm text-text-muted italic">Paused</span>
+              : <span className="font-mono text-sm text-text-muted">{formatElapsed(elapsed)}</span>
+            }
+            <button
+              onClick={handleTogglePause}
+              className="w-8 h-8 rounded-full bg-bg-tertiary flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
+              aria-label={isPaused ? 'Resume workout' : 'Pause workout'}
+            >
+              {isPaused ? <Play size={15} /> : <Pause size={15} />}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Scrollable exercise list */}
@@ -493,6 +523,7 @@ export default function WorkoutScreen() {
                 onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
                 isActive={exIdx === activeExIdx}
                 onRemove={isCustomMode ? () => handleRemoveExercise(exIdx) : undefined}
+                isBuilderMode={mode === 'builder'}
               />
             )
           }
@@ -519,6 +550,7 @@ export default function WorkoutScreen() {
                     onAddSet={isCustomMode ? () => handleAddSetToSuperset(group.indices) : undefined}
                     isActive={exIdx === activeExIdx}
                     onRemove={isCustomMode ? () => handleRemoveExercise(exIdx) : undefined}
+                    isBuilderMode={mode === 'builder'}
                   />
                 ))}
               </div>
@@ -526,17 +558,44 @@ export default function WorkoutScreen() {
           )
         })}
 
-        {/* Finish + Cancel — inline at bottom of scroll area */}
+        {/* Finish / Save — inline at bottom of scroll area */}
         <div className="pt-4 mt-2 border-t border-bg-tertiary">
-          <PrimaryButton onClick={() => setSummaryOpen(true)} className="mb-2">
-            Finish Workout
-          </PrimaryButton>
-          <button
-            onClick={handleBack}
-            className="w-full text-danger text-sm font-medium py-2"
-          >
-            Cancel Workout
-          </button>
+          {mode === 'builder' ? (
+            <div className="space-y-3">
+              <input
+                value={builderName}
+                onChange={e => setBuilderName(e.target.value)}
+                placeholder="e.g. Upper Body Power"
+                className="w-full bg-bg-tertiary rounded-xl px-4 py-3 text-text-primary placeholder-text-muted text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+              {builderSaveError && <p className="text-xs text-danger">{builderSaveError}</p>}
+              <PrimaryButton
+                onClick={handleSaveBuilder}
+                disabled={builderSaving || activeExercises.length === 0}
+                className="mb-2"
+              >
+                {builderSaving ? 'Saving…' : 'Save Template'}
+              </PrimaryButton>
+              <button
+                onClick={() => { allowNavRef.current = true; navigate(-1) }}
+                className="w-full text-text-muted text-sm font-medium py-2"
+              >
+                Discard
+              </button>
+            </div>
+          ) : (
+            <>
+              <PrimaryButton onClick={() => setSummaryOpen(true)} className="mb-2">
+                Finish Workout
+              </PrimaryButton>
+              <button
+                onClick={handleBack}
+                className="w-full text-danger text-sm font-medium py-2"
+              >
+                Cancel Workout
+              </button>
+            </>
+          )}
         </div>
       </div>
 
