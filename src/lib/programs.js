@@ -156,6 +156,185 @@ export const PROGRAMS = {
       },
     ],
   },
+  '531': {
+    id: '531',
+    name: '5/3/1 — Wendler',
+    description: 'Percentage-based strength program. All % use your Training Max (TM) = 90% of true 1RM. Set a TM for each lift before starting. After each 4-week cycle: +5 lb OHP & Bench, +10 lb Squat & Deadlift.',
+    blockStructure: {
+      weeksPerBlock: 4,
+      deloadWeek: 4,
+      blockNames: ['5/3/1 Cycle'],
+      phaseByWeek: { 1: 'The 5s', 2: 'The 3s', 3: '5/3/1', 4: 'Deload' },
+    },
+    sessionOrder: [
+      'ohp-w1', 'dead-w1', 'bench-w1', 'squat-w1',
+      'ohp-w2', 'dead-w2', 'bench-w2', 'squat-w2',
+      'ohp-w3', 'dead-w3', 'bench-w3', 'squat-w3',
+      'ohp-w4', 'dead-w4', 'bench-w4', 'squat-w4',
+    ],
+    sessions: [
+      // ── Week 1 — The 5s (65%×5 / 75%×5 / 85%×5+) ──────────────────────
+      {
+        id: 'ohp-w1', name: 'OHP — Week 1', tag: 'push', tagLabel: 'PRESS',
+        focus: 'The 5s · 65% × 5 / 75% × 5 / 85% × 5+ (AMRAP)',
+        exercises: [
+          { name: 'Overhead Press (Barbell)', sets: 3, reps: '5+',  rest: 300, restLabel: '5 min' },
+          { name: 'Dips (Weighted)',           sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Chin-Up',                  sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Hanging Leg Raise',         sets: 5, reps: '10',  rest: 60,  restLabel: '1 min' },
+        ],
+      },
+      {
+        id: 'dead-w1', name: 'Deadlift — Week 1', tag: 'pull', tagLabel: 'DEADLIFT',
+        focus: 'The 5s · 65% × 5 / 75% × 5 / 85% × 5+ (AMRAP)',
+        exercises: [
+          { name: 'Deadlift (Barbell)',        sets: 3, reps: '5+',  rest: 300, restLabel: '5 min' },
+          { name: 'Barbell Row (Pronated)',     sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Reverse Hyperextension',    sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+        ],
+      },
+      {
+        id: 'bench-w1', name: 'Bench — Week 1', tag: 'push', tagLabel: 'BENCH',
+        focus: 'The 5s · 65% × 5 / 75% × 5 / 85% × 5+ (AMRAP)',
+        exercises: [
+          { name: 'Barbell Bench Press',       sets: 3, reps: '5+',  rest: 300, restLabel: '5 min' },
+          { name: 'Dumbbell Bench Press',      sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Dumbbell Row',              sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Ab Wheel',                  sets: 5, reps: '10',  rest: 60,  restLabel: '1 min' },
+        ],
+      },
+      {
+        id: 'squat-w1', name: 'Squat — Week 1', tag: 'legs', tagLabel: 'SQUAT',
+        focus: 'The 5s · 65% × 5 / 75% × 5 / 85% × 5+ (AMRAP)',
+        exercises: [
+          { name: 'Back Squat (Barbell)',       sets: 3, reps: '5+',  rest: 300, restLabel: '5 min' },
+          { name: 'Leg Press',                  sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Leg Curl (Machine)',          sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Plank',                      sets: 3, reps: '60',  rest: 60,  restLabel: '60 sec' },
+        ],
+      },
+      // ── Week 2 — The 3s (70%×3 / 80%×3 / 90%×3+) ──────────────────────
+      {
+        id: 'ohp-w2', name: 'OHP — Week 2', tag: 'push', tagLabel: 'PRESS',
+        focus: 'The 3s · 70% × 3 / 80% × 3 / 90% × 3+ (AMRAP)',
+        exercises: [
+          { name: 'Overhead Press (Barbell)', sets: 3, reps: '3+',  rest: 300, restLabel: '5 min' },
+          { name: 'Dips (Weighted)',           sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Chin-Up',                  sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Hanging Leg Raise',         sets: 5, reps: '10',  rest: 60,  restLabel: '1 min' },
+        ],
+      },
+      {
+        id: 'dead-w2', name: 'Deadlift — Week 2', tag: 'pull', tagLabel: 'DEADLIFT',
+        focus: 'The 3s · 70% × 3 / 80% × 3 / 90% × 3+ (AMRAP)',
+        exercises: [
+          { name: 'Deadlift (Barbell)',        sets: 3, reps: '3+',  rest: 300, restLabel: '5 min' },
+          { name: 'Barbell Row (Pronated)',     sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Reverse Hyperextension',    sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+        ],
+      },
+      {
+        id: 'bench-w2', name: 'Bench — Week 2', tag: 'push', tagLabel: 'BENCH',
+        focus: 'The 3s · 70% × 3 / 80% × 3 / 90% × 3+ (AMRAP)',
+        exercises: [
+          { name: 'Barbell Bench Press',       sets: 3, reps: '3+',  rest: 300, restLabel: '5 min' },
+          { name: 'Dumbbell Bench Press',      sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Dumbbell Row',              sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Ab Wheel',                  sets: 5, reps: '10',  rest: 60,  restLabel: '1 min' },
+        ],
+      },
+      {
+        id: 'squat-w2', name: 'Squat — Week 2', tag: 'legs', tagLabel: 'SQUAT',
+        focus: 'The 3s · 70% × 3 / 80% × 3 / 90% × 3+ (AMRAP)',
+        exercises: [
+          { name: 'Back Squat (Barbell)',       sets: 3, reps: '3+',  rest: 300, restLabel: '5 min' },
+          { name: 'Leg Press',                  sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Leg Curl (Machine)',          sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Plank',                      sets: 3, reps: '60',  rest: 60,  restLabel: '60 sec' },
+        ],
+      },
+      // ── Week 3 — 5/3/1 (75%×5 / 85%×3 / 95%×1+) ───────────────────────
+      {
+        id: 'ohp-w3', name: 'OHP — Week 3', tag: 'push', tagLabel: 'PRESS',
+        focus: '5/3/1 · 75% × 5 / 85% × 3 / 95% × 1+ (AMRAP)',
+        exercises: [
+          { name: 'Overhead Press (Barbell)', sets: 3, reps: '5 / 3 / 1+', rest: 300, restLabel: '5 min' },
+          { name: 'Dips (Weighted)',           sets: 5, reps: '10',         rest: 90,  restLabel: '90 sec' },
+          { name: 'Chin-Up',                  sets: 5, reps: '10',         rest: 90,  restLabel: '90 sec' },
+          { name: 'Hanging Leg Raise',         sets: 5, reps: '10',         rest: 60,  restLabel: '1 min' },
+        ],
+      },
+      {
+        id: 'dead-w3', name: 'Deadlift — Week 3', tag: 'pull', tagLabel: 'DEADLIFT',
+        focus: '5/3/1 · 75% × 5 / 85% × 3 / 95% × 1+ (AMRAP)',
+        exercises: [
+          { name: 'Deadlift (Barbell)',        sets: 3, reps: '5 / 3 / 1+', rest: 300, restLabel: '5 min' },
+          { name: 'Barbell Row (Pronated)',     sets: 5, reps: '10',         rest: 90,  restLabel: '90 sec' },
+          { name: 'Reverse Hyperextension',    sets: 5, reps: '10',         rest: 90,  restLabel: '90 sec' },
+        ],
+      },
+      {
+        id: 'bench-w3', name: 'Bench — Week 3', tag: 'push', tagLabel: 'BENCH',
+        focus: '5/3/1 · 75% × 5 / 85% × 3 / 95% × 1+ (AMRAP)',
+        exercises: [
+          { name: 'Barbell Bench Press',       sets: 3, reps: '5 / 3 / 1+', rest: 300, restLabel: '5 min' },
+          { name: 'Dumbbell Bench Press',      sets: 5, reps: '10',         rest: 90,  restLabel: '90 sec' },
+          { name: 'Dumbbell Row',              sets: 5, reps: '10',         rest: 90,  restLabel: '90 sec' },
+          { name: 'Ab Wheel',                  sets: 5, reps: '10',         rest: 60,  restLabel: '1 min' },
+        ],
+      },
+      {
+        id: 'squat-w3', name: 'Squat — Week 3', tag: 'legs', tagLabel: 'SQUAT',
+        focus: '5/3/1 · 75% × 5 / 85% × 3 / 95% × 1+ (AMRAP)',
+        exercises: [
+          { name: 'Back Squat (Barbell)',       sets: 3, reps: '5 / 3 / 1+', rest: 300, restLabel: '5 min' },
+          { name: 'Leg Press',                  sets: 5, reps: '10',         rest: 90,  restLabel: '90 sec' },
+          { name: 'Leg Curl (Machine)',          sets: 5, reps: '10',         rest: 90,  restLabel: '90 sec' },
+          { name: 'Plank',                      sets: 3, reps: '60',         rest: 60,  restLabel: '60 sec' },
+        ],
+      },
+      // ── Week 4 — Deload (40%×5 / 50%×5 / 60%×5) ────────────────────────
+      {
+        id: 'ohp-w4', name: 'OHP — Deload', tag: 'push', tagLabel: 'PRESS',
+        focus: 'Deload · 40% × 5 / 50% × 5 / 60% × 5 — Cycle done: +5 lb OHP & Bench TM next cycle',
+        exercises: [
+          { name: 'Overhead Press (Barbell)', sets: 3, reps: '5',   rest: 180, restLabel: '3 min' },
+          { name: 'Dips (Weighted)',           sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Chin-Up',                  sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Hanging Leg Raise',         sets: 5, reps: '10',  rest: 60,  restLabel: '1 min' },
+        ],
+      },
+      {
+        id: 'dead-w4', name: 'Deadlift — Deload', tag: 'pull', tagLabel: 'DEADLIFT',
+        focus: 'Deload · 40% × 5 / 50% × 5 / 60% × 5 — Cycle done: +10 lb Deadlift TM next cycle',
+        exercises: [
+          { name: 'Deadlift (Barbell)',        sets: 3, reps: '5',   rest: 180, restLabel: '3 min' },
+          { name: 'Barbell Row (Pronated)',     sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Reverse Hyperextension',    sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+        ],
+      },
+      {
+        id: 'bench-w4', name: 'Bench — Deload', tag: 'push', tagLabel: 'BENCH',
+        focus: 'Deload · 40% × 5 / 50% × 5 / 60% × 5 — Cycle done: +5 lb Bench TM next cycle',
+        exercises: [
+          { name: 'Barbell Bench Press',       sets: 3, reps: '5',   rest: 180, restLabel: '3 min' },
+          { name: 'Dumbbell Bench Press',      sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Dumbbell Row',              sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Ab Wheel',                  sets: 5, reps: '10',  rest: 60,  restLabel: '1 min' },
+        ],
+      },
+      {
+        id: 'squat-w4', name: 'Squat — Deload', tag: 'legs', tagLabel: 'SQUAT',
+        focus: 'Deload · 40% × 5 / 50% × 5 / 60% × 5 — Cycle done: +10 lb Squat TM next cycle',
+        exercises: [
+          { name: 'Back Squat (Barbell)',       sets: 3, reps: '5',   rest: 180, restLabel: '3 min' },
+          { name: 'Leg Press',                  sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Leg Curl (Machine)',          sets: 5, reps: '10',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Plank',                      sets: 3, reps: '60',  rest: 60,  restLabel: '60 sec' },
+        ],
+      },
+    ],
+  },
 }
 
 export function getActiveProgram(config) {

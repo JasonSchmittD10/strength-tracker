@@ -12,13 +12,6 @@ const COMING_SOON = [
     structure: '4 sessions · Upper Power / Lower Power / Upper Hypertrophy / Lower Hypertrophy',
     blockSummary: 'Power + Hypertrophy blocks',
   },
-  {
-    id: '531-bbb',
-    name: '5/3/1 BBB',
-    description: "Jim Wendler's 5/3/1 with Boring But Big supplemental work.",
-    structure: '4 sessions · Squat / Bench / Deadlift / Press days',
-    blockSummary: 'Percentage-based wave loading',
-  },
 ]
 
 
