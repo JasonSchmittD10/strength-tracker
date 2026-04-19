@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { getActiveProgram, getBlockAndWeek, getNextSession } from '@/lib/programs'
 
-const DEFAULT_CONFIG = { activeProgramId: 'ppl-x2', programStartDate: '2026-03-30' }
+const DEFAULT_CONFIG = {}
 
 async function fetchConfig() {
   const { data: { user } } = await supabase.auth.getUser()
