@@ -335,6 +335,72 @@ export const PROGRAMS = {
       },
     ],
   },
+  'phul': {
+    id: 'phul',
+    name: 'PHUL',
+    description: 'Power Hypertrophy Upper Lower — 4 days/week alternating power and hypertrophy focus for upper and lower body.',
+    blockStructure: {
+      weeksPerBlock: 4,
+      deloadWeek: 4,
+      blockNames: ['PHUL Block'],
+      phaseByWeek: { 1: 'Foundation', 2: 'Accumulation', 3: 'Intensification', 4: 'Deload' },
+    },
+    sessionOrder: ['upper-power', 'lower-power', 'upper-hyp', 'lower-hyp'],
+    sessions: [
+      {
+        id: 'upper-power', name: 'Upper Power', tag: 'push', tagLabel: 'POWER',
+        focus: 'Power · Chest, Back, Shoulders',
+        exercises: [
+          { name: 'Barbell Bench Press',       sets: 3, reps: '3–5',   rest: 240, restLabel: '4 min' },
+          { name: 'Barbell Row (Pronated)',     sets: 3, reps: '3–5',   rest: 240, restLabel: '4 min' },
+          { name: 'Overhead Press (Barbell)',   sets: 3, reps: '5',     rest: 180, restLabel: '3 min' },
+          { name: 'Weighted Pull-Up',           sets: 3, reps: '5',     rest: 180, restLabel: '3 min' },
+          { name: 'Incline Dumbbell Press',     sets: 2, reps: '6–8',   rest: 120, restLabel: '2 min' },
+          { name: 'Dumbbell Row',               sets: 2, reps: '6–8',   rest: 120, restLabel: '2 min' },
+        ],
+      },
+      {
+        id: 'lower-power', name: 'Lower Power', tag: 'legs', tagLabel: 'POWER',
+        focus: 'Power · Quads, Hamstrings, Glutes',
+        exercises: [
+          { name: 'Back Squat (Barbell)',       sets: 3, reps: '3–5',   rest: 300, restLabel: '5 min' },
+          { name: 'Romanian Deadlift',          sets: 3, reps: '3–5',   rest: 300, restLabel: '5 min' },
+          { name: 'Leg Press',                  sets: 3, reps: '10–12', rest: 120, restLabel: '2 min' },
+          { name: 'Leg Curl (Machine)',          sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Standing Calf Raise',        sets: 4, reps: '8–10',  rest: 60,  restLabel: '1 min' },
+        ],
+      },
+      {
+        id: 'upper-hyp', name: 'Upper Hypertrophy', tag: 'push', tagLabel: 'HYPERTROPHY',
+        focus: 'Hypertrophy · Chest, Back, Shoulders, Arms',
+        exercises: [
+          { name: 'Incline Barbell Press',      sets: 4, reps: '8–12',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Cable Row (Neutral Grip)',    sets: 4, reps: '8–12',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Dumbbell Shoulder Press',    sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Lat Pulldown (Wide Grip)',    sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Cable Fly (Low-to-High)',     sets: 3, reps: '12–15', rest: 60,  restLabel: '1 min' },
+          { name: 'Face Pull (Cable)',           sets: 3, reps: '15',    rest: 60,  restLabel: '1 min' },
+          { name: 'Lateral Raise (DB)',          sets: 3, reps: '12–15', rest: 60,  restLabel: '1 min' },
+          { name: 'EZ Bar Curl',                sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Tricep Pushdown (Cable)',     sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+        ],
+      },
+      {
+        id: 'lower-hyp', name: 'Lower Hypertrophy', tag: 'legs', tagLabel: 'HYPERTROPHY',
+        focus: 'Hypertrophy · Quads, Hamstrings, Glutes, Calves',
+        exercises: [
+          { name: 'Back Squat (Barbell)',        sets: 4, reps: '8–12',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Romanian Deadlift',           sets: 4, reps: '8–12',  rest: 90,  restLabel: '90 sec' },
+          { name: 'Hack Squat / Leg Press',      sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Leg Curl (Machine)',           sets: 3, reps: '10–12', rest: 90,  restLabel: '90 sec' },
+          { name: 'Bulgarian Split Squat (DB)',   sets: 3, reps: '10–12', rest: 120, restLabel: '2 min' },
+          { name: 'Leg Extension (Machine)',      sets: 3, reps: '12–15', rest: 60,  restLabel: '1 min' },
+          { name: 'Standing Calf Raise',          sets: 3, reps: '10–12', rest: 60,  restLabel: '1 min' },
+          { name: 'Seated Calf Raise',            sets: 2, reps: '15–20', rest: 60,  restLabel: '1 min' },
+        ],
+      },
+    ],
+  },
 }
 
 export function getActiveProgram(config) {

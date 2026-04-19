@@ -4,15 +4,7 @@ import { ArrowLeft, Check } from 'lucide-react'
 import { useProgram, useSaveConfig } from '@/hooks/useProgram'
 import { PROGRAMS } from '@/lib/programs'
 
-const COMING_SOON = [
-  {
-    id: 'phul',
-    name: 'PHUL',
-    description: 'Upper/Lower split twice per week — power and hypertrophy focus.',
-    structure: '4 sessions · Upper Power / Lower Power / Upper Hypertrophy / Lower Hypertrophy',
-    blockSummary: 'Power + Hypertrophy blocks',
-  },
-]
+const COMING_SOON = []
 
 
 function deriveStructureSummary(program) {
