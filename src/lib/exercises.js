@@ -265,32 +265,32 @@ export const EXERCISE_LIBRARY = {
     notes: 'Targets upper chest from a different angle than pressing. The stretch at the bottom with constant cable tension makes this very effective.'
   },
   'Plank': {
-    inputType: 'time',
     muscles: { primary: ['Core'], secondary: ['Shoulders', 'Glutes'] },
     pattern: 'Isometric',
     cues: ['Forearms on floor, elbows under shoulders', 'Squeeze glutes and abs — no sagging hips', 'Neck neutral — eyes to floor', 'Breathe steadily — do not hold breath'],
     notes: 'Core endurance staple. Quality over duration — a 30-sec perfect plank beats 2 min with a sagging back.',
+    inputType: 'time',
   },
   'Dead Hang': {
-    inputType: 'time',
     muscles: { primary: ['Lats', 'Grip'], secondary: ['Rear Delts', 'Core'] },
     pattern: 'Isometric',
     cues: ['Fully passive hang — let shoulders elevate', 'No kipping or swinging', 'Grip with full hand, not fingertips', 'Breathe steadily'],
     notes: 'Excellent shoulder decompression and grip endurance builder. Progress by adding weight via belt.',
+    inputType: 'time',
   },
   'Wall Sit': {
-    inputType: 'time',
     muscles: { primary: ['Quads'], secondary: ['Glutes', 'Hamstrings'] },
     pattern: 'Isometric',
     cues: ['Back flat against wall', 'Thighs parallel to floor', 'Feet shoulder-width, toes forward', 'Do not rest hands on thighs'],
     notes: 'Pure quad endurance. Simple to perform with no equipment — effective finisher for leg sessions.',
+    inputType: 'time',
   },
   'L-Sit': {
-    inputType: 'time',
     muscles: { primary: ['Core', 'Hip Flexors'], secondary: ['Triceps', 'Shoulders'] },
     pattern: 'Isometric',
     cues: ['Legs straight and parallel to floor', 'Depress scapulae — push shoulders down', 'Point toes', 'Tuck version acceptable for beginners'],
     notes: 'Advanced isometric requiring hip flexor strength and tricep/shoulder stability. Use parallettes or dip bars.',
+    inputType: 'time',
   },
 }
 
