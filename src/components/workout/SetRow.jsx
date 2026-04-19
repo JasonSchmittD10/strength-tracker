@@ -7,7 +7,7 @@ const RPE_VALUES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 const SWIPE_THRESHOLD = 60
 const REMOVE_ZONE_WIDTH = 80
 
-export default function SetRow({ setNumber, set, onChange, onComplete, onRemove }) {
+export default function SetRow({ setNumber, set, onChange, onComplete, onRemove, highlighted = false }) {
   const { weight = '', reps = '', rpe = '', completed = false } = set
   const unit = useUnitPreference()
   const [swipeX, setSwipeX] = useState(0)
@@ -45,7 +45,7 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove 
   }
 
   return (
-    <div className="relative overflow-hidden rounded-lg">
+    <div className={`relative overflow-hidden rounded-lg ${highlighted ? 'ring-1 ring-accent' : ''}`}>
       {onRemove && (
         <div
           className="absolute right-0 top-0 bottom-0 bg-danger flex items-center justify-center"

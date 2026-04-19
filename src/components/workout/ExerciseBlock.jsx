@@ -5,7 +5,7 @@ import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
 
-export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect, onAddSet }) {
+export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect, onAddSet, isActive = false }) {
   const [cuesOpen, setCuesOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const info = EXERCISE_LIBRARY[exercise.name] || {}
@@ -29,6 +29,8 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
       onChange([...sets, { weight: last.weight || '', reps: last.reps || '', rpe: '', completed: false }])
     }
   }
+
+  const firstUncompletedIdx = isActive ? sets.findIndex(s => !s.completed) : -1
 
   return (
     <div className={`bg-bg-card rounded-2xl border border-bg-tertiary p-4 ${isInSuperset ? 'mb-0' : 'mb-3'}`}>
@@ -93,6 +95,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
           onChange={updated => updateSet(i, updated)}
           onComplete={() => onSetComplete(exIdx, i)}
           onRemove={onRemoveSet && sets.length > 1 ? () => onRemoveSet(i) : undefined}
+          highlighted={i === firstUncompletedIdx}
         />
       ))}
 

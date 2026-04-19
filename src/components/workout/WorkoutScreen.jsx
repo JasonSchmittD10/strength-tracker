@@ -402,6 +402,10 @@ export default function WorkoutScreen() {
   const canAddSuperset = selectedExercises.size >= 2 &&
     ![...selectedExercises].some(i => activeExercises[i]?.supersetId)
 
+  const activeExIdx = activeExercises.findIndex((_, i) =>
+    (exerciseSets[i] ?? []).some(s => !s.completed)
+  )
+
   const currentSessionState = {
     ...(mode === 'program' ? session : {}),
     exercises: activeExercises.map((ex, i) => ({ ...ex, sets: exerciseSets[i] ?? [] })),
@@ -474,6 +478,7 @@ export default function WorkoutScreen() {
                 onRemoveSet={isCustomMode ? (setIdx) => removeSet(exIdx, setIdx) : undefined}
                 isSelected={selectedExercises.has(exIdx)}
                 onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
+                isActive={exIdx === activeExIdx}
               />
             )
           }
@@ -498,6 +503,7 @@ export default function WorkoutScreen() {
                     isSelected={selectedExercises.has(exIdx)}
                     onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
                     onAddSet={isCustomMode ? () => handleAddSetToSuperset(group.indices) : undefined}
+                    isActive={exIdx === activeExIdx}
                   />
                 ))}
               </div>
