@@ -15,7 +15,7 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove 
 
   function handleComplete() {
     if (!completed) onComplete()
-    else onChange({ ...set, completed: false })
+    else onChange({ ...set, completed: false, editing: true })
   }
 
   function handleTouchStart(e) {

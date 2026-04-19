@@ -197,8 +197,10 @@ export default function WorkoutScreen() {
 
   function handleSetComplete(exIdx, setIdx) {
     const sets = exerciseSets[exIdx] ?? []
-    const wasCompleted = sets[setIdx]?.completed
-    if (!wasCompleted) {
+    const set = sets[setIdx]
+    const wasCompleted = set?.completed
+    const isRecompletion = set?.editing === true
+    if (!wasCompleted && !isRecompletion) {
       const restDuration = activeExercises[exIdx]?.rest ?? 90
       // key: Date.now() forces RestTimer remount — resets countdown if already running
       setRestTimer({ duration: restDuration, key: Date.now() })
@@ -206,7 +208,9 @@ export default function WorkoutScreen() {
     }
     setExerciseSets(prev => ({
       ...prev,
-      [exIdx]: (prev[exIdx] ?? []).map((s, i) => i === setIdx ? { ...s, completed: !wasCompleted } : s),
+      [exIdx]: (prev[exIdx] ?? []).map((s, i) =>
+        i === setIdx ? { ...s, completed: !wasCompleted, editing: false } : s
+      ),
     }))
   }
 
