@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
 import { totalVolume, formatVolume } from '@/lib/utils'
+import PrimaryButton from '@/components/shared/PrimaryButton'
 import CustomWorkoutSheet from '@/components/workout/CustomWorkoutSheet'
 import HomeHero from '@/components/home/HomeHero'
 
