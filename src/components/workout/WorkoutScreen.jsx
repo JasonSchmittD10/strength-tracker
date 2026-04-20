@@ -609,7 +609,7 @@ export default function WorkoutScreen() {
                 </button>
               )}
               <button
-                onClick={() => setSummaryOpen(true)}
+                onClick={() => { setIsSelectingSuperset(false); setSelectedExercises(new Set()); setSummaryOpen(true) }}
                 className="w-full h-[46px] bg-accent rounded-[6px] font-commons font-bold text-[18px] text-black"
               >
                 Finish Workout
