@@ -44,105 +44,114 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
     setSwipeX(0)
   }
 
-  const inputStateClass = completed
-    ? 'bg-[#0a0a0a] border border-transparent text-white/60 opacity-50 pointer-events-none'
+  const cellState = completed
+    ? 'bg-[#0a0a0a] border border-transparent opacity-50 pointer-events-none'
     : highlighted
-    ? 'bg-[rgba(242,166,85,0.05)] border border-[rgba(242,166,85,0.5)] text-white/60'
-    : 'bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] text-white/60'
+    ? 'bg-[rgba(242,166,85,0.05)] border border-[rgba(242,166,85,0.5)]'
+    : 'bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)]'
 
-  const inputBase = 'w-full rounded-[4px] py-[12px] font-commons text-[18px] text-center focus:outline-none min-h-[44px]'
-  const inputClass = `${inputBase} px-[10px] ${inputStateClass}`
-  const rpeSelectClass = `${inputBase} px-[4px] ${inputStateClass}`
+  const cellBase = `w-full h-[44px] pt-[12px] pb-[11px] px-[10px] rounded-[4px] font-commons text-[18px] text-[rgba(255,255,255,0.6)] tracking-[-0.5px] text-center focus:outline-none ${cellState}`
+
+  const labelClass = 'font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px] shrink-0'
+
+  const innerAlign = showLabels ? 'items-end' : 'items-center'
 
   return (
-    <div className="relative overflow-hidden rounded-[4px] mb-[8px]">
+    <div className="relative overflow-hidden mb-[12px]">
       {onRemove && (
         <div
-          className="absolute right-0 top-0 bottom-0 bg-danger flex items-center justify-center"
-          style={{ width: REMOVE_ZONE_WIDTH }}
+          className="absolute right-0 top-0 bottom-0 flex items-center justify-center transition-colors"
+          style={{ width: REMOVE_ZONE_WIDTH, zIndex: 0, backgroundColor: swipeX > 0 ? '#f87171' : 'transparent' }}
           onClick={onRemove}
         >
-          <span className="text-white text-xs font-semibold">Remove</span>
+          {swipeX >= SWIPE_THRESHOLD && <span className="text-white text-xs font-semibold">Remove</span>}
         </div>
       )}
       <div
         style={{
           transform: `translateX(-${swipeX}px)`,
           transition: swipeX === 0 ? 'transform 0.2s ease' : 'none',
+          zIndex: 1,
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={swipeX > 0 ? resetSwipe : undefined}
-        className="flex items-center gap-[8px] bg-[#0a0a0a]"
+        className="relative flex gap-[16px] items-end w-full bg-[rgba(255,255,255,0.05)]"
       >
-        {/* Set number */}
-        <div className="flex flex-col items-center justify-center flex-shrink-0 w-[24px]">
-          {showLabels && <span className="font-commons text-[14px] text-[#8b8b8b] mb-[8px] invisible">·</span>}
-          <span className="font-commons font-semibold text-[18px] text-[#9d9d9d] leading-none">{setNumber}</span>
+        {/* Set number — fixed height to align with input cell */}
+        <div className="flex flex-col h-[44px] items-center justify-center flex-shrink-0">
+          <span className="font-commons font-semibold text-[18px] text-[#9d9d9d] tracking-[-0.5px]">{setNumber}</span>
         </div>
 
-        {/* Weight */}
-        <div className="flex-1 flex flex-col gap-[4px]">
-          {showLabels && <span className="font-commons text-[14px] text-[#8b8b8b] text-center">Weight</span>}
-          <input
-            type="number"
-            inputMode="decimal"
-            value={weight}
-            onChange={e => onChange({ ...set, weight: e.target.value })}
-            placeholder={unit}
-            readOnly={completed}
-            className={inputClass}
-          />
-        </div>
+        {/* Inputs + check button */}
+        <div className={`flex flex-1 gap-[8px] ${innerAlign} min-w-0`}>
 
-        {/* Reps / Time */}
-        <div className="flex-1 flex flex-col gap-[4px]">
-          {showLabels && <span className="font-commons text-[14px] text-[#8b8b8b] text-center">{inputType === 'time' ? 'Sec' : 'Reps'}</span>}
-          <input
-            type="number"
-            inputMode="numeric"
-            value={inputType === 'time' ? (set.duration_seconds ?? '') : reps}
-            onChange={e => onChange(
-              inputType === 'time'
-                ? { ...set, duration_seconds: e.target.value }
-                : { ...set, reps: e.target.value }
-            )}
-            placeholder={inputType === 'time' ? 'sec' : 'reps'}
-            readOnly={completed}
-            className={inputClass}
-          />
-        </div>
+          {/* Weight */}
+          <div className="flex flex-1 flex-col gap-[8px] min-w-0">
+            {showLabels && <span className={labelClass}>Weight</span>}
+            <input
+              type="number"
+              inputMode="decimal"
+              value={weight}
+              onChange={e => onChange({ ...set, weight: e.target.value })}
+              placeholder={unit}
+              readOnly={completed}
+              className={cellBase}
+            />
+          </div>
 
-        {/* RPE */}
-        <div className="flex-1 flex flex-col gap-[4px]">
-          {showLabels && <span className="font-commons text-[14px] text-[#8b8b8b] text-center">RPE</span>}
-          <select
-            value={rpe}
-            onChange={e => onChange({ ...set, rpe: e.target.value })}
-            disabled={completed}
-            className={rpeSelectClass}
-          >
-            <option value="">RPE</option>
-            {RPE_VALUES.map(v => <option key={v} value={v}>{v}</option>)}
-          </select>
-        </div>
+          {/* Reps / Time */}
+          <div className="flex flex-1 flex-col gap-[8px] min-w-0">
+            {showLabels && <span className={labelClass}>{inputType === 'time' ? 'Sec' : 'Reps'}</span>}
+            <input
+              type="number"
+              inputMode="numeric"
+              value={inputType === 'time' ? (set.duration_seconds ?? '') : reps}
+              onChange={e => onChange(
+                inputType === 'time'
+                  ? { ...set, duration_seconds: e.target.value }
+                  : { ...set, reps: e.target.value }
+              )}
+              placeholder={inputType === 'time' ? 'sec' : 'reps'}
+              readOnly={completed}
+              className={cellBase}
+            />
+          </div>
 
-        {/* Check / Done button */}
-        {!hideComplete ? (
-          <button
-            onClick={handleComplete}
-            className={`w-[44px] h-[44px] rounded-[4px] flex items-center justify-center flex-shrink-0 transition-colors ${
-              completed
-                ? 'bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] text-white/60'
-                : 'bg-[rgba(255,255,255,0.1)] border border-transparent text-white/80'
-            }`}
-          >
-            {completed ? <Pencil size={16} /> : <Check size={16} />}
-          </button>
-        ) : (
-          <div className="w-[44px] flex-shrink-0" />
-        )}
+          {/* RPE */}
+          <div className="flex flex-1 flex-col gap-[8px] min-w-0">
+            {showLabels && <span className={labelClass}>RPE</span>}
+            <select
+              value={rpe}
+              onChange={e => onChange({ ...set, rpe: e.target.value })}
+              disabled={completed}
+              className={cellBase}
+            >
+              <option value="">RPE</option>
+              {RPE_VALUES.map(v => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </div>
+
+          {/* Check / Done button */}
+          {!hideComplete ? (
+            <div className="flex flex-col gap-[8px] flex-shrink-0">
+              {showLabels && <span className={`${labelClass} invisible`}>·</span>}
+              <button
+                onClick={handleComplete}
+                className={`h-[44px] w-[44px] rounded-[4px] flex items-center justify-center transition-colors ${
+                  completed
+                    ? 'bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] text-white/60'
+                    : 'bg-[rgba(255,255,255,0.1)] border border-transparent text-white/80'
+                }`}
+              >
+                {completed ? <Pencil size={16} /> : <Check size={16} />}
+              </button>
+            </div>
+          ) : (
+            <div className="w-[44px] flex-shrink-0" />
+          )}
+        </div>
       </div>
     </div>
   )

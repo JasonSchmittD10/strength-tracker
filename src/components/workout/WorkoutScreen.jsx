@@ -8,8 +8,10 @@ import RestTimer from './RestTimer'
 import WorkoutSummary from './WorkoutSummary'
 import { useSessions, useSaveSession } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
+import { useProgram } from '@/hooks/useProgram'
 import { normalizeExerciseName } from '@/lib/exercises'
 import { totalVolume } from '@/lib/utils'
+import { getBlockAndWeek } from '@/lib/programs'
 
 function useElapsedTimer(isPaused) {
   const [elapsed, setElapsed] = useState(0)
@@ -186,6 +188,11 @@ export default function WorkoutScreen() {
   const [builderSaving, setBuilderSaving] = useState(false)
   const [builderSaveError, setBuilderSaveError] = useState(null)
   const allowNavRef = useRef(false)
+  const { program, config: programConfig } = useProgram()
+  const blockInfo = mode === 'program' && programConfig ? getBlockAndWeek(programConfig) : null
+  const programSubtitle = program && blockInfo
+    ? `${program.name} · Block ${blockInfo.blockNumber} · Week ${blockInfo.weekInBlock} · ${blockInfo.phaseName}`
+    : null
 
   // Block swipe-back and browser back button during workout
   // useRef so the flag is synchronously true before navigate() is called
@@ -464,28 +471,32 @@ export default function WorkoutScreen() {
   return (
     <div className="flex flex-col h-screen bg-bg-primary">
       {/* Static header */}
-      <div className="flex-shrink-0 px-[16px] py-[12px] flex items-center justify-between bg-bg-primary">
-        {/* Left: icon pill */}
-        <div className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex-shrink-0">
-          <Dumbbell size={16} className="text-white" />
-        </div>
-
-        {/* Center: title + subtitle */}
-        <div className="flex flex-col items-center flex-1 mx-[12px]">
-          <span className="font-judge text-[16px] text-white leading-none">Workout</span>
-          <span className="font-commons text-[12px] text-[#8b8b8b] leading-none mt-[2px] truncate max-w-[180px]">
-            {mode === 'program'
-              ? session.name
-              : mode === 'builder'
-                ? 'Build Workout'
-                : 'Custom Workout'}
-          </span>
+      <div className="flex-shrink-0 px-[16px] pb-[16px] pt-[12px] flex items-center justify-between bg-bg-primary border-b border-[rgba(255,255,255,0.1)]">
+        {/* Left: icon + session name + subtitle */}
+        <div className="flex items-center gap-[8px] flex-1 min-w-0">
+          <div className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex-shrink-0">
+            <Dumbbell size={20} className="text-white" />
+          </div>
+          <div className="flex flex-col items-start min-w-0">
+            <span className="font-judge text-[16px] text-white leading-[1.2]">
+              {mode === 'program'
+                ? session.name
+                : mode === 'builder'
+                  ? 'Build Workout'
+                  : template?.name || 'Custom Workout'}
+            </span>
+            {programSubtitle && (
+              <span className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px] truncate">
+                {programSubtitle}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Right: timer + pause pill */}
         {mode !== 'builder' && (
-          <div className="flex items-center gap-[8px] flex-shrink-0">
-            <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[0.5px]">
+          <div className="flex items-center gap-[12px] flex-shrink-0">
+            <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[0.5px] leading-[14px]">
               {isPaused ? 'Paused' : formatElapsed(elapsed)}
             </span>
             <button
@@ -493,7 +504,7 @@ export default function WorkoutScreen() {
               className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex items-center justify-center"
               aria-label={isPaused ? 'Resume workout' : 'Pause workout'}
             >
-              {isPaused ? <Play size={16} className="text-white" /> : <Pause size={16} className="text-white" />}
+              {isPaused ? <Play size={12} className="text-white" /> : <Pause size={12} className="text-white" />}
             </button>
           </div>
         )}
