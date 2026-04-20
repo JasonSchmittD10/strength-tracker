@@ -7,7 +7,7 @@ const RPE_VALUES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 const SWIPE_THRESHOLD = 60
 const REMOVE_ZONE_WIDTH = 80
 
-export default function SetRow({ setNumber, set, onChange, onComplete, onRemove, highlighted = false, hideComplete = false, inputType = 'reps' }) {
+export default function SetRow({ setNumber, set, onChange, onComplete, onRemove, highlighted = false, hideComplete = false, inputType = 'reps', showLabels = false }) {
   const { weight = '', reps = '', rpe = '', completed = false } = set
   const unit = useUnitPreference()
   const [swipeX, setSwipeX] = useState(0)
@@ -44,8 +44,12 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
     setSwipeX(0)
   }
 
+  const inputBase = `w-full bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[4px] py-[12px] font-commons text-[18px] text-white/60 text-center focus:outline-none focus:border-accent min-h-[44px] ${completed ? 'pointer-events-none opacity-50' : ''}`
+  const inputClass = `${inputBase} px-[10px]`
+  const rpeSelectClass = `${inputBase} px-[4px]`
+
   return (
-    <div className={`relative overflow-hidden rounded-lg ${highlighted ? 'ring-1 ring-accent' : ''}`}>
+    <div className={`relative overflow-hidden rounded-[4px] mb-[8px] ${highlighted ? 'ring-1 ring-accent/60' : ''}`}>
       {onRemove && (
         <div
           className="absolute right-0 top-0 bottom-0 bg-danger flex items-center justify-center"
@@ -64,55 +68,72 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={swipeX > 0 ? resetSwipe : undefined}
-        className={`flex items-center gap-2 py-2 bg-bg-card ${completed ? 'opacity-60' : ''}`}
+        className="flex items-end gap-[8px]"
       >
-        <span className="w-6 text-center text-xs text-text-muted font-medium">{setNumber}</span>
+        {/* Set number */}
+        <div className="flex flex-col items-center justify-end flex-shrink-0 w-[24px]">
+          {showLabels && <span className="font-commons text-[14px] text-[#8b8b8b] mb-[8px] invisible">·</span>}
+          <span className="font-commons font-semibold text-[18px] text-[#9d9d9d] leading-none pb-[13px]">{setNumber}</span>
+        </div>
 
-        <input
-          type="number"
-          inputMode="decimal"
-          value={weight}
-          onChange={e => onChange({ ...set, weight: e.target.value })}
-          placeholder={unit}
-          readOnly={completed}
-          className={`flex-1 min-w-0 bg-bg-tertiary rounded-lg px-2 py-2.5 text-center text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px] ${completed ? 'pointer-events-none' : ''}`}
-        />
+        {/* Weight */}
+        <div className="flex-1 flex flex-col gap-[4px]">
+          {showLabels && <span className="font-commons text-[14px] text-[#8b8b8b] text-center">Weight</span>}
+          <input
+            type="number"
+            inputMode="decimal"
+            value={weight}
+            onChange={e => onChange({ ...set, weight: e.target.value })}
+            placeholder={unit}
+            readOnly={completed}
+            className={inputClass}
+          />
+        </div>
 
-        <input
-          type="number"
-          inputMode="numeric"
-          value={inputType === 'time' ? (set.duration_seconds ?? '') : reps}
-          onChange={e => onChange(
-            inputType === 'time'
-              ? { ...set, duration_seconds: e.target.value }
-              : { ...set, reps: e.target.value }
-          )}
-          placeholder={inputType === 'time' ? 'sec' : 'reps'}
-          readOnly={completed}
-          className={`flex-1 min-w-0 bg-bg-tertiary rounded-lg px-2 py-2.5 text-center text-sm text-text-primary placeholder-text-muted focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px] ${completed ? 'pointer-events-none' : ''}`}
-        />
+        {/* Reps / Time */}
+        <div className="flex-1 flex flex-col gap-[4px]">
+          {showLabels && <span className="font-commons text-[14px] text-[#8b8b8b] text-center">{inputType === 'time' ? 'Sec' : 'Reps'}</span>}
+          <input
+            type="number"
+            inputMode="numeric"
+            value={inputType === 'time' ? (set.duration_seconds ?? '') : reps}
+            onChange={e => onChange(
+              inputType === 'time'
+                ? { ...set, duration_seconds: e.target.value }
+                : { ...set, reps: e.target.value }
+            )}
+            placeholder={inputType === 'time' ? 'sec' : 'reps'}
+            readOnly={completed}
+            className={inputClass}
+          />
+        </div>
 
-        <select
-          value={rpe}
-          onChange={e => onChange({ ...set, rpe: e.target.value })}
-          disabled={completed}
-          className={`w-16 bg-bg-tertiary rounded-lg px-1 py-2.5 text-center text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent min-h-[44px] ${completed ? 'pointer-events-none' : ''}`}
-        >
-          <option value="">RPE</option>
-          {RPE_VALUES.map(v => <option key={v} value={v}>{v}</option>)}
-        </select>
+        {/* RPE */}
+        <div className="flex-1 flex flex-col gap-[4px]">
+          {showLabels && <span className="font-commons text-[14px] text-[#8b8b8b] text-center">RPE</span>}
+          <select
+            value={rpe}
+            onChange={e => onChange({ ...set, rpe: e.target.value })}
+            disabled={completed}
+            className={rpeSelectClass}
+          >
+            <option value="">RPE</option>
+            {RPE_VALUES.map(v => <option key={v} value={v}>{v}</option>)}
+          </select>
+        </div>
 
+        {/* Check / Done button */}
         {!hideComplete ? (
           <button
             onClick={handleComplete}
-            className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-              completed ? 'bg-success text-white' : 'bg-bg-tertiary text-text-muted hover:bg-accent/20 hover:text-accent'
+            className={`w-[44px] h-[44px] rounded-[4px] flex items-center justify-center flex-shrink-0 transition-colors ${
+              completed ? 'bg-accent' : 'bg-[rgba(255,255,255,0.1)]'
             }`}
           >
-            {completed ? <Pencil size={16} /> : <Check size={16} />}
+            {completed ? <Pencil size={16} className="text-black" /> : <Check size={16} className="text-white/60" />}
           </button>
         ) : (
-          <div className="w-11 flex-shrink-0" />
+          <div className="w-[44px] flex-shrink-0" />
         )}
       </div>
     </div>

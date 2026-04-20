@@ -1,6 +1,6 @@
 // src/components/workout/ExerciseBlock.jsx
 import { useState, useEffect } from 'react'
-import { Clock, Check, Trash2 } from 'lucide-react'
+import { Clock, Trash2, Check } from 'lucide-react'
 import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
@@ -41,69 +41,67 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
 
   const firstUncompletedIdx = isActive ? sets.findIndex(s => !s.completed) : -1
 
+  const metaParts = []
+  if (primaryMuscle) metaParts.push(primaryMuscle)
+  if (exercise.sets && exercise.reps) metaParts.push(`${exercise.sets}×${exercise.reps} ${inputType === 'time' ? 'sec' : 'reps'}`)
+  if (exercise.tempo) metaParts.push(`Tempo ${exercise.tempo}`)
+
   return (
-    <div className={`bg-bg-card rounded-2xl border border-bg-tertiary p-4 ${isInSuperset ? 'mb-0' : 'mb-3'}`}>
+    <div className={`bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] p-[16px] ${isInSuperset ? 'mb-0' : 'mb-[12px]'}`}>
       {/* Header */}
-      <div
-        className="flex items-center justify-between mb-3 cursor-pointer select-none"
-        onClick={() => setCollapsed(c => !c)}
-      >
-        {onSelect && (
-          <button
-            onClick={onSelect}
-            className={`mr-3 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-accent border-accent' : 'border-text-muted'}`}
-          >
-            {isSelected && <Check size={10} className="text-black" />}
-          </button>
-        )}
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <div
-              className="font-bold text-text-primary text-base cursor-pointer hover:text-accent transition-colors"
-              onClick={e => { e.stopPropagation(); setInfoOpen(true) }}
+      <div className="flex items-start justify-between mb-[16px]">
+        <div className="flex items-center gap-[10px] flex-1 min-w-0">
+          {onSelect && (
+            <button
+              onClick={onSelect}
+              className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-accent border-accent' : 'border-text-muted'}`}
             >
-              {exercise.name}
+              {isSelected && <Check size={10} className="text-black" />}
+            </button>
+          )}
+          <div
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={() => setCollapsed(c => !c)}
+          >
+            <div className="flex items-center gap-[8px]">
+              <span
+                className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-snug"
+                onClick={e => { e.stopPropagation(); setInfoOpen(true) }}
+              >
+                {exercise.name}
+              </span>
+              {collapsed && sets.every(s => s.completed) && (
+                <span className="text-xs text-success font-semibold">Done</span>
+              )}
             </div>
-            {collapsed && sets.every(s => s.completed) && (
-              <span className="text-xs text-success font-semibold">Done</span>
+            {metaParts.length > 0 && (
+              <div className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-snug mt-[2px]">
+                {metaParts.join(' · ')}
+              </div>
             )}
           </div>
-          {primaryMuscle && <div className="text-xs text-text-secondary">{primaryMuscle}</div>}
-          {exercise.tempo && <div className="text-xs text-text-muted">Tempo: {exercise.tempo}</div>}
-          {exercise.reps && (
-            <div className="text-xs text-text-muted mt-0.5">
-              {exercise.sets} × {exercise.reps} {inputType === 'time' ? 'sec' : 'reps'}
-            </div>
+        </div>
+        <div className="flex items-center gap-[16px] flex-shrink-0 ml-[12px]">
+          <button
+            onClick={e => { e.stopPropagation(); setHistoryOpen(true) }}
+            className="p-[8px] text-[#8b8b8b] hover:text-accent transition-colors"
+          >
+            <Clock size={16} />
+          </button>
+          {onRemove && (
+            <button
+              onClick={e => { e.stopPropagation(); onRemove() }}
+              className="p-[8px] text-[#8b8b8b] hover:text-danger transition-colors"
+            >
+              <Trash2 size={16} />
+            </button>
           )}
         </div>
-        <button
-          onClick={e => { e.stopPropagation(); setHistoryOpen(true) }}
-          className="p-2 text-text-muted hover:text-accent transition-colors"
-        >
-          <Clock size={16} />
-        </button>
-        {onRemove && (
-          <button
-            onClick={e => { e.stopPropagation(); onRemove() }}
-            className="p-2 text-text-muted hover:text-danger transition-colors flex-shrink-0"
-          >
-            <Trash2 size={16} />
-          </button>
-        )}
       </div>
 
       {!collapsed && (
         <>
-          {/* Column headers */}
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-6" />
-            <span className="flex-1 text-center text-xs text-text-muted">Weight</span>
-            <span className="flex-1 text-center text-xs text-text-muted">{inputType === 'time' ? 'Sec' : 'Reps'}</span>
-            <span className="w-16 text-center text-xs text-text-muted">RPE</span>
-            <span className="w-11" />
-          </div>
-
-          {/* Sets */}
+          {/* Sets — no standalone column header row; labels are in SetRow for first row only */}
           {sets.map((set, i) => (
             <SetRow
               key={i}
@@ -115,13 +113,14 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
               highlighted={i === firstUncompletedIdx}
               hideComplete={isBuilderMode}
               inputType={inputType}
+              showLabels={i === 0}
             />
           ))}
 
           {!isProgramMode && (
             <button
               onClick={addSet}
-              className="w-full mt-2 py-2 text-xs text-accent border border-accent/30 rounded-lg hover:bg-accent/10 transition-colors"
+              className="w-full mt-[12px] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[4px] px-[12px] py-[10px] font-commons font-bold text-[14px] text-white"
             >
               + Add Set
             </button>
