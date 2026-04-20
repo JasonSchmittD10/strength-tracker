@@ -33,9 +33,10 @@ export default function WorkoutSummary({
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false)
 
   useEffect(() => {
-    if (open) { setWorkoutName(templateName ?? ''); setSaveError(null) }
+    if (open) { setWorkoutName(templateName ?? ''); setSaveError(null); setShowSaveTemplate(false) }
   }, [open, templateName])
 
   const { vol, completedSets, exerciseCount } = useMemo(() => {
@@ -110,9 +111,13 @@ export default function WorkoutSummary({
           <span className="font-commons text-[14px] text-accent">Back</span>
         </button>
         <span className="font-judge text-[16px] text-white">Workout</span>
-        <div className="text-[#8b8b8b] w-[16px] h-[16px]">
+        <button
+          onClick={() => setShowSaveTemplate(true)}
+          aria-label="Save as template"
+          className={showSaveTemplate || isCustomMode ? 'text-accent' : 'text-[#8b8b8b]'}
+        >
           <Bookmark size={16} />
-        </div>
+        </button>
       </div>
 
       <div className="px-[16px] pb-[40px]">
@@ -173,8 +178,8 @@ export default function WorkoutSummary({
           </div>
         </div>
 
-        {/* Custom mode: save-as-template */}
-        {isCustomMode && (
+        {/* Save-as-template section — always open for custom mode, revealed via bookmark for program mode */}
+        {(isCustomMode || showSaveTemplate) && (
           <div className="mt-[32px] flex flex-col gap-[12px]">
             <span className="font-commons text-[14px] text-white/40 tracking-[1px] uppercase">
               {templateId ? 'Update Template' : 'Save as Template'}
@@ -203,22 +208,33 @@ export default function WorkoutSummary({
 
           {externalSaveError && <p className="font-commons text-[14px] text-danger text-center">{externalSaveError}</p>}
 
-          {isCustomMode ? (
+          {isCustomMode || showSaveTemplate ? (
             <>
               <button
                 onClick={handleSaveWithTemplate}
-                disabled={saving}
+                disabled={saving || externalSaving}
                 className="w-full h-[46px] bg-accent rounded-[6px] font-commons font-bold text-[18px] text-black disabled:opacity-50"
               >
-                {saving ? 'Saving…' : templateId ? 'Update Template' : 'Done — Log Workout'}
+                {saving || externalSaving ? 'Saving…' : templateId ? 'Update Template' : 'Done — Log Workout'}
               </button>
-              <button
-                onClick={handleSaveWithoutTemplate}
-                disabled={saving}
-                className="w-full font-commons text-[16px] text-[#8b8b8b] text-center py-[8px] disabled:opacity-50"
-              >
-                Don't Save Template
-              </button>
+              {isCustomMode && (
+                <button
+                  onClick={handleSaveWithoutTemplate}
+                  disabled={saving}
+                  className="w-full font-commons text-[16px] text-[#8b8b8b] text-center py-[8px] disabled:opacity-50"
+                >
+                  Don't Save Template
+                </button>
+              )}
+              {showSaveTemplate && !isCustomMode && (
+                <button
+                  onClick={() => onSave(null)}
+                  disabled={externalSaving}
+                  className="w-full font-commons text-[16px] text-[#8b8b8b] text-center py-[8px] disabled:opacity-50"
+                >
+                  Skip — Just Log Workout
+                </button>
+              )}
             </>
           ) : (
             <button
