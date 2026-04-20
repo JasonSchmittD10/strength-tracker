@@ -600,6 +600,14 @@ export default function WorkoutScreen() {
                   + Add Exercise
                 </button>
               )}
+              {isCustomMode && activeExercises.length >= 2 && (
+                <button
+                  onClick={() => setIsSelectingSuperset(true)}
+                  className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] py-[12px] px-[16px] font-commons font-bold text-[18px] text-white"
+                >
+                  + Superset
+                </button>
+              )}
               <button
                 onClick={() => setSummaryOpen(true)}
                 className="w-full h-[46px] bg-accent rounded-[6px] font-commons font-bold text-[18px] text-black"
