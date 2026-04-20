@@ -44,7 +44,9 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
     setSwipeX(0)
   }
 
-  const inputClass = `w-full bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[4px] py-[12px] px-[10px] font-commons text-[18px] text-white/60 text-center focus:outline-none focus:border-accent min-h-[44px] ${completed ? 'pointer-events-none opacity-50' : ''}`
+  const inputBase = `w-full bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[4px] py-[12px] font-commons text-[18px] text-white/60 text-center focus:outline-none focus:border-accent min-h-[44px] ${completed ? 'pointer-events-none opacity-50' : ''}`
+  const inputClass = `${inputBase} px-[10px]`
+  const rpeSelectClass = `${inputBase} px-[4px]`
 
   return (
     <div className={`relative overflow-hidden rounded-[4px] mb-[8px] ${highlighted ? 'ring-1 ring-accent/60' : ''}`}>
@@ -113,7 +115,7 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
             value={rpe}
             onChange={e => onChange({ ...set, rpe: e.target.value })}
             disabled={completed}
-            className={`w-full bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[4px] py-[12px] px-[4px] font-commons text-[18px] text-white/60 text-center focus:outline-none focus:border-accent min-h-[44px] ${completed ? 'pointer-events-none opacity-50' : ''}`}
+            className={rpeSelectClass}
           >
             <option value="">RPE</option>
             {RPE_VALUES.map(v => <option key={v} value={v}>{v}</option>)}
