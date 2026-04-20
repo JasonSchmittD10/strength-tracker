@@ -4,8 +4,8 @@ import { ChevronRight } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
 import { totalVolume, formatVolume } from '@/lib/utils'
-import PrimaryButton from '@/components/shared/PrimaryButton'
 import TemplatePickerSheet from '@/components/workout/TemplatePickerSheet'
+import HomeHero from '@/components/home/HomeHero'
 
 function getMonday(date = new Date()) {
   const d = new Date(date)
@@ -84,52 +84,6 @@ function getThisWeekSessions(sessions) {
     .sort((a, b) => new Date(a.date) - new Date(b.date))
 }
 
-// ---------- Hero variants ----------
-
-function HeroInPlan({ sessionTypeName, exerciseCount, estimatedMins, muscles, onStart }) {
-  return (
-    <div className="flex flex-col items-start">
-      <p className="text-base text-text-muted">Today we</p>
-      <h1 className="font-judge text-[72px] leading-[0.95] text-white">{sessionTypeName}</h1>
-      <p className="text-base text-text-muted mb-4">
-        {exerciseCount} exercises · ~{estimatedMins} min · {muscles}
-      </p>
-      <PrimaryButton onClick={onStart}>Start Workout</PrimaryButton>
-    </div>
-  )
-}
-
-function HeroRest({ daysThisWeek, nextSessionName, onLogRecovery, onMobility }) {
-  const tomorrowText = nextSessionName ? ` Tomorrow: ${nextSessionName}.` : ''
-  return (
-    <div className="flex flex-col items-start">
-      <p className="text-base text-text-muted">Today we</p>
-      <h1 className="font-judge text-[72px] leading-[0.95] text-white">Rest.</h1>
-      <p className="text-base text-text-muted mb-4">
-        You've trained {daysThisWeek} day{daysThisWeek !== 1 ? 's' : ''} this week. Muscles grow when you let them.{tomorrowText}
-      </p>
-      <div className="flex flex-col gap-3 w-full">
-        <PrimaryButton variant="dark" onClick={onLogRecovery}>Log Recovery</PrimaryButton>
-        <PrimaryButton variant="dark" onClick={onMobility}>Mobility</PrimaryButton>
-      </div>
-    </div>
-  )
-}
-
-function HeroNoPlan({ onStartCustom, onStartPlan }) {
-  return (
-    <div className="flex flex-col items-start">
-      <p className="text-base text-text-muted">Today we</p>
-      <h1 className="font-judge text-[72px] leading-[0.95] text-white">Lift.</h1>
-      <p className="text-base text-text-muted mb-4">What are you going to go for today?</p>
-      <div className="flex flex-col gap-4 w-full">
-        <PrimaryButton onClick={onStartCustom}>Start Custom Workout</PrimaryButton>
-        <PrimaryButton variant="dark" onClick={onStartPlan}>Start New Plan</PrimaryButton>
-      </div>
-    </div>
-  )
-}
-
 // ---------- Main screen ----------
 
 export default function HomeScreen() {
@@ -145,6 +99,7 @@ export default function HomeScreen() {
   const thisWeekSessions = useMemo(() => getThisWeekSessions(sessions), [sessions])
 
   const today = new Date()
+  const todayStr = today.toISOString().slice(0, 10)
   const dateLabel = today.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'long',
@@ -153,14 +108,18 @@ export default function HomeScreen() {
 
   const weeksPerBlock = program?.blockStructure?.weeksPerBlock ?? 4
 
-  // "In Plan": program + nextSession exist
-  // "Rest": program exists but no nextSession (all sessions done this week)
-  // "No Plan": no program
-  const heroVariant = isLoading ? null : !program ? 'no-plan' : nextSession ? 'in-plan' : 'rest'
+  const completedToday = thisWeekSessions.some(s => s.date === todayStr)
+  const todaySession = thisWeekSessions.find(s => s.date === todayStr)
 
-  const sessionTypeName = nextSession?.name
-    ? nextSession.name.split(' ')[0] + '.'
-    : null
+  const heroVariant = isLoading ? null
+    : !program
+      ? (completedToday ? 'completed' : 'no-plan')
+      : nextSession
+        ? (completedToday ? 'in-plan-done' : 'in-plan')
+        : 'rest'
+
+  const sessionName = nextSession?.name?.split(' ')[0] ?? null
+  const completedSessionName = todaySession?.sessionName?.split(' ')[0] ?? null
 
   const muscles = nextSession?.focus?.includes('·')
     ? nextSession.focus.split('·').slice(1).join('·').trim()
@@ -206,25 +165,21 @@ export default function HomeScreen() {
       <div className="px-4 mt-9">
         {isLoading ? (
           <div className="h-48 animate-pulse rounded-xl bg-bg-card" />
-        ) : heroVariant === 'in-plan' ? (
-          <HeroInPlan
-            sessionTypeName={sessionTypeName}
-            exerciseCount={nextSession.exercises.length}
+        ) : (
+          <HomeHero
+            variant={heroVariant}
+            sessionName={heroVariant === 'in-plan-done' ? completedSessionName : sessionName}
+            exerciseCount={nextSession?.exercises.length}
             estimatedMins={estimatedMins}
             muscles={muscles}
-            onStart={() => navigate('/workout', { state: { session: nextSession, programId: program?.id } })}
-          />
-        ) : heroVariant === 'rest' ? (
-          <HeroRest
             daysThisWeek={thisWeekSessions.length}
             nextSessionName={nextAfterRest}
+            onStart={() => navigate('/workout', { state: { session: nextSession, programId: program?.id } })}
+            onViewRecap={() => navigate('/history')}
             onLogRecovery={() => navigate('/workout', { state: { mode: 'custom', preset: 'recovery' } })}
             onMobility={() => navigate('/workout', { state: { mode: 'custom', preset: 'mobility' } })}
-          />
-        ) : (
-          <HeroNoPlan
             onStartCustom={() => setPickerOpen(true)}
-            onStartPlan={() => navigate('/program-selector')}
+            onStartNewPlan={() => navigate('/program-selector')}
           />
         )}
       </div>
@@ -279,7 +234,7 @@ export default function HomeScreen() {
         <PrimaryButton onClick={() => setPickerOpen(true)}>
           My Workouts
         </PrimaryButton>
-        <PrimaryButton variant="outline" onClick={() => navigate('/workout', { state: { mode: 'builder' } })}>
+        <PrimaryButton variant="secondary" onClick={() => navigate('/workout', { state: { mode: 'builder' } })}>
           Build Workout
         </PrimaryButton>
       </div>

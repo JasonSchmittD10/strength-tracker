@@ -5,7 +5,7 @@ export default {
     extend: {
       colors: {
         bg: {
-          primary:   '#0f1117',
+          primary:   '#0a0a0a',
           secondary: '#1a1d27',
           tertiary:  '#22263a',
           card:      '#1e2235',

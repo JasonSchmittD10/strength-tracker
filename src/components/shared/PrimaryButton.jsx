@@ -1,14 +1,9 @@
-// Primary CTA button — matches Figma spec: h-46, rounded-[6px], TT Commons Bold 18px, tracking-[-0.36px]
-// variant="filled"  → orange fill, black text (default)
-// variant="outline" → orange border + text, transparent fill
-// variant="dark"    → dark fill (#181818), white text
-export default function PrimaryButton({ children, onClick, disabled, className = '', variant = 'filled', type = 'button' }) {
-  const base = 'w-full h-[46px] flex items-center justify-center px-4 rounded-[6px] font-commons font-bold text-[18px] tracking-[-0.36px] transition-colors disabled:opacity-50'
+export default function PrimaryButton({ children, onClick, disabled, className = '', variant = 'primary', type = 'button' }) {
+  const base = 'w-full flex items-center justify-center px-[16px] py-[12px] rounded-[6px] font-commons font-bold text-[18px] tracking-[-0.36px] transition-colors overflow-hidden disabled:opacity-50'
 
   const variants = {
-    filled:  'bg-accent hover:bg-accent-hover text-black',
-    outline: 'bg-transparent border border-accent text-accent hover:bg-accent/5',
-    dark:    'bg-[#181818] hover:bg-[#222] text-white',
+    primary:   'bg-accent active:bg-accent-hover text-black',
+    secondary: 'bg-white/5 border border-white/10 text-white active:bg-white/10',
   }
 
   return (
@@ -16,7 +11,7 @@ export default function PrimaryButton({ children, onClick, disabled, className =
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${base} ${variants[variant]} ${className}`}
+      className={`${base} ${variants[variant] ?? variants.primary} ${className}`}
     >
       {children}
     </button>
