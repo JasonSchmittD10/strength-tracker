@@ -1,7 +1,7 @@
 // src/components/workout/WorkoutScreen.jsx
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate, useBlocker } from 'react-router-dom'
-import { Plus, Pause, Play, Dumbbell } from 'lucide-react'
+import { Pause, Play, Dumbbell } from 'lucide-react'
 import ExerciseBlock from './ExerciseBlock'
 import ExerciseSearchSheet from './ExerciseSearchSheet'
 import RestTimer from './RestTimer'
@@ -10,7 +10,6 @@ import { useSessions, useSaveSession } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
 import { normalizeExerciseName } from '@/lib/exercises'
 import { totalVolume } from '@/lib/utils'
-import PrimaryButton from '@/components/shared/PrimaryButton'
 
 function useElapsedTimer(isPaused) {
   const [elapsed, setElapsed] = useState(0)
@@ -504,14 +503,12 @@ export default function WorkoutScreen() {
       <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8">
         {isCustomMode && activeExercises.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="text-4xl mb-3">💪</div>
-            <p className="text-text-secondary text-sm mb-6">No exercises yet. Add one to get started.</p>
+            <p className="font-commons text-[16px] text-[#8b8b8b] mb-[24px]">No exercises yet. Add one to get started.</p>
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-black font-semibold rounded-xl px-6 py-3 text-sm transition-colors"
+              className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] py-[12px] px-[24px] font-commons font-bold text-[18px] text-white"
             >
-              <Plus size={18} />
-              Add Exercise
+              + Add Exercise
             </button>
           </div>
         )}
@@ -569,38 +566,49 @@ export default function WorkoutScreen() {
         })}
 
         {/* Finish / Save — inline at bottom of scroll area */}
-        <div className="pt-4 mt-2 border-t border-bg-tertiary">
+        <div className="pt-[24px] mt-[8px] flex flex-col gap-[12px]">
           {mode === 'builder' ? (
-            <div className="space-y-3">
+            <>
               <input
                 value={builderName}
                 onChange={e => setBuilderName(e.target.value)}
                 placeholder="e.g. Upper Body Power"
-                className="w-full bg-bg-tertiary rounded-xl px-4 py-3 text-text-primary placeholder-text-muted text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] px-[16px] py-[12px] font-commons text-[18px] text-white placeholder-[#5c5c5c] focus:outline-none focus:border-accent"
               />
-              {builderSaveError && <p className="text-xs text-danger">{builderSaveError}</p>}
-              <PrimaryButton
+              {builderSaveError && <p className="font-commons text-[14px] text-danger">{builderSaveError}</p>}
+              <button
                 onClick={handleSaveBuilder}
                 disabled={builderSaving || activeExercises.length === 0}
-                className="mb-2"
+                className="w-full h-[46px] bg-accent rounded-[6px] font-commons font-bold text-[18px] text-black disabled:opacity-50"
               >
                 {builderSaving ? 'Saving…' : 'Save Template'}
-              </PrimaryButton>
+              </button>
               <button
                 onClick={() => { allowNavRef.current = true; navigate(-1) }}
-                className="w-full text-text-muted text-sm font-medium py-2"
+                className="w-full font-commons font-bold text-[18px] text-[#c02727] text-center py-[12px]"
               >
                 Discard
               </button>
-            </div>
+            </>
           ) : (
             <>
-              <PrimaryButton onClick={() => setSummaryOpen(true)} className="mb-2">
+              {isCustomMode && activeExercises.length > 0 && (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] py-[12px] px-[16px] font-commons font-bold text-[18px] text-white"
+                >
+                  + Add Exercise
+                </button>
+              )}
+              <button
+                onClick={() => setSummaryOpen(true)}
+                className="w-full h-[46px] bg-accent rounded-[6px] font-commons font-bold text-[18px] text-black"
+              >
                 Finish Workout
-              </PrimaryButton>
+              </button>
               <button
                 onClick={handleBack}
-                className="w-full text-danger text-sm font-medium py-2"
+                className="w-full font-commons font-bold text-[18px] text-[#c02727] text-center py-[12px]"
               >
                 Cancel Workout
               </button>
@@ -609,42 +617,24 @@ export default function WorkoutScreen() {
         </div>
       </div>
 
-      {/* Sticky footer (custom mode only, when exercises exist) */}
-      {isCustomMode && activeExercises.length > 0 && (
-        <div className="flex-shrink-0 border-t border-bg-tertiary bg-bg-primary px-4 py-3">
-          {isSelectingSuperset ? (
-            <div className="flex gap-2">
-              <button
-                onClick={() => { setIsSelectingSuperset(false); setSelectedExercises(new Set()) }}
-                className="flex-1 py-3 border border-bg-tertiary rounded-xl text-sm text-text-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddSuperset}
-                disabled={!canAddSuperset}
-                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-colors ${canAddSuperset ? 'bg-accent text-black' : 'bg-bg-tertiary text-text-muted'}`}
-              >
-                Add Superset{canAddSuperset && selectedExercises.size >= 2 ? ` (${selectedExercises.size})` : ''}
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 bg-bg-card border border-bg-tertiary rounded-xl text-sm text-text-primary hover:border-accent/50 transition-colors"
-              >
-                <Plus size={15} />
-                Add Exercise
-              </button>
-              <button
-                onClick={() => setIsSelectingSuperset(true)}
-                className="flex-1 flex items-center justify-center py-3 bg-bg-card border border-bg-tertiary rounded-xl text-sm text-text-primary hover:border-accent/50 transition-colors"
-              >
-                Superset
-              </button>
-            </div>
-          )}
+      {/* Sticky footer — superset selection only */}
+      {isCustomMode && isSelectingSuperset && (
+        <div className="flex-shrink-0 border-t border-bg-tertiary bg-bg-primary px-[16px] py-[12px]">
+          <div className="flex gap-[8px]">
+            <button
+              onClick={() => { setIsSelectingSuperset(false); setSelectedExercises(new Set()) }}
+              className="flex-1 py-[12px] border border-[rgba(255,255,255,0.1)] rounded-[6px] font-commons text-[16px] text-[#8b8b8b]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddSuperset}
+              disabled={!canAddSuperset}
+              className={`flex-1 py-[12px] rounded-[6px] font-commons font-bold text-[16px] transition-colors ${canAddSuperset ? 'bg-accent text-black' : 'bg-[rgba(255,255,255,0.05)] text-[#5c5c5c]'}`}
+            >
+              Add Superset{canAddSuperset && selectedExercises.size >= 2 ? ` (${selectedExercises.size})` : ''}
+            </button>
+          </div>
         </div>
       )}
 
