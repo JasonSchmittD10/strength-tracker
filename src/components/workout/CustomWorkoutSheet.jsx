@@ -18,7 +18,7 @@ export default function CustomWorkoutSheet({ open, onClose }) {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      <div className="fixed inset-0 z-[60] flex flex-col justify-end">
         <div className="absolute inset-0 bg-black/60" onClick={onClose} />
         <div className="relative bg-[#161616] rounded-tl-[16px] rounded-tr-[16px] pt-[10px] px-[20px] pb-[34px]">
           {/* Drag pill */}
