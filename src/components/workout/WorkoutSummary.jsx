@@ -110,9 +110,9 @@ export default function WorkoutSummary({
           <span className="font-commons text-[14px] text-accent">Back</span>
         </button>
         <span className="font-judge text-[16px] text-white">Workout</span>
-        <button aria-label="Save workout" className="text-[#8b8b8b]">
+        <div className="text-[#8b8b8b] w-[16px] h-[16px]">
           <Bookmark size={16} />
-        </button>
+        </div>
       </div>
 
       <div className="px-[16px] pb-[40px]">

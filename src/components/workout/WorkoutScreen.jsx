@@ -592,7 +592,7 @@ export default function WorkoutScreen() {
             </>
           ) : (
             <>
-              {isCustomMode && activeExercises.length > 0 && (
+              {isCustomMode && activeExercises.length > 0 && !isSelectingSuperset && (
                 <button
                   onClick={() => setSearchOpen(true)}
                   className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] py-[12px] px-[16px] font-commons font-bold text-[18px] text-white"
@@ -600,7 +600,7 @@ export default function WorkoutScreen() {
                   + Add Exercise
                 </button>
               )}
-              {isCustomMode && activeExercises.length >= 2 && (
+              {isCustomMode && activeExercises.length >= 2 && !isSelectingSuperset && (
                 <button
                   onClick={() => setIsSelectingSuperset(true)}
                   className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] py-[12px] px-[16px] font-commons font-bold text-[18px] text-white"
