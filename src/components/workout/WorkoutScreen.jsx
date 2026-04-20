@@ -618,7 +618,7 @@ export default function WorkoutScreen() {
                 onClick={handleBack}
                 className="w-full font-commons font-bold text-[18px] text-[#c02727] text-center py-[12px]"
               >
-                Cancel Workout
+                Cancel
               </button>
             </>
           )}

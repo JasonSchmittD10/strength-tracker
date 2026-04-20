@@ -44,12 +44,18 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
     setSwipeX(0)
   }
 
-  const inputBase = `w-full bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[4px] py-[12px] font-commons text-[18px] text-white/60 text-center focus:outline-none focus:border-accent min-h-[44px] ${completed ? 'pointer-events-none opacity-50' : ''}`
-  const inputClass = `${inputBase} px-[10px]`
-  const rpeSelectClass = `${inputBase} px-[4px]`
+  const inputStateClass = completed
+    ? 'bg-[#0a0a0a] border border-transparent text-white/60 opacity-50 pointer-events-none'
+    : highlighted
+    ? 'bg-[rgba(242,166,85,0.05)] border border-[rgba(242,166,85,0.5)] text-white/60'
+    : 'bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] text-white/60'
+
+  const inputBase = 'w-full rounded-[4px] py-[12px] font-commons text-[18px] text-center focus:outline-none min-h-[44px]'
+  const inputClass = `${inputBase} px-[10px] ${inputStateClass}`
+  const rpeSelectClass = `${inputBase} px-[4px] ${inputStateClass}`
 
   return (
-    <div className={`relative overflow-hidden rounded-[4px] mb-[8px] ${highlighted ? 'ring-1 ring-accent/60' : ''}`}>
+    <div className="relative overflow-hidden rounded-[4px] mb-[8px]">
       {onRemove && (
         <div
           className="absolute right-0 top-0 bottom-0 bg-danger flex items-center justify-center"
@@ -68,7 +74,7 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={swipeX > 0 ? resetSwipe : undefined}
-        className="flex items-end gap-[8px]"
+        className="flex items-end gap-[8px] bg-bg-card"
       >
         {/* Set number */}
         <div className="flex flex-col items-center justify-end flex-shrink-0 w-[24px]">
@@ -127,10 +133,12 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
           <button
             onClick={handleComplete}
             className={`w-[44px] h-[44px] rounded-[4px] flex items-center justify-center flex-shrink-0 transition-colors ${
-              completed ? 'bg-accent' : 'bg-[rgba(255,255,255,0.1)]'
+              completed
+                ? 'bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] text-white/60'
+                : 'bg-[rgba(255,255,255,0.1)] border border-transparent text-white/80'
             }`}
           >
-            {completed ? <Pencil size={16} className="text-black" /> : <Check size={16} className="text-white/60" />}
+            {completed ? <Pencil size={16} /> : <Check size={16} />}
           </button>
         ) : (
           <div className="w-[44px] flex-shrink-0" />
