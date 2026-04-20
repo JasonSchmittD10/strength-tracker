@@ -8,7 +8,6 @@ import RestTimer from './RestTimer'
 import WorkoutSummary from './WorkoutSummary'
 import { useSessions, useSaveSession } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
-import { useProgram } from '@/hooks/useProgram'
 import { normalizeExerciseName } from '@/lib/exercises'
 import { totalVolume } from '@/lib/utils'
 import PrimaryButton from '@/components/shared/PrimaryButton'
@@ -52,8 +51,6 @@ export default function WorkoutScreen() {
   const { data: allSessions = [] } = useSessions()
   const { mutateAsync: saveSession } = useSaveSession()
   const { mutateAsync: saveTemplate } = useSaveTemplate()
-  const { data: programData } = useProgram()
-  const { program, blockInfo } = programData || {}
 
   // ─── Custom/template exercises ────────────────────────────────────────────
   const [customExercises, setCustomExercises] = useState(() => {
@@ -429,12 +426,6 @@ export default function WorkoutScreen() {
         <button onClick={() => navigate('/home')} className="ml-2 text-accent">Go home</button>
       </div>
     )
-  }
-
-  const TAG_COLORS = {
-    push: 'text-push bg-push/15',
-    pull: 'text-pull bg-pull/15',
-    legs: 'text-legs bg-legs/15',
   }
 
   const isCustomMode = mode === 'custom' || mode === 'template' || mode === 'builder'
