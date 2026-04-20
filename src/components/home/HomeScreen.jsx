@@ -4,7 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import { useProgram } from '@/hooks/useProgram'
 import { totalVolume, formatVolume } from '@/lib/utils'
-import TemplatePickerSheet from '@/components/workout/TemplatePickerSheet'
+import CustomWorkoutSheet from '@/components/workout/CustomWorkoutSheet'
 import HomeHero from '@/components/home/HomeHero'
 
 function getMonday(date = new Date()) {
@@ -229,13 +229,10 @@ export default function HomeScreen() {
         </div>
       </div>
 
-      {/* My Workouts + Build Workout — 36px below volume */}
-      <div className="px-4 mt-9 flex flex-col gap-3">
+      {/* Custom Workout — 36px below volume */}
+      <div className="px-4 mt-9">
         <PrimaryButton onClick={() => setPickerOpen(true)}>
-          My Workouts
-        </PrimaryButton>
-        <PrimaryButton variant="secondary" onClick={() => navigate('/workout', { state: { mode: 'builder' } })}>
-          Build Workout
+          Custom Workout
         </PrimaryButton>
       </div>
 
@@ -264,7 +261,7 @@ export default function HomeScreen() {
         </div>
       )}
 
-      <TemplatePickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />
+      <CustomWorkoutSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />
     </div>
   )
 }

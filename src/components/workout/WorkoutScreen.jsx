@@ -44,6 +44,7 @@ export default function WorkoutScreen() {
   const session = state?.session
   const programId = state?.programId
   const template = state?.template
+  const prebuiltExercises = state?.prebuiltExercises
 
   const [isPaused, setIsPaused] = useState(false)
   const pausedRestRemainingRef = useRef(null)
@@ -64,6 +65,16 @@ export default function WorkoutScreen() {
         rest: ex.rest ?? 90,
         restLabel: ex.restLabel ?? '90 sec',
         supersetId: null,
+      }))
+    }
+    if (prebuiltExercises?.length) {
+      return prebuiltExercises.map(ex => ({
+        name: ex.name,
+        sets: 3,
+        reps: '8–12',
+        rest: 90,
+        restLabel: '90 sec',
+        supersetId: ex.supersetId ?? null,
       }))
     }
     return []
@@ -106,6 +117,14 @@ export default function WorkoutScreen() {
           }))
           return [i, sets]
         })
+      )
+    }
+    if (prebuiltExercises?.length) {
+      return Object.fromEntries(
+        prebuiltExercises.map((_, i) => [
+          i,
+          Array.from({ length: 3 }, () => ({ weight: '', reps: '', rpe: '', completed: false })),
+        ])
       )
     }
     return {}
