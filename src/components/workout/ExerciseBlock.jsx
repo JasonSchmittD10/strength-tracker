@@ -84,14 +84,14 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
         <div className="flex items-center gap-[16px] flex-shrink-0 ml-[12px]">
           <button
             onClick={e => { e.stopPropagation(); setHistoryOpen(true) }}
-            className="text-[#8b8b8b] hover:text-accent transition-colors"
+            className="p-[8px] text-[#8b8b8b] hover:text-accent transition-colors"
           >
             <Clock size={16} />
           </button>
           {onRemove && (
             <button
               onClick={e => { e.stopPropagation(); onRemove() }}
-              className="text-[#8b8b8b] hover:text-danger transition-colors"
+              className="p-[8px] text-[#8b8b8b] hover:text-danger transition-colors"
             >
               <Trash2 size={16} />
             </button>
