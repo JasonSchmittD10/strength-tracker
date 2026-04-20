@@ -74,12 +74,12 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={swipeX > 0 ? resetSwipe : undefined}
-        className="flex items-end gap-[8px] bg-bg-card"
+        className="flex items-center gap-[8px] bg-[#0a0a0a]"
       >
         {/* Set number */}
-        <div className="flex flex-col items-center justify-end flex-shrink-0 w-[24px]">
+        <div className="flex flex-col items-center justify-center flex-shrink-0 w-[24px]">
           {showLabels && <span className="font-commons text-[14px] text-[#8b8b8b] mb-[8px] invisible">·</span>}
-          <span className="font-commons font-semibold text-[18px] text-[#9d9d9d] leading-none pb-[13px]">{setNumber}</span>
+          <span className="font-commons font-semibold text-[18px] text-[#9d9d9d] leading-none">{setNumber}</span>
         </div>
 
         {/* Weight */}
