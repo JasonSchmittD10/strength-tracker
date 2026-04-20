@@ -6,9 +6,9 @@ export default {
       colors: {
         bg: {
           primary:   '#0a0a0a',
-          secondary: '#1a1d27',
-          tertiary:  '#22263a',
-          card:      '#1e2235',
+          secondary: '#161616',
+          tertiary:  '#222222',
+          card:      '#1e1e1e',
           deep:      '#0a0a0a',
           stat:      '#181818',
           badge:     '#2f2f2f',
@@ -19,9 +19,9 @@ export default {
           dim:     'rgba(242,166,85,0.15)',
         },
         text: {
-          primary:   '#f0f2ff',
-          secondary: '#8b8fa8',
-          muted:     '#5a5e7a',
+          primary:   '#ffffff',
+          secondary: '#8b8b8b',
+          muted:     '#5c5c5c',
         },
         push:    { DEFAULT: '#ff6b6b', dim: 'rgba(255,107,107,0.15)' },
         pull:    { DEFAULT: '#4ecdc4', dim: 'rgba(78,205,196,0.15)' },
