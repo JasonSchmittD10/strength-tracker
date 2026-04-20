@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { ChevronLeft, Copy, Check, Bookmark } from 'lucide-react'
-import { epley, formatDuration, formatVolume, totalVolume } from '@/lib/utils'
+import { epley, formatDuration, totalVolume } from '@/lib/utils'
 import { useSessions } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
 import { useUnitPreference } from '@/hooks/useProfile'
@@ -110,7 +110,7 @@ export default function WorkoutSummary({
           <span className="font-commons text-[14px] text-accent">Back</span>
         </button>
         <span className="font-judge text-[16px] text-white">Workout</span>
-        <button className="text-[#8b8b8b]">
+        <button aria-label="Save workout" className="text-[#8b8b8b]">
           <Bookmark size={16} />
         </button>
       </div>
@@ -124,7 +124,7 @@ export default function WorkoutSummary({
           <span className="font-judge text-[48px] text-white leading-none">{volK}</span>
           {vol >= 1000 && <span className="font-judge text-[32px] text-accent leading-none mb-[2px]">k</span>}
         </div>
-        <div className="font-commons text-[14px] text-[#8b8b8b] mt-[4px]">lb lifted</div>
+        <div className="font-commons text-[14px] text-[#8b8b8b] mt-[4px]">{unit} lifted</div>
 
         {/* PR badge */}
         {prs.length > 0 && (
