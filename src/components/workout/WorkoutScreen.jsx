@@ -1,7 +1,7 @@
 // src/components/workout/WorkoutScreen.jsx
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate, useBlocker } from 'react-router-dom'
-import { Plus, Pause, Play } from 'lucide-react'
+import { Plus, Pause, Play, Dumbbell } from 'lucide-react'
 import ExerciseBlock from './ExerciseBlock'
 import ExerciseSearchSheet from './ExerciseSearchSheet'
 import RestTimer from './RestTimer'
@@ -473,37 +473,37 @@ export default function WorkoutScreen() {
 
   return (
     <div className="flex flex-col h-screen bg-bg-primary">
-      {/* Static header — does not scroll */}
-      <div className="flex-shrink-0 bg-bg-primary/95 backdrop-blur border-b border-bg-tertiary px-4 py-3 flex items-center gap-3">
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex items-center gap-2">
-            {mode === 'program' && session.tag && (
-              <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full flex-shrink-0 ${TAG_COLORS[session.tag] ?? ''}`}>
-                {session.tagLabel}
-              </span>
-            )}
-            <span className="font-bold text-text-primary truncate">
-              {mode === 'program' ? session.name : mode === 'builder' ? 'Build Workout' : 'Custom Workout'}
-            </span>
-          </div>
-          {mode === 'program' && blockInfo && (
-            <div className="text-xs text-text-muted leading-none mt-0.5">
-              {program?.name} · Block {blockInfo.blockNumber} · Week {blockInfo.weekInBlock} · {blockInfo.phaseName}
-            </div>
-          )}
+      {/* Static header */}
+      <div className="flex-shrink-0 px-[16px] py-[12px] flex items-center justify-between bg-bg-primary">
+        {/* Left: icon pill */}
+        <div className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex-shrink-0">
+          <Dumbbell size={16} className="text-white" />
         </div>
+
+        {/* Center: title + subtitle */}
+        <div className="flex flex-col items-center flex-1 mx-[12px]">
+          <span className="font-judge text-[16px] text-white leading-none">Workout</span>
+          <span className="font-commons text-[12px] text-[#8b8b8b] leading-none mt-[2px] truncate max-w-[180px]">
+            {mode === 'program'
+              ? session.name
+              : mode === 'builder'
+                ? 'Build Workout'
+                : 'Custom Workout'}
+          </span>
+        </div>
+
+        {/* Right: timer + pause pill */}
         {mode !== 'builder' && (
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {isPaused
-              ? <span className="text-sm text-text-muted italic">Paused</span>
-              : <span className="font-mono text-sm text-text-muted">{formatElapsed(elapsed)}</span>
-            }
+          <div className="flex items-center gap-[8px] flex-shrink-0">
+            <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[0.5px]">
+              {isPaused ? 'Paused' : formatElapsed(elapsed)}
+            </span>
             <button
               onClick={handleTogglePause}
-              className="w-8 h-8 rounded-full bg-bg-tertiary flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
+              className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex items-center justify-center"
               aria-label={isPaused ? 'Resume workout' : 'Pause workout'}
             >
-              {isPaused ? <Play size={15} /> : <Pause size={15} />}
+              {isPaused ? <Play size={16} className="text-white" /> : <Pause size={16} className="text-white" />}
             </button>
           </div>
         )}
