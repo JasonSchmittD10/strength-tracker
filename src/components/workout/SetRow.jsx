@@ -77,7 +77,7 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onClick={swipeX > 0 ? resetSwipe : undefined}
-        className="relative flex gap-[16px] items-end w-full bg-[rgba(255,255,255,0.05)]"
+        className="relative flex gap-[16px] items-end w-full"
       >
         {/* Set number — fixed height to align with input cell */}
         <div className="flex flex-col h-[44px] items-center justify-center flex-shrink-0">
