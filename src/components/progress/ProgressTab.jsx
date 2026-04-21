@@ -1,125 +1,146 @@
-import { useState } from 'react'
-import { useSessions } from '@/hooks/useSessions'
-import { useUnitPreference } from '@/hooks/useProfile'
-import { normalizeExerciseName } from '@/lib/exercises'
-import { epley, formatDate, formatVolume, totalVolume } from '@/lib/utils'
-import ExerciseChart from './ExerciseChart'
+import { useNavigate } from 'react-router-dom'
+import { useProgram } from '@/hooks/useProgram'
+import { PROGRAMS } from '@/lib/programs'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import clockIcon from '@/assets/icons/icon-clock.svg'
+import ProgressIndicator from './ProgressIndicator'
+import JourneyBlocks from './JourneyBlocks'
+import ProgramTile from './ProgramTile'
 
-const METRICS = [
-  { key: 'e1rm', label: 'e1RM' },
-  { key: 'volume', label: 'Volume' },
-  { key: 'maxWeight', label: 'Max Weight' },
-]
+// ─── Next Up session tile ─────────────────────────────────────────────────────
+function NextUpTile({ session, programId, onStart }) {
+  const exerciseCount = session.exercises?.length ?? 0
+  const estimatedMins = Math.round(exerciseCount * 8)
 
+  return (
+    <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] p-[16px] flex items-center justify-between gap-[12px]">
+      <div className="flex flex-col gap-[8px] flex-1 min-w-0">
+        <p className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-[1.19] truncate">
+          {session.name}
+        </p>
+        <div className="flex gap-[24px] items-center">
+          <div className="flex items-center gap-[4px]">
+            <img src={clockIcon} alt="" className="w-[12px] h-[12px] flex-shrink-0 brightness-0 invert opacity-60" />
+            <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] whitespace-nowrap">
+              {estimatedMins} min
+            </span>
+          </div>
+          <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] whitespace-nowrap">
+            {exerciseCount} exercises
+          </span>
+        </div>
+      </div>
+      <button
+        onClick={onStart}
+        className="flex-shrink-0 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] px-[16px] py-[12px] font-commons font-bold text-[18px] text-white tracking-[-0.36px]"
+      >
+        Start
+      </button>
+    </div>
+  )
+}
+
+// ─── On-program state ─────────────────────────────────────────────────────────
+function OnProgram({ program, blockInfo, nextSession, config }) {
+  const navigate = useNavigate()
+
+  function handleStart() {
+    navigate('/workout', { state: { session: nextSession, programId: program.id } })
+  }
+
+  return (
+    <div className="px-[16px] pt-[90px] pb-[40px] flex flex-col gap-[36px]">
+      {/* Header: program label + name + progress indicator */}
+      <div className="flex flex-col gap-[23px]">
+        <div className="flex flex-col gap-[4px]">
+          <span className="font-commons text-[14px] text-[#8b8b8b] leading-[14px]">PROGRAM</span>
+          <p className="font-judge text-[48px] text-white leading-[60px]">{program.name}</p>
+        </div>
+        {blockInfo && (
+          <ProgressIndicator
+            blockNumber={blockInfo.blockNumber}
+            phaseName={blockInfo.phaseName}
+            weeksPerBlock={blockInfo.weeksPerBlock}
+            weekInBlock={blockInfo.weekInBlock}
+          />
+        )}
+      </div>
+
+      {/* Next Up */}
+      {nextSession && (
+        <div className="flex flex-col gap-[8px]">
+          <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">Next Up</span>
+          <NextUpTile
+            session={nextSession}
+            programId={program.id}
+            onStart={handleStart}
+          />
+        </div>
+      )}
+
+      {/* Journey — all blocks */}
+      <JourneyBlocks
+        program={program}
+        blockInfo={blockInfo ?? { blockNumber: 1, weekInBlock: 1, weeksPerBlock: program.blockStructure.weeksPerBlock }}
+      />
+
+      {/* Switch Program */}
+      <button
+        onClick={() => navigate('/program-selector')}
+        className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] px-[16px] py-[12px] font-commons font-bold text-[18px] text-white tracking-[-0.36px]"
+      >
+        Switch Program
+      </button>
+    </div>
+  )
+}
+
+// ─── No-program state ─────────────────────────────────────────────────────────
+function NoProgram() {
+  const programs = Object.values(PROGRAMS)
+
+  return (
+    <div className="px-[16px] pt-[90px] pb-[40px] flex flex-col gap-[36px]">
+      {/* Header */}
+      <div className="flex flex-col gap-[4px]">
+        <span className="font-commons text-[14px] text-[#8b8b8b] leading-[14px]">PROGRAM</span>
+        <p className="font-judge text-[48px] text-white leading-[60px]">Pick your next block.</p>
+        <p className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px]">
+          Structure beats motivation. Run a program and see what happens.
+        </p>
+      </div>
+
+      {/* Program list */}
+      <div className="flex flex-col gap-[12px]">
+        <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px]">
+          All Programs — {programs.length}
+        </span>
+        {programs.map(program => (
+          <ProgramTile key={program.id} program={program} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main tab ─────────────────────────────────────────────────────────────────
 export default function ProgressTab() {
-  const { data: sessions = [], isLoading } = useSessions()
-  const unit = useUnitPreference()
-  const [selectedExercise, setSelectedExercise] = useState('')
-  const [metric, setMetric] = useState('e1rm')
-
-  const exerciseNames = [...new Set(
-    sessions.flatMap(s => (s.exercises || []).map(e => normalizeExerciseName(e.name)))
-  )].sort()
+  const { data: programData, isLoading } = useProgram()
 
   if (isLoading) return <LoadingSpinner />
 
-  const exerciseData = selectedExercise
-    ? sessions
-        .filter(s => s.exercises?.some(e => normalizeExerciseName(e.name) === selectedExercise))
-        .map(s => ({
-          ...s,
-          exercises: s.exercises.filter(e => normalizeExerciseName(e.name) === selectedExercise),
-        }))
-        .slice(0, 20)
-        .reverse()
-    : []
+  const { program, blockInfo, nextSession, config } = programData || {}
 
-  const allSets = exerciseData.flatMap(s => s.exercises?.flatMap(e => e.sets || []) || [])
-  const bestE1RM = allSets.length ? Math.max(0, ...allSets.map(s => epley(s.weight, s.reps) || 0)) : 0
-  const bestSession = exerciseData.find(s => {
-    const sets = s.exercises?.[0]?.sets || []
-    return sets.some(st => (epley(st.weight, st.reps) || 0) === bestE1RM)
-  })
+  if (!program) {
+    return <NoProgram />
+  }
 
   return (
-    <div className="safe-top px-4 pb-4 max-w-lg mx-auto">
-      <h1 className="font-bold text-2xl text-text-primary py-4">Progress</h1>
-
-      <select
-        value={selectedExercise}
-        onChange={e => setSelectedExercise(e.target.value)}
-        className="w-full bg-bg-card border border-bg-tertiary rounded-xl px-4 py-3 text-text-primary text-sm focus:outline-none focus:border-accent mb-4"
-      >
-        <option value="">Select exercise…</option>
-        {exerciseNames.map(name => (
-          <option key={name} value={name}>{name}</option>
-        ))}
-      </select>
-
-      {selectedExercise && (
-        <>
-          <div className="flex gap-2 mb-4">
-            {METRICS.map(m => (
-              <button
-                key={m.key}
-                onClick={() => setMetric(m.key)}
-                className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                  metric === m.key
-                    ? 'bg-accent text-black'
-                    : 'bg-bg-card border border-bg-tertiary text-text-muted hover:border-accent/30'
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-
-          {exerciseData.length > 1 ? (
-            <div className="bg-bg-card border border-bg-tertiary rounded-2xl p-4 mb-4">
-              <ExerciseChart data={exerciseData} metric={metric} />
-            </div>
-          ) : (
-            <div className="bg-bg-card border border-bg-tertiary rounded-2xl p-4 mb-4 text-center text-text-muted text-sm py-8">
-              {exerciseData.length === 0 ? 'No data yet.' : 'Log 2+ sessions to see chart.'}
-            </div>
-          )}
-
-          {bestE1RM > 0 && (
-            <div className="bg-accent/10 border border-accent/30 rounded-2xl p-4 mb-4">
-              <div className="text-xs text-text-muted mb-1">Personal Best e1RM</div>
-              <div className="text-2xl font-bold text-accent">{bestE1RM} {unit}</div>
-              {bestSession && (
-                <div className="text-xs text-text-secondary mt-1">{formatDate(bestSession.date)}</div>
-              )}
-            </div>
-          )}
-
-          {exerciseData.length > 0 && (
-            <div>
-              <div className="text-sm font-semibold text-text-secondary mb-2">Recent Sessions</div>
-              {[...exerciseData].reverse().slice(0, 5).map((s, i) => {
-                const sets = s.exercises?.[0]?.sets || []
-                const topSet = sets.length ? sets.reduce((b, c) => (epley(c.weight, c.reps) || 0) > (epley(b.weight, b.reps) || 0) ? c : b) : {}
-                const vol = totalVolume(s.exercises)
-                return (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-bg-tertiary last:border-0">
-                    <div>
-                      <div className="text-sm text-text-primary">{formatDate(s.date, true)}</div>
-                      <div className="text-xs text-text-muted">
-                        {topSet.weight}{unit} × {topSet.reps} · {formatVolume(vol)} {unit}
-                      </div>
-                    </div>
-                    <div className="text-sm font-semibold text-accent">
-                      {epley(topSet.weight, topSet.reps) || '—'} {unit}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </>
-      )}
-    </div>
+    <OnProgram
+      program={program}
+      blockInfo={blockInfo}
+      nextSession={nextSession}
+      config={config}
+    />
   )
 }
