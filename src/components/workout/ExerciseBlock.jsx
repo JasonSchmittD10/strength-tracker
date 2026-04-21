@@ -1,6 +1,8 @@
 // src/components/workout/ExerciseBlock.jsx
 import { useState, useEffect } from 'react'
-import { Clock, Trash2, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
+import historyIcon from '@/assets/icons/icon-history.svg'
+import trashIcon from '@/assets/icons/icon-trash.svg'
 import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
@@ -75,25 +77,29 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
               )}
             </div>
             {metaParts.length > 0 && (
-              <div className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-snug mt-[2px]">
-                {metaParts.join(' · ')}
+              <div className="flex flex-col gap-[4px] mt-[6px]">
+                {metaParts.map((part, i) => (
+                  <span key={i} className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                    {part}
+                  </span>
+                ))}
               </div>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-[16px] flex-shrink-0 ml-[12px]">
+        <div className="flex items-center gap-[16px] flex-shrink-0 ml-[12px] pt-[2px]">
           <button
             onClick={e => { e.stopPropagation(); setHistoryOpen(true) }}
-            className="p-[8px] text-[#8b8b8b] hover:text-accent transition-colors"
+            aria-label="Exercise history"
           >
-            <Clock size={16} />
+            <img src={historyIcon} alt="" className="w-[16px] h-[16px]" />
           </button>
           {onRemove && (
             <button
               onClick={e => { e.stopPropagation(); onRemove() }}
-              className="p-[8px] text-[#8b8b8b] hover:text-danger transition-colors"
+              aria-label="Remove exercise"
             >
-              <Trash2 size={16} />
+              <img src={trashIcon} alt="" className="w-[16px] h-[16px]" />
             </button>
           )}
         </div>
