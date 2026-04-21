@@ -5,6 +5,7 @@ import ExerciseTile from './ExerciseTile'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import xmarkIcon from '@/assets/icons/icon-xmark.svg'
 import searchIcon from '@/assets/icons/icon-search.svg'
+import plusSmIcon from '@/assets/icons/icon-plus-sm.svg'
 
 // All exercises sorted A–Z with muscle info
 const ALL_EXERCISES = Object.keys(EXERCISE_LIBRARY)
@@ -66,17 +67,19 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
   const footer = (
     <div className="flex gap-[8px] pb-[8px]">
       <PrimaryButton
+        variant="secondary"
         onClick={handleAddExercise}
         disabled={selections.size === 0}
       >
-        Add Exercise
+        <img src={plusSmIcon} alt="" className="w-[14px] h-[14px] mr-[8px] flex-shrink-0" />
+        {selections.size > 0 ? `Add Exercise (${selections.size})` : 'Add Exercise'}
       </PrimaryButton>
       <PrimaryButton
         variant="secondary"
         onClick={handleAddSuperset}
         disabled={selections.size < 2}
-        className={selections.size >= 2 ? '!bg-accent !text-black !border-accent' : ''}
       >
+        <img src={plusSmIcon} alt="" className="w-[14px] h-[14px] mr-[8px] flex-shrink-0" />
         Add Superset
       </PrimaryButton>
     </div>
