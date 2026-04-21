@@ -36,9 +36,9 @@ function AuthInput({ type, value, onChange, placeholder, autoComplete }) {
       onBlur={() => setFocused(false)}
       className={`w-full h-[46px] rounded-[4px] px-[10px] font-commons text-[18px] tracking-[-0.5px] leading-[1.19] focus:outline-none transition-colors ${
         focused
-          ? 'bg-[rgba(242,166,85,0.05)] border border-[rgba(242,166,85,0.5)] text-[rgba(255,255,255,0.6)]'
-          : 'bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.6)]'
-      } placeholder:text-[rgba(255,255,255,0.4)]`}
+          ? 'bg-[rgba(242,166,85,0.05)] border border-[rgba(242,166,85,0.5)]'
+          : 'bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)]'
+      } ${value ? 'text-white' : 'text-[rgba(255,255,255,0.6)]'} placeholder:text-[rgba(255,255,255,0.4)]`}
     />
   )
 }
