@@ -1,150 +1,153 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useProgram } from '@/hooks/useProgram'
+import { PROGRAMS } from '@/lib/programs'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
-import SlideUpSheet from '@/components/shared/SlideUpSheet'
-import PrimaryButton from '@/components/shared/PrimaryButton'
+import clockIcon from '@/assets/icons/icon-clock.svg'
+import ProgressIndicator from '@/components/progress/ProgressIndicator'
+import JourneyBlocks from '@/components/progress/JourneyBlocks'
+import ProgramTile from '@/components/progress/ProgramTile'
 
-export default function ProgramTab() {
+// ─── Next Up session tile ─────────────────────────────────────────────────────
+function NextUpTile({ session, programId, onStart }) {
+  const exerciseCount = session.exercises?.length ?? 0
+  const estimatedMins = Math.round(exerciseCount * 8)
+
+  return (
+    <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] p-[16px] flex items-center justify-between gap-[12px]">
+      <div className="flex flex-col gap-[8px] flex-1 min-w-0">
+        <p className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-[1.19] truncate">
+          {session.name}
+        </p>
+        <div className="flex gap-[24px] items-center">
+          <div className="flex items-center gap-[4px]">
+            <img src={clockIcon} alt="" className="w-[12px] h-[12px] flex-shrink-0 brightness-0 invert opacity-60" />
+            <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] whitespace-nowrap">
+              {estimatedMins} min
+            </span>
+          </div>
+          <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] whitespace-nowrap">
+            {exerciseCount} exercises
+          </span>
+        </div>
+      </div>
+      <button
+        onClick={onStart}
+        className="flex-shrink-0 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] px-[16px] py-[12px] font-commons font-bold text-[18px] text-white tracking-[-0.36px]"
+      >
+        Start
+      </button>
+    </div>
+  )
+}
+
+// ─── On-program state ─────────────────────────────────────────────────────────
+function OnProgram({ program, blockInfo, nextSession, config }) {
   const navigate = useNavigate()
-  const { data, isLoading } = useProgram()
-  const [previewSession, setPreviewSession] = useState(null)
 
-  if (isLoading) return <LoadingSpinner />
-
-  const { program, blockInfo, nextSession } = data || {}
-
-  function startWorkout() {
-    navigate('/workout', { state: { session: previewSession, programId: program?.id } })
+  function handleStart() {
+    navigate('/workout', { state: { session: nextSession, programId: program.id } })
   }
 
   return (
-    <div className="safe-top px-4 pb-8 max-w-lg mx-auto">
-      <h1 className="font-bold text-2xl text-text-primary py-4">Program</h1>
+    <div className="px-[16px] pt-[90px] pb-[40px] flex flex-col gap-[36px]">
+      {/* Header: program label + name + progress indicator */}
+      <div className="flex flex-col gap-[23px]">
+        <div className="flex flex-col gap-[4px]">
+          <span className="font-commons text-[14px] text-[#8b8b8b] leading-[14px]">PROGRAM</span>
+          <p className="font-judge text-[48px] text-white leading-[60px]">{program.name}</p>
+        </div>
+        {blockInfo && (
+          <ProgressIndicator
+            blockNumber={blockInfo.blockNumber}
+            phaseName={blockInfo.phaseName}
+            weeksPerBlock={blockInfo.weeksPerBlock}
+            weekInBlock={blockInfo.weekInBlock}
+          />
+        )}
+      </div>
 
-      {/* Active program + block/week status */}
-      {program && (
-        <div className="bg-bg-card border border-bg-tertiary rounded-2xl p-4 mb-4">
-          <div className="font-bold text-lg text-text-primary mb-1">{program.name}</div>
-          <div className="text-sm text-text-secondary mb-3">{program.description}</div>
-
-          {blockInfo ? (
-            <>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm text-text-secondary">
-                  Block {blockInfo.blockNumber} · Week {blockInfo.weekInBlock} of {blockInfo.weeksPerBlock}
-                </span>
-                <span className="text-xs font-semibold text-accent bg-accent/15 px-2 py-0.5 rounded-full">
-                  {blockInfo.phaseName}
-                </span>
-                {blockInfo.isDeload && (
-                  <span className="text-xs font-semibold text-text-muted bg-bg-tertiary px-2 py-0.5 rounded-full">
-                    Deload
-                  </span>
-                )}
-              </div>
-              <div className="w-full h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-accent rounded-full transition-all"
-                  style={{ width: `${(blockInfo.weekInBlock / blockInfo.weeksPerBlock) * 100}%` }}
-                />
-              </div>
-            </>
-          ) : (
-            <div className="text-xs text-text-muted">Set a start date to track your block progress.</div>
-          )}
+      {/* Next Up */}
+      {nextSession && (
+        <div className="flex flex-col gap-[8px]">
+          <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">Next Up</span>
+          <NextUpTile
+            session={nextSession}
+            programId={program.id}
+            onStart={handleStart}
+          />
         </div>
       )}
 
-      {/* Session rotation */}
-      {program && (
-        <div className="mb-4">
-          <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Sessions</div>
-          <div className="space-y-2">
-            {program.sessionOrder.map(sessionId => {
-              const session = program.sessions.find(s => s.id === sessionId)
-              if (!session) return null
-              const isNext = nextSession?.id === session.id
-              return (
-                <button
-                  key={session.id}
-                  onClick={() => setPreviewSession(session)}
-                  className={`w-full text-left bg-bg-card rounded-2xl p-4 border transition-colors active:scale-[0.98] ${
-                    isNext
-                      ? 'border-accent/60'
-                      : 'border-bg-tertiary opacity-60'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-1">
-                    <div className="font-semibold text-text-primary">{session.name}</div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
-                      {isNext && (
-                        <span className="text-xs font-bold text-accent bg-accent/15 px-2 py-0.5 rounded-full">
-                          Up Next
-                        </span>
-                      )}
-                      <span className="text-xs font-semibold text-text-muted bg-bg-tertiary px-2 py-0.5 rounded-full">
-                        {session.tagLabel}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-xs text-text-secondary mb-1">{session.focus}</div>
-                  <div className="text-xs text-text-muted">{session.exercises.length} exercises</div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/* Journey — all blocks */}
+      <JourneyBlocks
+        program={program}
+        blockInfo={blockInfo ?? { blockNumber: 1, weekInBlock: 1, weeksPerBlock: program.blockStructure.weeksPerBlock }}
+      />
 
-      {/* Program management */}
+      {/* Switch Program */}
       <button
         onClick={() => navigate('/program-selector')}
-        className="w-full py-3 rounded-xl border border-bg-tertiary text-sm text-text-secondary font-medium hover:border-accent/50 active:border-accent transition-colors"
+        className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] px-[16px] py-[12px] font-commons font-bold text-[18px] text-white tracking-[-0.36px]"
       >
         Switch Program
       </button>
-
-      {/* Session preview sheet */}
-      <SlideUpSheet
-        open={!!previewSession}
-        onClose={() => setPreviewSession(null)}
-        title={previewSession?.name ?? ''}
-        heightClass="h-[80vh]"
-      >
-        {previewSession && (
-          <div className="flex flex-col h-full">
-            {/* Session meta */}
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs font-semibold text-text-muted bg-bg-tertiary px-2 py-0.5 rounded-full">
-                {previewSession.tagLabel}
-              </span>
-              <span className="text-xs text-text-secondary">{previewSession.focus}</span>
-            </div>
-
-            {/* Exercise list */}
-            <div className="flex-1 space-y-2 overflow-y-auto pb-4">
-              {previewSession.exercises.map((ex, i) => (
-                <div key={i} className="bg-bg-card border border-bg-tertiary rounded-xl px-4 py-3">
-                  <div className="font-medium text-sm text-text-primary mb-1">{ex.name}</div>
-                  <div className="flex items-center gap-3 text-xs text-text-muted">
-                    <span>{ex.sets} sets × {ex.reps}</span>
-                    <span>·</span>
-                    <span>{ex.restLabel} rest</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Start button */}
-            <div className="pt-3 border-t border-bg-tertiary flex-shrink-0">
-              <PrimaryButton onClick={startWorkout}>
-                Start Workout
-              </PrimaryButton>
-            </div>
-          </div>
-        )}
-      </SlideUpSheet>
     </div>
+  )
+}
+
+// ─── No-program state ─────────────────────────────────────────────────────────
+function NoProgram() {
+  const navigate = useNavigate()
+  const programs = Object.values(PROGRAMS)
+
+  return (
+    <div className="px-[16px] pt-[90px] pb-[40px] flex flex-col gap-[36px]">
+      {/* Header */}
+      <div className="flex flex-col gap-[4px]">
+        <span className="font-commons text-[14px] text-[#8b8b8b] leading-[14px]">PROGRAM</span>
+        <p className="font-judge text-[48px] text-white leading-[60px]">Pick your next block.</p>
+        <p className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px]">
+          Structure beats motivation. Run a program and see what happens.
+        </p>
+      </div>
+
+      {/* Program list */}
+      <div className="flex flex-col gap-[12px]">
+        <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px]">
+          All Programs — {programs.length}
+        </span>
+        {programs.map(program => (
+          <button
+            key={program.id}
+            onClick={() => navigate(`/program-detail/${program.id}`)}
+            className="w-full text-left"
+          >
+            <ProgramTile program={program} />
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main tab ─────────────────────────────────────────────────────────────────
+export default function ProgressTab() {
+  const { data: programData, isLoading } = useProgram()
+
+  if (isLoading) return <LoadingSpinner />
+
+  const { program, blockInfo, nextSession, config } = programData || {}
+
+  if (!program) {
+    return <NoProgram />
+  }
+
+  return (
+    <OnProgram
+      program={program}
+      blockInfo={blockInfo}
+      nextSession={nextSession}
+      config={config}
+    />
   )
 }
