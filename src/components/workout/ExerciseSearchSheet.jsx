@@ -87,8 +87,10 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
 
   return (
     <SlideUpSheet open={open} onClose={onClose} topOffset={48} footer={footer}>
-      {/* Sticky header + search — pins to top of scroll container while list scrolls behind */}
-      <div className="sticky top-0 z-10 bg-[#161616] -mx-[20px] px-[20px] pb-[24px]">
+      {/* Sticky header + search — pins to top of scroll container while list scrolls behind.
+          -mt-[16px] + pt-[16px] cancels SlideUpSheet's pt-[16px] so the bg covers the full
+          top gap and content can't sneak through above the sticky block. */}
+      <div className="sticky top-0 z-10 bg-[#161616] -mx-[20px] px-[20px] -mt-[16px] pt-[16px] pb-[24px]">
         {/* Header row */}
         <div className="flex items-start gap-[10px]">
           <h2 className="flex-1 font-judge text-[26px] leading-[1.2] text-white">
