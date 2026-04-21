@@ -1,6 +1,7 @@
 // src/components/workout/SetRow.jsx
 import { useState, useRef } from 'react'
-import { Check, Pencil } from 'lucide-react'
+import { Pencil } from 'lucide-react'
+import checkIcon from '@/assets/icons/icon-check.svg'
 import { useUnitPreference } from '@/hooks/useProfile'
 
 const RPE_VALUES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
@@ -145,7 +146,7 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
                     : 'bg-[rgba(255,255,255,0.1)] border border-transparent text-white/80'
                 }`}
               >
-                {completed ? <Pencil size={16} /> : <Check size={16} />}
+                {completed ? <Pencil size={16} /> : <img src={checkIcon} alt="" className="w-[16px] h-[16px]" />}
               </button>
             </div>
           ) : (

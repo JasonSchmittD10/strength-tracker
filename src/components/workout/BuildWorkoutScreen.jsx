@@ -4,6 +4,7 @@ import PrimaryButton from '@/components/shared/PrimaryButton'
 import BuildWorkoutHeader from './BuildWorkoutHeader'
 import BuildWorkoutEmptyState from './BuildWorkoutEmptyState'
 import ExerciseSearchSheet from './ExerciseSearchSheet'
+import supersetIcon from '@/assets/icons/icon-superset.svg'
 
 // Approximate item height (py-16 padding = 32px + ~21px text + 2px border) + 8px gap
 const ITEM_HEIGHT = 63
@@ -198,6 +199,27 @@ export default function BuildWorkoutScreen() {
 
   const hasExercises = exercises.length > 0
 
+  // Compute display groups (single exercises or superset bundles)
+  const displayGroups = []
+  const groupedIndices = new Set()
+  for (let i = 0; i < exercises.length; i++) {
+    if (groupedIndices.has(i)) continue
+    const ex = exercises[i]
+    if (ex.supersetId) {
+      const indices = exercises
+        .map((e, j) => e.supersetId === ex.supersetId ? j : -1)
+        .filter(j => j !== -1)
+      if (indices.length >= 2) {
+        indices.forEach(j => groupedIndices.add(j))
+        displayGroups.push({ type: 'superset', id: ex.supersetId, indices })
+      } else {
+        displayGroups.push({ type: 'single', index: i })
+      }
+    } else {
+      displayGroups.push({ type: 'single', index: i })
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen bg-bg-primary">
       <BuildWorkoutHeader
@@ -212,16 +234,49 @@ export default function BuildWorkoutScreen() {
       ) : (
         <>
           <div className="flex-1 overflow-y-auto px-[16px] pt-[16px] pb-[8px] flex flex-col gap-[8px]">
-            {exercises.map((ex, i) => (
-              <BuildExerciseRow
-                key={ex.id ?? i}
-                exercise={ex}
-                onRemove={() => removeExercise(i)}
-                onDragStart={(clientY) => startDrag(i, clientY)}
-                translateY={getItemTranslate(i)}
-                isDragging={dragState?.fromIndex === i}
-              />
-            ))}
+            {displayGroups.map(group => {
+              if (group.type === 'single') {
+                const i = group.index
+                return (
+                  <BuildExerciseRow
+                    key={exercises[i].id ?? i}
+                    exercise={exercises[i]}
+                    onRemove={() => removeExercise(i)}
+                    onDragStart={(clientY) => startDrag(i, clientY)}
+                    translateY={getItemTranslate(i)}
+                    isDragging={dragState?.fromIndex === i}
+                  />
+                )
+              }
+              // Superset group
+              return (
+                <div key={group.id} className="border border-[#2d2d2d] rounded-[16px] p-[12px] flex flex-col gap-[12px]">
+                  {/* Superset header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-[8px]">
+                      <img src={supersetIcon} alt="" className="w-[16px] h-[16px] flex-shrink-0" />
+                      <span className="font-commons font-semibold text-[#8b8b8b] text-[14px] tracking-[0.28px]">SUPERSET</span>
+                    </div>
+                    {/* Drag handle (visual only — group drag is a future enhancement) */}
+                    <div className="flex flex-col gap-[4px] px-[4px] py-[6px]">
+                      <div className="h-[2px] w-[14px] bg-[#8c8c8c]" />
+                      <div className="h-[2px] w-[14px] bg-[#8c8c8c]" />
+                    </div>
+                  </div>
+                  {/* Exercise rows within superset */}
+                  {group.indices.map(i => (
+                    <BuildExerciseRow
+                      key={exercises[i].id ?? i}
+                      exercise={exercises[i]}
+                      onRemove={() => removeExercise(i)}
+                      onDragStart={() => {}}
+                      translateY={0}
+                      isDragging={false}
+                    />
+                  ))}
+                </div>
+              )
+            })}
           </div>
           <div className="flex-shrink-0 px-[16px] pb-[34px] pt-[12px] bg-bg-primary border-t border-[rgba(255,255,255,0.1)]">
             <PrimaryButton onClick={handleStartWorkout}>Start Workout</PrimaryButton>

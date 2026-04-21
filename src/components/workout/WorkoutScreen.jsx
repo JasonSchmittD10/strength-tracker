@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useBlocker } from 'react-router-dom'
 import workoutIcon from '@/assets/icons/icon-workout.svg'
 import pauseIcon from '@/assets/icons/icon-pause.svg'
 import playIcon from '@/assets/icons/icon-play.svg'
+import supersetIcon from '@/assets/icons/icon-superset.svg'
 import ExerciseBlock from './ExerciseBlock'
 import ExerciseSearchSheet from './ExerciseSearchSheet'
 import RestTimer from './RestTimer'
@@ -552,32 +553,32 @@ export default function WorkoutScreen() {
             )
           }
           return (
-            <div key={group.id} className="mb-3">
-              <div className="flex items-center gap-2 mb-1.5 ml-0.5">
-                <span className="text-xs font-bold text-accent uppercase tracking-wider">Superset</span>
-                <div className="flex-1 h-px bg-accent/20" />
+            <div key={group.id} className="border border-[#2d2d2d] rounded-[16px] p-[12px] flex flex-col gap-[12px] mb-[12px]">
+              {/* Superset header */}
+              <div className="flex items-center gap-[8px]">
+                <img src={supersetIcon} alt="" className="w-[16px] h-[16px] flex-shrink-0" />
+                <span className="font-commons font-semibold text-[#8b8b8b] text-[14px] tracking-[0.28px]">SUPERSET</span>
               </div>
-              <div className="border-l-2 border-accent pl-2.5 space-y-1.5">
-                {group.indices.map(exIdx => (
-                  <ExerciseBlock
-                    key={exIdx}
-                    exercise={activeExercises[exIdx]}
-                    exIdx={exIdx}
-                    sets={exerciseSets[exIdx] ?? []}
-                    onChange={sets => setExerciseSets(prev => ({ ...prev, [exIdx]: sets }))}
-                    onSetComplete={handleSetComplete}
-                    isProgramMode={mode === 'program'}
-                    onRemoveSet={isCustomMode ? (setIdx) => removeSet(exIdx, setIdx) : undefined}
-                    isInSuperset={true}
-                    isSelected={selectedExercises.has(exIdx)}
-                    onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
-                    onAddSet={isCustomMode ? () => handleAddSetToSuperset(group.indices) : undefined}
-                    isActive={exIdx === activeExIdx}
-                    onRemove={isCustomMode ? () => handleRemoveExercise(exIdx) : undefined}
-                    isBuilderMode={mode === 'builder'}
-                  />
-                ))}
-              </div>
+              {/* Exercise blocks */}
+              {group.indices.map(exIdx => (
+                <ExerciseBlock
+                  key={exIdx}
+                  exercise={activeExercises[exIdx]}
+                  exIdx={exIdx}
+                  sets={exerciseSets[exIdx] ?? []}
+                  onChange={sets => setExerciseSets(prev => ({ ...prev, [exIdx]: sets }))}
+                  onSetComplete={handleSetComplete}
+                  isProgramMode={mode === 'program'}
+                  onRemoveSet={isCustomMode ? (setIdx) => removeSet(exIdx, setIdx) : undefined}
+                  isInSuperset={true}
+                  isSelected={selectedExercises.has(exIdx)}
+                  onSelect={isCustomMode && isSelectingSuperset ? () => handleToggleSelect(exIdx) : undefined}
+                  onAddSet={isCustomMode ? () => handleAddSetToSuperset(group.indices) : undefined}
+                  isActive={exIdx === activeExIdx}
+                  onRemove={isCustomMode ? () => handleRemoveExercise(exIdx) : undefined}
+                  isBuilderMode={mode === 'builder'}
+                />
+              ))}
             </div>
           )
         })}
