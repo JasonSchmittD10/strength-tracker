@@ -1,7 +1,9 @@
 // src/components/workout/WorkoutScreen.jsx
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate, useBlocker } from 'react-router-dom'
-import { Pause, Play, Dumbbell } from 'lucide-react'
+import workoutIcon from '@/assets/icons/icon-workout.svg'
+import pauseIcon from '@/assets/icons/icon-pause.svg'
+import playIcon from '@/assets/icons/icon-play.svg'
 import ExerciseBlock from './ExerciseBlock'
 import ExerciseSearchSheet from './ExerciseSearchSheet'
 import RestTimer from './RestTimer'
@@ -468,6 +470,14 @@ export default function WorkoutScreen() {
     exercises: activeExercises.map((ex, i) => ({ ...ex, sets: exerciseSets[i] ?? [] })),
   }
 
+  const headerDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  const headerTitle = mode === 'program'
+    ? session.name
+    : mode === 'builder'
+      ? 'Build Workout'
+      : template?.name || 'Workout'
+  const headerSubtitle = mode === 'program' ? programSubtitle : headerDate
+
   return (
     <div className="flex flex-col h-screen bg-bg-primary">
       {/* Static header */}
@@ -475,36 +485,32 @@ export default function WorkoutScreen() {
         {/* Left: icon + session name + subtitle */}
         <div className="flex items-center gap-[8px] flex-1 min-w-0">
           <div className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex-shrink-0">
-            <Dumbbell size={20} className="text-white" />
+            <img src={workoutIcon} alt="" className="w-[20px] h-[20px]" />
           </div>
           <div className="flex flex-col items-start min-w-0">
             <span className="font-judge text-[16px] text-white leading-[1.2]">
-              {mode === 'program'
-                ? session.name
-                : mode === 'builder'
-                  ? 'Build Workout'
-                  : template?.name || 'Custom Workout'}
+              {headerTitle}
             </span>
-            {programSubtitle && (
+            {headerSubtitle && (
               <span className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px] truncate">
-                {programSubtitle}
+                {headerSubtitle}
               </span>
             )}
           </div>
         </div>
 
-        {/* Right: timer + pause pill */}
+        {/* Right: timer + pause/play button */}
         {mode !== 'builder' && (
           <div className="flex items-center gap-[12px] flex-shrink-0">
             <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[0.5px] leading-[14px]">
-              {isPaused ? 'Paused' : formatElapsed(elapsed)}
+              {formatElapsed(elapsed)}
             </span>
             <button
               onClick={handleTogglePause}
-              className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex items-center justify-center"
+              className={`rounded-[4px] p-[8px] flex items-center justify-center ${isPaused ? 'bg-[rgba(242,166,85,0.5)]' : 'bg-[rgba(255,255,255,0.1)]'}`}
               aria-label={isPaused ? 'Resume workout' : 'Pause workout'}
             >
-              {isPaused ? <Play size={12} className="text-white" /> : <Pause size={12} className="text-white" />}
+              <img src={isPaused ? playIcon : pauseIcon} alt="" className="w-[16px] h-[16px]" />
             </button>
           </div>
         )}
