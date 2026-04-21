@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function SlideUpSheet({ open, onClose, title, children, footer }) {
+export default function SlideUpSheet({ open, onClose, title, children, footer, topOffset = 0 }) {
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
   const contentRef = useRef(null)
@@ -70,7 +70,10 @@ export default function SlideUpSheet({ open, onClose, title, children, footer })
       <div
         ref={sheetRef}
         className="relative bg-[#161616] border-t border-[rgba(255,255,255,0.1)] rounded-tl-[16px] rounded-tr-[16px] flex flex-col transition-transform duration-300"
-        style={{ transform: visible ? 'translateY(0)' : 'translateY(100%)' }}
+        style={{
+          transform: visible ? 'translateY(0)' : 'translateY(100%)',
+          maxHeight: topOffset ? `calc(100dvh - ${topOffset}px)` : undefined,
+        }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -81,7 +84,7 @@ export default function SlideUpSheet({ open, onClose, title, children, footer })
         </div>
 
         {/* Content */}
-        <div ref={contentRef} className="px-[20px] pt-[16px] overflow-y-auto">
+        <div ref={contentRef} className="px-[20px] pt-[16px] flex-1 overflow-y-auto min-h-0">
           {title && (
             <h2 className="font-judge text-[26px] leading-[1.2] text-white mb-[4px]">{title}</h2>
           )}
