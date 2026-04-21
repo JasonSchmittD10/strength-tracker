@@ -181,6 +181,7 @@ export default function WorkoutScreen() {
   const [restTimer, setRestTimer] = useState(null)          // { duration, key }
   const [restTimerFullScreen, setRestTimerFullScreen] = useState(false)
   const [summaryOpen, setSummaryOpen] = useState(false)
+  const [confirmFinishOpen, setConfirmFinishOpen] = useState(false)
   const [confirmBack, setConfirmBack] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [saveError, setSaveError] = useState(null)
@@ -411,20 +412,23 @@ export default function WorkoutScreen() {
     }
   }
 
-  async function handleSave(sessionName) {
+  async function handleFinishConfirmed() {
+    setConfirmFinishOpen(false)
+    setIsSelectingSuperset(false)
+    setSelectedExercises(new Set())
     setSaving(true)
     setSaveError(null)
     try {
       const data = buildSessionData()
-      if (sessionName) data.sessionName = sessionName
       data.totalVolume = totalVolume(data.exercises)
       await saveSession(data)
       allowNavRef.current = true
-      navigate('/history')
     } catch (e) {
       console.error('Save session failed:', e)
       setSaveError(e?.message ?? 'Failed to save workout. Please try again.')
+    } finally {
       setSaving(false)
+      setSummaryOpen(true)
     }
   }
 
@@ -627,10 +631,10 @@ export default function WorkoutScreen() {
                 </button>
               )}
               <button
-                onClick={() => { setIsSelectingSuperset(false); setSelectedExercises(new Set()); setSummaryOpen(true) }}
+                onClick={() => setConfirmFinishOpen(true)}
                 className="w-full h-[46px] bg-accent rounded-[6px] font-commons font-bold text-[18px] text-black"
               >
-                Finish Workout
+                {saving ? 'Saving…' : 'Finish Workout'}
               </button>
               <button
                 onClick={handleBack}
@@ -684,19 +688,44 @@ export default function WorkoutScreen() {
         onAddSuperset={handleAddSupersetFromSheet}
       />
 
-      {/* Workout summary sheet */}
+      {/* Workout summary / results */}
       <WorkoutSummary
         open={summaryOpen}
         onClose={() => setSummaryOpen(false)}
-        onSave={handleSave}
+        onDone={() => { setSummaryOpen(false); navigate('/history') }}
         session={currentSessionState}
         durationSeconds={elapsed}
         mode={mode}
         templateId={template?.id}
         templateName={template?.name}
-        externalSaving={saving}
-        externalSaveError={saveError}
+        saveError={saveError}
       />
+
+      {/* Confirm finish dialog */}
+      {confirmFinishOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-[24px]">
+          <div className="bg-[#161616] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-[24px] w-full max-w-sm flex flex-col gap-[20px]">
+            <div className="flex flex-col gap-[6px]">
+              <h3 className="font-judge text-[22px] text-white leading-snug">Finish workout?</h3>
+              <p className="font-commons text-[16px] text-[rgba(255,255,255,0.6)] leading-[1.4]">Ready to log your session?</p>
+            </div>
+            <div className="flex flex-col gap-[10px]">
+              <button
+                onClick={handleFinishConfirmed}
+                className="w-full h-[46px] bg-accent rounded-[6px] font-commons font-bold text-[18px] text-black"
+              >
+                Finish Workout
+              </button>
+              <button
+                onClick={() => setConfirmFinishOpen(false)}
+                className="w-full h-[46px] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] font-commons font-bold text-[18px] text-white"
+              >
+                Keep Going
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm leave dialog */}
       {confirmBack && (
