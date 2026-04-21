@@ -97,6 +97,7 @@ function OnProgram({ program, blockInfo, nextSession, config }) {
 
 // ─── No-program state ─────────────────────────────────────────────────────────
 function NoProgram() {
+  const navigate = useNavigate()
   const programs = Object.values(PROGRAMS)
 
   return (
@@ -116,7 +117,13 @@ function NoProgram() {
           All Programs — {programs.length}
         </span>
         {programs.map(program => (
-          <ProgramTile key={program.id} program={program} />
+          <button
+            key={program.id}
+            onClick={() => navigate(`/program-detail/${program.id}`)}
+            className="w-full text-left"
+          >
+            <ProgramTile program={program} />
+          </button>
         ))}
       </div>
     </div>

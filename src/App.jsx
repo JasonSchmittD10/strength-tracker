@@ -14,6 +14,7 @@ import ProgramSelector from '@/components/programs/ProgramSelector'
 import ProgramTab from '@/components/programs/ProgramTab'
 import GroupsTab from '@/components/groups/GroupsTab'
 import GroupDetailScreen from '@/components/groups/GroupDetailScreen'
+import ProgramDetailScreen from '@/components/programs/ProgramDetailScreen'
 
 function MainApp() {
   return (
@@ -39,6 +40,7 @@ const router = createHashRouter([
       { path: 'groups', element: <GroupsTab /> },
       { path: 'settings', element: <SettingsTab /> },
       { path: 'program-selector', element: <ProgramSelector /> },
+      { path: 'program-detail/:programId', element: <ProgramDetailScreen /> },
     ],
   },
   { path: '/groups/:groupId', element: <GroupDetailScreen /> },
