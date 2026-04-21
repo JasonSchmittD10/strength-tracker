@@ -87,26 +87,29 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
 
   return (
     <SlideUpSheet open={open} onClose={onClose} topOffset={48} footer={footer}>
-      {/* Header row */}
-      <div className="flex items-start gap-[10px] mb-[24px]">
-        <h2 className="flex-1 font-judge text-[26px] leading-[1.2] text-white">
-          Select Exercise(s) to Add
-        </h2>
-        <button onClick={onClose} className="flex-shrink-0 mt-[4px]" aria-label="Close">
-          <img src={xmarkIcon} alt="" className="w-[18px] h-[18px]" />
-        </button>
-      </div>
+      {/* Sticky header + search — pins to top of scroll container while list scrolls behind */}
+      <div className="sticky top-0 z-10 bg-[#161616] -mx-[20px] px-[20px] pb-[24px]">
+        {/* Header row */}
+        <div className="flex items-start gap-[10px]">
+          <h2 className="flex-1 font-judge text-[26px] leading-[1.2] text-white">
+            Select Exercise(s) to Add
+          </h2>
+          <button onClick={onClose} className="flex-shrink-0 mt-[4px]" aria-label="Close">
+            <img src={xmarkIcon} alt="" className="w-[18px] h-[18px]" />
+          </button>
+        </div>
 
-      {/* Search input */}
-      <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[4px] flex items-center gap-[10px] px-[10px] py-[12px] mb-[24px]">
-        <img src={searchIcon} alt="" className="w-[16px] h-[16px] flex-shrink-0" />
-        <input
-          ref={inputRef}
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search for an exercise..."
-          className="flex-1 bg-transparent font-commons text-[18px] text-white placeholder-[rgba(255,255,255,0.6)] tracking-[-0.5px] leading-[1.19] focus:outline-none"
-        />
+        {/* Search input */}
+        <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[4px] flex items-center gap-[10px] px-[10px] py-[12px] mt-[24px]">
+          <img src={searchIcon} alt="" className="w-[16px] h-[16px] flex-shrink-0" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search for an exercise..."
+            className="flex-1 bg-transparent font-commons text-[18px] text-white placeholder-[rgba(255,255,255,0.6)] tracking-[-0.5px] leading-[1.19] focus:outline-none"
+          />
+        </div>
       </div>
 
       {/* Exercise list */}
