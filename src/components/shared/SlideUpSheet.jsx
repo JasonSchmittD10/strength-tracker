@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function SlideUpSheet({ open, onClose, title, children, footer, topOffset = 0 }) {
+export default function SlideUpSheet({ open, onClose, title, children, footer, topOffset = 0, stickyHeader }) {
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
   const contentRef = useRef(null)
@@ -83,8 +83,15 @@ export default function SlideUpSheet({ open, onClose, title, children, footer, t
           <div className="h-[4px] w-[39px] bg-[#969698] rounded-full" />
         </div>
 
-        {/* Content */}
-        <div ref={contentRef} className="px-[20px] pt-[16px] flex-1 overflow-y-auto min-h-0">
+        {/* Non-scrolling header (rendered above the scroll container) */}
+        {stickyHeader && (
+          <div className="flex-shrink-0 px-[20px] pt-[16px]">
+            {stickyHeader}
+          </div>
+        )}
+
+        {/* Scrollable content */}
+        <div ref={contentRef} className={`px-[20px] flex-1 overflow-y-auto min-h-0 ${stickyHeader ? 'pt-[0px]' : 'pt-[16px]'}`}>
           {title && (
             <h2 className="font-judge text-[26px] leading-[1.2] text-white mb-[4px]">{title}</h2>
           )}
