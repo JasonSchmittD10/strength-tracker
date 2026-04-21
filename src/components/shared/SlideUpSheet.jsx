@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 export default function SlideUpSheet({ open, onClose, title, children, footer }) {
   const [mounted, setMounted] = useState(false)
@@ -56,7 +57,7 @@ export default function SlideUpSheet({ open, onClose, title, children, footer })
 
   if (!mounted) return null
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       {/* Backdrop */}
       <div
@@ -98,6 +99,7 @@ export default function SlideUpSheet({ open, onClose, title, children, footer })
           <div className="absolute bottom-[8px] left-1/2 -translate-x-1/2 h-[5px] w-[134px] bg-[#969698] rounded-full" />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
