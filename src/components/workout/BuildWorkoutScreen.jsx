@@ -22,6 +22,7 @@ function DragHandle({ onTouchStart }) {
 
 function BuildExerciseRow({ exercise, onRemove, onDragStart, translateY, isDragging }) {
   const startXRef = useRef(null)
+  const swipeXAtStartRef = useRef(0)
   const [swipeX, setSwipeX] = useState(0)
 
   // Reset swipe if row becomes the dragged item
@@ -31,14 +32,17 @@ function BuildExerciseRow({ exercise, onRemove, onDragStart, translateY, isDragg
 
   function onCardTouchStart(e) {
     startXRef.current = e.touches[0].clientX
+    swipeXAtStartRef.current = swipeX
   }
   function onCardTouchMove(e) {
     if (startXRef.current === null) return
     const dx = e.touches[0].clientX - startXRef.current
-    if (dx < 0) setSwipeX(Math.max(dx, -80))
+    const next = swipeXAtStartRef.current + dx
+    setSwipeX(Math.min(0, Math.max(next, -80)))
   }
   function onCardTouchEnd() {
-    if (swipeX < -60) onRemove()
+    // Snap open (reveal delete) or snap closed — never auto-delete
+    if (swipeX < -40) setSwipeX(-80)
     else setSwipeX(0)
     startXRef.current = null
   }
@@ -64,7 +68,7 @@ function BuildExerciseRow({ exercise, onRemove, onDragStart, translateY, isDragg
         <div
           style={{
             transform: `translateX(${swipeX}px)`,
-            transition: swipeX === 0 ? 'transform 0.2s ease' : 'none',
+            transition: startXRef.current === null ? 'transform 0.2s ease' : 'none',
             width: 'calc(100% + 80px)',
           }}
           className="flex"
@@ -85,7 +89,7 @@ function BuildExerciseRow({ exercise, onRemove, onDragStart, translateY, isDragg
           {/* Delete panel — sibling in the flex row, not an overlay */}
           <div
             className="w-[80px] bg-[#c02727] border-l-4 border-[rgba(0,0,0,0.1)] flex items-center justify-center flex-shrink-0"
-            onTouchEnd={(e) => { e.stopPropagation(); onRemove() }}
+            onClick={onRemove}
           >
             <span className="font-commons font-bold text-white text-[14px] tracking-[-0.28px]">Delete</span>
           </div>
