@@ -71,7 +71,7 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
         onClick={handleAddExercise}
         disabled={selections.size === 0}
       >
-        <img src={plusSmIcon} alt="" className="w-[14px] h-[14px] mr-[8px] flex-shrink-0" />
+        <img src={plusSmIcon} alt="" className="w-[14px] h-[14px] mr-[8px] flex-shrink-0 brightness-0 invert" />
         {selections.size > 0 ? `Add Exercise (${selections.size})` : 'Add Exercise'}
       </PrimaryButton>
       <PrimaryButton
@@ -79,7 +79,7 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
         onClick={handleAddSuperset}
         disabled={selections.size < 2}
       >
-        <img src={plusSmIcon} alt="" className="w-[14px] h-[14px] mr-[8px] flex-shrink-0" />
+        <img src={plusSmIcon} alt="" className="w-[14px] h-[14px] mr-[8px] flex-shrink-0 brightness-0 invert" />
         Add Superset
       </PrimaryButton>
     </div>
