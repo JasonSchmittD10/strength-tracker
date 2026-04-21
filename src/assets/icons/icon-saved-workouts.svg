@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group">
+<path id="Vector" d="M13 18V24C13 25.1046 13.8954 26 15 26H24C25.1046 26 26 25.1046 26 24V18C26 16.8954 25.1046 16 24 16H15C13.8954 16 13 16.8954 13 18Z" fill="var(--fill-0, #B7B7B7)" fill-opacity="0.3"/>
+<path id="Vector_2" d="M14 9V3C14 1.89544 13.1046 1 12 1H3C1.89544 1 1 1.89544 1 3V9C1 10.1046 1.89544 11 3 11H12C13.1046 11 14 10.1046 14 9Z" fill="var(--fill-0, #B7B7B7)" fill-opacity="0.3"/>
+<path id="Vector_3" d="M1 18V24C1 25.1046 1.89544 26 3 26H6C7.10456 26 8 25.1046 8 24V18C8 16.8954 7.10456 16 6 16H3C1.89544 16 1 16.8954 1 18Z" stroke="var(--stroke-0, #B7B7B7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_4" d="M13 18V24C13 25.1046 13.8954 26 15 26H24C25.1046 26 26 25.1046 26 24V18C26 16.8954 25.1046 16 24 16H15C13.8954 16 13 16.8954 13 18Z" stroke="var(--stroke-0, #B7B7B7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_5" d="M26 9V3C26 1.89544 25.1046 1 24 1H21C19.8954 1 19 1.89544 19 3V9C19 10.1046 19.8954 11 21 11H24C25.1046 11 26 10.1046 26 9Z" stroke="var(--stroke-0, #B7B7B7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Vector_6" d="M14 9V3C14 1.89544 13.1046 1 12 1H3C1.89544 1 1 1.89544 1 3V9C1 10.1046 1.89544 11 3 11H12C13.1046 11 14 10.1046 14 9Z" stroke="var(--stroke-0, #B7B7B7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>
