@@ -1,58 +1,40 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronRight, Check } from 'lucide-react'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
+import PrimaryButton from '@/components/shared/PrimaryButton'
+import ExerciseTile from './ExerciseTile'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
+import xmarkIcon from '@/assets/icons/icon-xmark.svg'
+import searchIcon from '@/assets/icons/icon-search.svg'
+import plusSmIcon from '@/assets/icons/icon-plus-sm.svg'
 
-const MUSCLE_TO_GROUP = {
-  Chest: 'Chest',
-  'Upper Chest': 'Chest',
-  Lats: 'Back',
-  'Mid/Upper Back': 'Back',
-  'Mid Back': 'Back',
-  'Front Delts': 'Shoulders',
-  Shoulders: 'Shoulders',
-  'Lateral Delts': 'Shoulders',
-  'Rear Delts': 'Shoulders',
-  Triceps: 'Arms',
-  'Triceps (Long Head)': 'Arms',
-  Biceps: 'Arms',
-  'Biceps (Long Head)': 'Arms',
-  Brachialis: 'Arms',
-  Brachioradialis: 'Arms',
-  Quads: 'Legs',
-  Glutes: 'Legs',
-  Hamstrings: 'Legs',
-  Gastrocnemius: 'Legs',
-  Soleus: 'Legs',
-}
+// All exercises sorted A–Z with muscle info
+const ALL_EXERCISES = Object.keys(EXERCISE_LIBRARY)
+  .sort()
+  .map(name => {
+    const primaryMuscle = EXERCISE_LIBRARY[name].muscles?.primary?.[0] || ''
+    return { name, primaryMuscle }
+  })
 
-const GROUP_ORDER = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs']
-
-const ALL_EXERCISES = Object.keys(EXERCISE_LIBRARY).map(name => {
-  const primaryMuscle = EXERCISE_LIBRARY[name].muscles?.primary?.[0] || ''
-  return { name, primaryMuscle, group: MUSCLE_TO_GROUP[primaryMuscle] || 'Other' }
-})
-
-const GROUPED_EXERCISES = GROUP_ORDER.reduce((acc, group) => {
-  const exs = ALL_EXERCISES.filter(e => e.group === group)
-  if (exs.length) acc[group] = exs
+// Grouped alphabetically by first letter
+const ALPHA_GROUPS = ALL_EXERCISES.reduce((acc, ex) => {
+  const letter = ex.name[0].toUpperCase()
+  if (!acc[letter]) acc[letter] = []
+  acc[letter].push(ex)
   return acc
 }, {})
 
 export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperset }) {
   const [query, setQuery] = useState('')
-  const [mode, setMode] = useState('single')          // 'single' | 'superset'
-  const [supersetSelections, setSupersetSelections] = useState(new Set())
+  const [selections, setSelections] = useState(new Set())
   const inputRef = useRef(null)
 
   useEffect(() => {
     if (open) {
-      const t = setTimeout(() => inputRef.current?.focus(), 120)
+      const t = setTimeout(() => inputRef.current?.focus(), 150)
       return () => clearTimeout(t)
     } else {
       setQuery('')
-      setMode('single')
-      setSupersetSelections(new Set())
+      setSelections(new Set())
     }
   }, [open])
 
@@ -64,131 +46,111 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
       )
     : null
 
-  function handleRowTap(name) {
-    if (mode === 'single') {
-      onAdd(name)
-      onClose()
-    } else {
-      setSupersetSelections(prev => {
-        const next = new Set(prev)
-        next.has(name) ? next.delete(name) : next.add(name)
-        return next
-      })
-    }
+  function toggleSelection(name) {
+    setSelections(prev => {
+      const next = new Set(prev)
+      next.has(name) ? next.delete(name) : next.add(name)
+      return next
+    })
   }
 
-  function handleSupersetConfirm() {
-    onAddSuperset([...supersetSelections])
-    setSupersetSelections(new Set())
-    setMode('single')
+  function handleAddExercise() {
+    selections.forEach(name => onAdd(name))
+    onClose()
+  }
+
+  function handleAddSuperset() {
+    onAddSuperset([...selections])
     onClose()
   }
 
   const footer = (
-    <div className="flex gap-3">
-      <button
-        onClick={() => { setMode('single'); setSupersetSelections(new Set()) }}
-        className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-colors ${
-          mode === 'single'
-            ? 'bg-accent text-black'
-            : 'bg-bg-card border border-bg-tertiary text-text-muted'
-        }`}
+    <div className="flex gap-[8px] pb-[8px]">
+      <PrimaryButton
+        variant="secondary"
+        onClick={handleAddExercise}
+        disabled={selections.size === 0}
       >
-        Add Exercise
-      </button>
-      <button
-        onClick={() => {
-          if (mode === 'single') {
-            setMode('superset')
-          } else if (supersetSelections.size >= 2) {
-            handleSupersetConfirm()
-          }
-        }}
-        className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-colors ${
-          mode === 'superset' && supersetSelections.size >= 2
-            ? 'bg-accent text-black'
-            : mode === 'superset'
-            ? 'bg-bg-card border border-accent/50 text-accent'
-            : 'bg-bg-card border border-bg-tertiary text-text-muted'
-        }`}
+        <img src={plusSmIcon} alt="" className="w-[14px] h-[14px] mr-[8px] flex-shrink-0 brightness-0 invert" />
+        {selections.size > 0 ? `Add Exercise (${selections.size})` : 'Add Exercise'}
+      </PrimaryButton>
+      <PrimaryButton
+        variant="secondary"
+        onClick={handleAddSuperset}
+        disabled={selections.size < 2}
       >
-        {mode === 'superset' && supersetSelections.size >= 2
-          ? `Add Superset (${supersetSelections.size})`
-          : 'Add Superset'}
-      </button>
+        <img src={plusSmIcon} alt="" className="w-[14px] h-[14px] mr-[8px] flex-shrink-0 brightness-0 invert" />
+        Add Superset
+      </PrimaryButton>
     </div>
   )
 
-  return (
-    <SlideUpSheet open={open} onClose={onClose} title="Add Exercise" heightClass="h-[90vh]" footer={footer}>
-      <div className="mb-3 flex-shrink-0">
+  const stickyHeader = (
+    <div className="pb-[24px]">
+      {/* Header row */}
+      <div className="flex items-start gap-[10px]">
+        <h2 className="flex-1 font-judge text-[26px] leading-[1.2] text-white">
+          Select Exercise(s) to Add
+        </h2>
+        <button onClick={onClose} className="flex-shrink-0 mt-[4px]" aria-label="Close">
+          <img src={xmarkIcon} alt="" className="w-[18px] h-[18px]" />
+        </button>
+      </div>
+
+      {/* Search input */}
+      <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[4px] flex items-center gap-[10px] px-[10px] py-[12px] mt-[24px]">
+        <img src={searchIcon} alt="" className="w-[16px] h-[16px] flex-shrink-0" />
         <input
           ref={inputRef}
           value={query}
           onChange={e => setQuery(e.target.value)}
-          aria-label="Search exercises"
-          placeholder="Search exercises or muscle group…"
-          className="w-full bg-bg-tertiary rounded-xl px-4 py-3 text-text-primary placeholder-text-muted text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+          placeholder="Search for an exercise..."
+          className="flex-1 bg-transparent font-commons text-[18px] text-white placeholder-[rgba(255,255,255,0.6)] tracking-[-0.5px] leading-[1.19] focus:outline-none"
         />
       </div>
-      <div className="flex-1 overflow-y-auto min-h-0 -mx-5 px-5">
-        {filtered ? (
-          <>
-            {filtered.map(ex => (
-              <ExerciseRow
-                key={ex.name}
-                exercise={ex}
-                onSelect={handleRowTap}
-                selectable={mode === 'superset'}
-                isSelected={supersetSelections.has(ex.name)}
-              />
-            ))}
-            {filtered.length === 0 && (
-              <p className="text-center text-text-muted text-sm py-10">No exercises found</p>
-            )}
-          </>
-        ) : (
-          Object.entries(GROUPED_EXERCISES).map(([group, exercises]) => (
-            <div key={group} className="mb-5">
-              <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-                {group}
-              </div>
-              {exercises.map(ex => (
-                <ExerciseRow
-                  key={ex.name}
-                  exercise={ex}
-                  onSelect={handleRowTap}
-                  selectable={mode === 'superset'}
-                  isSelected={supersetSelections.has(ex.name)}
-                />
-              ))}
-            </div>
-          ))
-        )}
-      </div>
-    </SlideUpSheet>
+    </div>
   )
-}
 
-function ExerciseRow({ exercise, onSelect, selectable, isSelected }) {
   return (
-    <button
-      onClick={() => onSelect(exercise.name)}
-      className="w-full flex items-center justify-between py-3 border-b border-bg-tertiary last:border-0 text-left"
-    >
-      <div>
-        <div className="text-sm font-medium text-text-primary">{exercise.name}</div>
-        <div className="text-xs text-text-muted">{exercise.primaryMuscle}</div>
-      </div>
-      {selectable ? (
-        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-2 transition-colors ${
-          isSelected ? 'bg-accent border-accent' : 'border-bg-tertiary'
-        }`}>
-          {isSelected && <Check size={10} className="text-black" />}
+    <SlideUpSheet open={open} onClose={onClose} topOffset={48} footer={footer} stickyHeader={stickyHeader}>
+      {/* Exercise list */}
+      {filtered ? (
+        <div className="flex flex-col gap-[12px] pb-[16px]">
+          {filtered.map(ex => (
+            <ExerciseTile
+              key={ex.name}
+              exercise={ex}
+              isSelected={selections.has(ex.name)}
+              onSelect={toggleSelection}
+            />
+          ))}
+          {filtered.length === 0 && (
+            <p className="text-center font-commons text-[16px] text-[#8b8b8b] py-[24px]">
+              No exercises found
+            </p>
+          )}
         </div>
       ) : (
-        <ChevronRight size={16} className="text-text-muted flex-shrink-0 ml-2" aria-hidden="true" />
+        <div className="flex flex-col gap-[24px] pb-[16px]">
+          {Object.entries(ALPHA_GROUPS).map(([letter, exercises]) => (
+            <div key={letter} className="flex flex-col gap-[16px]">
+              <p className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-[1.19]">
+                {letter}
+              </p>
+              <div className="flex flex-col gap-[12px]">
+                {exercises.map(ex => (
+                  <ExerciseTile
+                    key={ex.name}
+                    exercise={ex}
+                    isSelected={selections.has(ex.name)}
+                    onSelect={toggleSelection}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
-    </button>
+    </SlideUpSheet>
   )
 }
