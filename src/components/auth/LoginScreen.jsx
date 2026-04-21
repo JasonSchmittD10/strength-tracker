@@ -1,8 +1,51 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import PrimaryButton from '@/components/shared/PrimaryButton'
+import mascotImage from '@/assets/images/mascot.png'
 
+// ─── Shared mascot crop — matches Figma node 133:16897 ───────────────────────
+function Mascot() {
+  return (
+    <div className="relative w-[177px] h-[159px] overflow-hidden flex-shrink-0">
+      <img
+        src={mascotImage}
+        alt=""
+        className="absolute max-w-none"
+        style={{
+          width: '141.24%',
+          height: '280.55%',
+          left: '-20.34%',
+          top: '-105.69%',
+        }}
+      />
+    </div>
+  )
+}
+
+// ─── Auth input — Figma active state uses accent border/tint on focus ─────────
+function AuthInput({ type, value, onChange, placeholder, autoComplete }) {
+  const [focused, setFocused] = useState(false)
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      autoComplete={autoComplete}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      className={`w-full h-[46px] rounded-[4px] px-[10px] font-commons text-[18px] tracking-[-0.5px] leading-[1.19] focus:outline-none transition-colors ${
+        focused
+          ? 'bg-[rgba(242,166,85,0.05)] border border-[rgba(242,166,85,0.5)] text-[rgba(255,255,255,0.6)]'
+          : 'bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.6)]'
+      } placeholder:text-[rgba(255,255,255,0.4)]`}
+    />
+  )
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 export default function LoginScreen() {
-  const [mode, setMode] = useState('signin') // 'signin' | 'signup' | 'forgot'
+  const [mode, setMode] = useState('signup') // 'signup' | 'signin' | 'forgot'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -36,103 +79,164 @@ export default function LoginScreen() {
 
     setLoading(false)
     if (error) setError(error.message)
-    // On success: onAuthStateChange in useAuth fires SIGNED_IN → App transitions automatically
+    // On success: onAuthStateChange fires SIGNED_IN → App transitions automatically
   }
 
-  return (
-    <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-10">
-          <img src="/icon.png" alt="Hybrid" className="w-16 h-16 rounded-2xl mb-4" />
-          <h1 className="font-sans text-3xl font-bold text-text-primary tracking-tight">Hybrid</h1>
-          <p className="text-text-secondary text-sm mt-1">Strength Tracker</p>
-        </div>
+  // ── Forgot-password sub-view ───────────────────────────────────────────────
+  if (mode === 'forgot') {
+    return (
+      <div className="h-screen bg-[#0a0a0a] overflow-y-auto flex flex-col">
+        <p className="font-judge text-[24px] text-[#5b5b5b] text-center pt-[66px] leading-normal flex-shrink-0">
+          MEATHEAD
+        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <h2 className="text-xl font-bold text-text-primary mb-1">
-              {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Reset password'}
-            </h2>
-            <p className="text-text-secondary text-sm mb-4">
-              {mode === 'signin' ? 'Welcome back' : mode === 'signup' ? 'Start tracking your lifts' : 'We\'ll send you a reset link'}
+        <div className="flex-1 flex flex-col justify-center px-[24px] pb-[40px]">
+          <div className="flex flex-col gap-[4px] items-center text-center mb-[36px]">
+            <h1 className="font-judge text-[32px] leading-[40px] text-white">
+              Reset Password
+            </h1>
+            <p className="font-commons text-[18px] text-[rgba(255,255,255,0.6)] leading-[1.19]">
+              We'll send you a reset link.
             </p>
+          </div>
 
+          <form onSubmit={handleSubmit} className="flex flex-col gap-[24px]">
             {forgotSent ? (
-              <p className="text-text-primary text-sm bg-bg-card border border-bg-tertiary rounded-xl px-4 py-3">
+              <p className="font-commons text-[18px] text-[rgba(255,255,255,0.6)] text-center leading-[1.4]">
                 Check your email for a reset link.
               </p>
             ) : (
-              <div className="space-y-3">
-                <input
+              <div className="flex flex-col gap-[16px]">
+                <AuthInput
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="your@email.com"
+                  placeholder="Email Address"
                   autoComplete="email"
-                  autoFocus
-                  className="w-full bg-bg-card border border-bg-tertiary rounded-xl px-4 py-3 text-text-primary placeholder-text-muted text-base focus:outline-none focus:border-accent transition-colors"
                 />
-                {mode !== 'forgot' && (
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Password"
-                    autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                    className="w-full bg-bg-card border border-bg-tertiary rounded-xl px-4 py-3 text-text-primary placeholder-text-muted text-base focus:outline-none focus:border-accent transition-colors"
-                  />
-                )}
               </div>
             )}
 
-            {error && <p className="text-danger text-sm mt-2">{error}</p>}
-          </div>
+            {error && (
+              <p className="font-commons text-[14px] text-[#f87171] text-center">{error}</p>
+            )}
 
-          {!forgotSent && (
+            {!forgotSent && (
+              <PrimaryButton
+                type="submit"
+                disabled={loading || !email.trim()}
+              >
+                {loading ? 'Sending…' : 'Send Reset Link'}
+              </PrimaryButton>
+            )}
+
             <button
-              type="submit"
-              disabled={loading || !email.trim() || (mode !== 'forgot' && !password)}
-              className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-black font-semibold rounded-xl py-3 text-base transition-colors"
+              type="button"
+              onClick={() => switchMode('signin')}
+              className="font-commons font-semibold text-[18px] text-white text-center tracking-[-0.36px] leading-[1.19]"
             >
-              {loading
-                ? (mode === 'signin' ? 'Signing in…' : mode === 'signup' ? 'Creating account…' : 'Sending…')
-                : (mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send Reset Link')}
+              <span className="underline decoration-solid">Back to Sign In</span>
             </button>
-          )}
+          </form>
+        </div>
+      </div>
+    )
+  }
 
-          <div className="text-center space-y-2">
-            {mode === 'signin' && (
-              <>
-                <p className="text-text-secondary text-sm">
-                  No account?{' '}
-                  <button type="button" onClick={() => switchMode('signup')} className="text-accent hover:underline">
-                    Create one
-                  </button>
-                </p>
-                <p className="text-text-secondary text-sm">
-                  <button type="button" onClick={() => switchMode('forgot')} className="text-accent hover:underline">
-                    Forgot password?
-                  </button>
-                </p>
-              </>
-            )}
-            {mode === 'signup' && (
-              <p className="text-text-secondary text-sm">
-                Already have an account?{' '}
-                <button type="button" onClick={() => switchMode('signin')} className="text-accent hover:underline">
-                  Sign in
-                </button>
-              </p>
-            )}
-            {mode === 'forgot' && (
-              <p className="text-text-secondary text-sm">
-                <button type="button" onClick={() => switchMode('signin')} className="text-accent hover:underline">
-                  Back to sign in
-                </button>
-              </p>
-            )}
+  // ── Main sign-up / sign-in view ────────────────────────────────────────────
+  const isSignup = mode === 'signup'
+
+  return (
+    <div className="h-screen bg-[#0a0a0a] overflow-y-auto flex flex-col">
+      {/* MEATHEAD wordmark */}
+      <p className="font-judge text-[24px] text-[#5b5b5b] text-center pt-[66px] leading-normal flex-shrink-0">
+        MEATHEAD
+      </p>
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col items-center px-[24px] pt-[44px] pb-[40px]">
+        <div className="w-full flex flex-col items-center gap-[36px]">
+
+          {/* Mascot — shown on sign-up (welcome) screen */}
+          {isSignup && <Mascot />}
+
+          {/* Title + subtitle */}
+          <div className="flex flex-col items-center gap-[4px] text-center w-full">
+            <h1 className="font-judge text-[32px] leading-[40px] text-white">
+              Welcome
+            </h1>
+            <p className="font-commons text-[18px] text-[rgba(255,255,255,0.6)] leading-[1.19]">
+              {isSignup
+                ? 'Create an account below to get started.'
+                : 'Sign in below to get started.'}
+            </p>
           </div>
-        </form>
+
+          {/* Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="w-full flex flex-col gap-[24px]"
+          >
+            {/* Inputs */}
+            <div className="flex flex-col gap-[16px]">
+              <AuthInput
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="Email Address"
+                autoComplete="email"
+              />
+              <AuthInput
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Password"
+                autoComplete={isSignup ? 'new-password' : 'current-password'}
+              />
+            </div>
+
+            {/* Error */}
+            {error && (
+              <p className="font-commons text-[14px] text-[#f87171] text-center -mt-[8px]">
+                {error}
+              </p>
+            )}
+
+            {/* CTA + links */}
+            <div className="flex flex-col items-center gap-[24px]">
+              <PrimaryButton
+                type="submit"
+                disabled={loading || !email.trim() || !password}
+              >
+                {loading
+                  ? (isSignup ? 'Creating account…' : 'Signing in…')
+                  : (isSignup ? 'Create an Account' : 'Sign In')}
+              </PrimaryButton>
+
+              {/* Switch mode link */}
+              <button
+                type="button"
+                onClick={() => switchMode(isSignup ? 'signin' : 'signup')}
+                className="font-commons font-semibold text-[18px] text-white text-center tracking-[-0.36px] leading-[1.19]"
+              >
+                {isSignup
+                  ? <>Existing User? <span className="underline decoration-solid">Sign In</span></>
+                  : <>Don't Have an Account? <span className="underline decoration-solid">Create One</span></>}
+              </button>
+
+              {/* Forgot password — sign-in only */}
+              {!isSignup && (
+                <button
+                  type="button"
+                  onClick={() => switchMode('forgot')}
+                  className="font-commons font-semibold text-[18px] text-white text-center tracking-[-0.36px] leading-[1.19] underline decoration-solid"
+                >
+                  Forgot Password
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )

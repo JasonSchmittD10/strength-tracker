@@ -1,6 +1,6 @@
 import { createHashRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
-import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import SplashScreen from '@/components/auth/SplashScreen'
 import LoginScreen from '@/components/auth/LoginScreen'
 import ResetPasswordScreen from '@/components/auth/ResetPasswordScreen'
 import BottomNav from '@/components/shared/BottomNav'
@@ -48,7 +48,7 @@ const router = createHashRouter([
 
 export default function App() {
   const { loading, session, recoveryMode, setRecoveryMode } = useAuth()
-  if (loading) return <LoadingSpinner />
+  if (loading) return <SplashScreen />
   if (recoveryMode) return <ResetPasswordScreen onDone={() => setRecoveryMode(false)} />
   if (!session) return <LoginScreen />
   return <RouterProvider router={router} />
