@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PROGRAMS } from '@/lib/programs'
-import { useProgram, useSaveConfig } from '@/hooks/useProgram'
+import { useProgramConfig, useStartProgram } from '@/hooks/useProgramConfig'
+import { useProfile } from '@/hooks/useProfile'
+import { getWeekSchedule, getWeeksInMacrocycle } from '@/lib/scheduling'
+import { resolveSetCount, resolveExerciseDisplay } from '@/lib/exerciseResolution'
+import ProgramInputsForm from '@/components/ProgramInputsForm'
 import backArrowIcon from '@/assets/icons/icon-back-arrow.svg'
 
 const PROGRAM_META = {
@@ -81,19 +85,24 @@ function SessionCard({ session }) {
       </div>
       <div className="h-px bg-[rgba(255,255,255,0.1)]" />
       <div className="flex flex-col gap-[12px]">
-        {session.exercises.map((ex, i) => (
-          <div key={i} className="flex items-center justify-between gap-[8px]">
-            <div className="flex items-center gap-[6px] min-w-0">
-              <span className="w-[4px] h-[4px] rounded-full bg-[#8b8b8b] flex-shrink-0" />
-              <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] truncate">
-                {ex.name}
+        {session.exercises.map((ex, i) => {
+          // Detail-view preview: assume week 1 (resolves week-indexed sets)
+          const display = resolveExerciseDisplay(ex, undefined)
+          const setCount = resolveSetCount(ex, 1) || ex.sets
+          return (
+            <div key={i} className="flex items-center justify-between gap-[8px]">
+              <div className="flex items-center gap-[6px] min-w-0">
+                <span className="w-[4px] h-[4px] rounded-full bg-[#8b8b8b] flex-shrink-0" />
+                <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] truncate">
+                  {display.name}
+                </span>
+              </div>
+              <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] whitespace-nowrap flex-shrink-0">
+                {setCount} x {ex.reps}
               </span>
             </div>
-            <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] whitespace-nowrap flex-shrink-0">
-              {ex.sets} x {ex.reps}
-            </span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -102,13 +111,19 @@ function SessionCard({ session }) {
 export default function ProgramDetailScreen() {
   const { programId } = useParams()
   const navigate = useNavigate()
-  const { data: programData } = useProgram()
-  const { mutateAsync: saveConfig, isPending } = useSaveConfig()
+  const { config } = useProgramConfig()
+  const { data: profile } = useProfile()
+  const { mutateAsync: startProgram, isPending } = useStartProgram()
+  const [inputsOpen, setInputsOpen] = useState(false)
+  const [startError, setStartError] = useState(null)
 
   const program = PROGRAMS[programId]
-  const isCurrentProgram = programData?.config?.activeProgramId === programId
+  const isCurrentProgram = config?.program_id === programId
+  const weightUnit = profile?.weightUnit ?? 'lbs'
+  const requiresInputs = !!program?.userInputs?.some(i => i.required)
 
-  const weekSchedule = program?.weekSchedule ?? []
+  // Detail-view sample week: for weeklyPatterns programs, show week 1
+  const weekSchedule = program ? (getWeekSchedule(program, 1) ?? []) : []
   const firstWorkoutIdx = weekSchedule.findIndex(s => s != null)
   const [selectedDay, setSelectedDay] = useState(firstWorkoutIdx === -1 ? 0 : firstWorkoutIdx)
 
@@ -126,22 +141,29 @@ export default function ProgramDetailScreen() {
   }
 
   const meta = PROGRAM_META[program.id] ?? { gear: 'Full gym', avgSession: '60 min', frequency: '4 x week' }
-  const totalWeeks = program.blockStructure.weeksPerBlock * program.blockStructure.blockNames.length
+  const totalWeeks = getWeeksInMacrocycle(program)
   const onCount = weekSchedule.filter(s => s != null).length
   const restCount = weekSchedule.length - onCount
   const selectedSession = program.sessions.find(s => s.id === weekSchedule[selectedDay])
 
   async function handleStart() {
+    if (requiresInputs) {
+      setInputsOpen(true)
+      return
+    }
+    await activateProgram({})
+  }
+
+  async function activateProgram(inputs) {
+    setStartError(null)
     const today = new Date().toISOString().split('T')[0]
     try {
-      await saveConfig({
-        ...(programData?.config ?? {}),
-        activeProgramId: program.id,
-        programStartDate: today,
-      })
+      await startProgram({ programId: program.id, startedAt: today, inputs })
+      setInputsOpen(false)
       navigate('/program')
     } catch (e) {
       console.error('Failed to start program', e)
+      setStartError(e.message ?? 'Failed to start program')
     }
   }
 
@@ -256,6 +278,25 @@ export default function ProgramDetailScreen() {
               : 'Start Program'}
         </button>
       </div>
+
+      {/* Onboarding inputs modal */}
+      {inputsOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+          <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <ProgramInputsForm
+              program={program}
+              weightUnit={weightUnit}
+              title={`${program.name} needs a few details`}
+              description="These drive the prescribed weights for the main lifts."
+              submitLabel="Start Program"
+              busy={isPending}
+              error={startError}
+              onSubmit={activateProgram}
+              onCancel={() => { setInputsOpen(false); setStartError(null) }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

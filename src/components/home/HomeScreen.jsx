@@ -1,12 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Repeat, X } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
-import { useProgram } from '@/hooks/useProgram'
+import { useTodaysSession } from '@/hooks/useTodaysSession'
+import { useCreateOverride, useDeleteOverride } from '@/hooks/useScheduleOverrides'
+import { useUpdateInputs } from '@/hooks/useProgramConfig'
+import { useProfile } from '@/hooks/useProfile'
 import { totalVolume, formatVolume } from '@/lib/utils'
+import { computePrescribedWeight } from '@/lib/loadPrescription'
 import PrimaryButton from '@/components/shared/PrimaryButton'
 import CustomWorkoutSheet from '@/components/workout/CustomWorkoutSheet'
 import HomeHero from '@/components/home/HomeHero'
+import SessionPickerSheet from '@/components/SessionPickerSheet'
+import BlockEndProgressionModal from '@/components/program/BlockEndProgressionModal'
 
 function getMonday(date = new Date()) {
   const d = new Date(date)
@@ -90,9 +96,47 @@ function getThisWeekSessions(sessions) {
 export default function HomeScreen() {
   const navigate = useNavigate()
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [swapSheetOpen, setSwapSheetOpen] = useState(false)
+  const [confirmSkipOpen, setConfirmSkipOpen] = useState(false)
   const { data: sessions = [] } = useSessions()
-  const { data: programData, isLoading } = useProgram()
-  const { program, blockInfo, nextSession } = programData || {}
+  const { resolution, macroPosition, completedToday, isLoading, config, program, todayOverride } = useTodaysSession()
+  const { mutateAsync: createOverride, isPending: creatingOverride } = useCreateOverride()
+  const { mutateAsync: deleteOverride, isPending: deletingOverride } = useDeleteOverride()
+  const { mutateAsync: updateInputs, isPending: savingInputs } = useUpdateInputs()
+  const { data: profile } = useProfile()
+  const weightUnit = profile?.weightUnit ?? 'lbs'
+
+  // ─── Block-end progression prompt ──────────────────────────────────────────
+  // Trigger: scheduling moved into a new block (current_block_number lags) and
+  // we're at week 1 of a meso. Fires for any program whose userInputs declare
+  // a `progression` (5/3/1 TM bumps, Conjugate ME variant rotation, etc.).
+  const [tmPromptOpen, setTmPromptOpen] = useState(false)
+  const programHasProgression = !!program?.userInputs?.some(i => i.progression)
+  const shouldPromptBlockEnd = !!(
+    programHasProgression
+    && macroPosition
+    && !macroPosition.completed
+    && macroPosition.weekInMeso === 1
+    && macroPosition.blockNumber > (config?.current_block_number ?? 1)
+  )
+  useEffect(() => {
+    if (shouldPromptBlockEnd) setTmPromptOpen(true)
+  }, [shouldPromptBlockEnd])
+
+  async function handleBlockEndConfirm(updatedInputs) {
+    await updateInputs({
+      inputs: { ...(config?.inputs ?? {}), ...updatedInputs },
+      currentBlockNumber: macroPosition.blockNumber,
+    })
+    setTmPromptOpen(false)
+  }
+  async function handleBlockEndSkip() {
+    await updateInputs({
+      inputs: config?.inputs ?? {},
+      currentBlockNumber: macroPosition.blockNumber,
+    })
+    setTmPromptOpen(false)
+  }
 
   const streak = useMemo(() => computeWeekStreak(sessions), [sessions])
   const prsThisMonth = useMemo(() => computePRsThisMonth(sessions), [sessions])
@@ -107,57 +151,118 @@ export default function HomeScreen() {
     day: 'numeric',
   }).toUpperCase()
 
-  const weeksPerBlock = program?.blockStructure?.weeksPerBlock ?? 4
-
-  const completedToday = thisWeekSessions.some(s => s.date === todayStr)
   const todaySession = thisWeekSessions.find(s => s.date === todayStr)
+  const todaySessionObj = resolution?.type === 'session' ? resolution.session : null
+
+  const programCompleted = resolution?.type === 'completed'
 
   const heroVariant = isLoading ? null
-    : !program
-      ? (completedToday ? 'completed' : 'no-plan')
-      : nextSession
-        ? (completedToday ? 'in-plan-done' : 'in-plan')
-        : 'rest'
+    : programCompleted
+      ? 'program-done'
+      : !program
+        ? (completedToday ? 'completed' : 'no-plan')
+        : todaySessionObj
+          ? (completedToday ? 'in-plan-done' : 'in-plan')
+          : 'rest'
 
-  const sessionName = nextSession?.name?.split(' ')[0] ?? null
+  const sessionName = todaySessionObj?.name?.split(' ')[0] ?? null
   const completedSessionName = todaySession?.sessionName?.split(' ')[0] ?? null
 
-  const muscles = nextSession?.focus?.includes('·')
-    ? nextSession.focus.split('·').slice(1).join('·').trim()
-    : nextSession?.focus || ''
+  const muscles = todaySessionObj?.focus?.includes('·')
+    ? todaySessionObj.focus.split('·').slice(1).join('·').trim()
+    : todaySessionObj?.focus || ''
 
-  const estimatedMins = nextSession ? Math.round(nextSession.exercises.length * 8) : 0
+  const estimatedMins = todaySessionObj ? Math.round(todaySessionObj.exercises.length * 8) : 0
+
+  // Headline-lift prescription preview (first exercise with a prescription)
+  const headlinePrescription = useMemo(() => {
+    if (!todaySessionObj || !program || !config?.inputs) return null
+    for (const ex of todaySessionObj.exercises) {
+      const rx = computePrescribedWeight(ex, config.inputs, macroPosition, weightUnit)
+      if (!rx) continue
+      const headline = rx.perSet
+        ? `${rx.perSet[rx.perSet.length - 1].formattedWeight} × ${rx.perSet.length} sets`
+        : `${rx.formattedWeight} × ${ex.sets ?? 1} sets`
+      return { name: ex.name, label: headline }
+    }
+    return null
+  }, [todaySessionObj, program, config, macroPosition, weightUnit])
 
   const totalWeekVol = weekBars.reduce((s, v) => s + v, 0)
   const maxBar = Math.max(...weekBars, 1)
 
-  // For rest variant: find next upcoming session name from program order
+  // ─── Override actions ──────────────────────────────────────────────────────
+  const swapInProgress = todayOverride?.override_type === 'swap'
+  const skipInProgress = todayOverride?.override_type === 'skip'
+  const wasSwappedFromRest = swapInProgress && !todayOverride?.original_session_id
+
+  async function handleSwapPick(newSessionId) {
+    if (!config?.id || !newSessionId) return
+    await createOverride({
+      programConfigId: config.id,
+      date: todayStr,
+      overrideType: 'swap',
+      originalSessionId: todayOverride?.original_session_id ?? (resolution?.session?.id ?? null),
+      newSessionId,
+    })
+  }
+
+  async function handleSkipConfirm() {
+    if (!config?.id) return
+    await createOverride({
+      programConfigId: config.id,
+      date: todayStr,
+      overrideType: 'skip',
+      originalSessionId: resolution?.session?.id ?? null,
+    })
+    setConfirmSkipOpen(false)
+  }
+
+  async function handleCancelOverride() {
+    if (!config?.id || !todayOverride) return
+    await deleteOverride({ id: todayOverride.id })
+  }
+
+  // For rest-day variant copy: name of the next training day's session (within this week)
   const nextAfterRest = useMemo(() => {
-    if (!program || nextSession) return null
-    const completedThisWeek = new Set(thisWeekSessions.map(s => s.sessionId))
-    return program.sessions.find(s => !completedThisWeek.has(s.id))?.name ?? null
-  }, [program, nextSession, thisWeekSessions])
+    if (!program || todaySessionObj) return null
+    const m = program.microcycle
+    if (m?.type !== 'calendar') return null
+    const pattern = m.weeklyPatterns
+      ? (m.weeklyPatterns[(macroPosition?.weekInMeso ?? 1) - 1] ?? m.weeklyPatterns[0])
+      : ((config?.custom_pattern && config.custom_pattern.length) ? config.custom_pattern : m.pattern)
+    if (!pattern) return null
+    // dayIdx of today (using same weekStart as resolution; default Mon=0)
+    const todayDayIdx = (today.getDay() - 1 + 7) % 7
+    for (let off = 1; off < 7; off++) {
+      const id = pattern[(todayDayIdx + off) % 7]
+      if (id && id !== 'rest') {
+        return program.sessions.find(s => s.id === id)?.name ?? null
+      }
+    }
+    return null
+  }, [program, todaySessionObj, macroPosition, today, config])
 
   return (
     <div className="safe-top bg-bg-deep min-h-full pb-6">
       {/* Header row */}
       <div className="flex items-center justify-between px-4 pt-4">
         <span className="text-sm text-text-muted">{dateLabel}</span>
-        {blockInfo && (
+        {macroPosition && program && !programCompleted && (
           <div className="flex items-center gap-2 bg-white/10 rounded-full px-2.5 py-1.5">
             <span className="text-xs text-text-muted">{program.name}</span>
             <div className="w-0.5 h-0.5 rounded-full bg-accent flex-shrink-0" />
-            <span className="text-xs text-white">Wk {blockInfo.weekInBlock}</span>
+            <span className="text-xs text-white">Wk {macroPosition.weekInBlock}</span>
             <div className="flex items-end gap-1.5 h-1">
-              {Array.from({ length: weeksPerBlock }).map((_, i) => (
+              {Array.from({ length: macroPosition.weeksInBlock }).map((_, i) => (
                 <div
                   key={i}
                   className="w-px h-full flex-shrink-0"
-                  style={{ backgroundColor: i < blockInfo.weekInBlock ? '#f2a655' : '#3f3f3f' }}
+                  style={{ backgroundColor: i < macroPosition.weekInBlock ? '#f2a655' : '#3f3f3f' }}
                 />
               ))}
             </div>
-            <span className="text-xs text-text-muted">{blockInfo.weekInBlock}/{weeksPerBlock}</span>
+            <span className="text-xs text-text-muted">{macroPosition.weekInBlock}/{macroPosition.weeksInBlock}</span>
           </div>
         )}
       </div>
@@ -166,16 +271,38 @@ export default function HomeScreen() {
       <div className="px-4 mt-9">
         {isLoading ? (
           <div className="h-48 animate-pulse rounded-xl bg-bg-card" />
+        ) : programCompleted ? (
+          <div className="flex flex-col gap-4 w-full">
+            <div className="flex flex-col w-full">
+              <span className="font-commons text-[16px] text-text-muted leading-normal">Today we</span>
+              <p className="font-judge text-[72px] leading-none text-white">Done.</p>
+              <span className="font-commons text-[16px] text-text-muted leading-normal">
+                Program complete. Time to pick a new one.
+              </span>
+            </div>
+            <PrimaryButton onClick={() => navigate('/program')}>Pick a New Program</PrimaryButton>
+          </div>
         ) : (
           <HomeHero
             variant={heroVariant}
             sessionName={heroVariant === 'in-plan-done' ? completedSessionName : sessionName}
-            exerciseCount={nextSession?.exercises.length}
+            exerciseCount={todaySessionObj?.exercises.length}
             estimatedMins={estimatedMins}
             muscles={muscles}
             daysThisWeek={thisWeekSessions.length}
             nextSessionName={nextAfterRest}
-            onStart={() => navigate('/workout', { state: { session: nextSession, programId: program?.id } })}
+            onStart={() => {
+              const route = todaySessionObj?.type === 'conditioning' ? '/conditioning' : '/workout'
+              navigate(route, {
+                state: {
+                  session: todaySessionObj,
+                  programId: program?.id,
+                  programConfigId: config?.id,
+                  scheduledDate: todayStr,
+                  wasSwapped: swapInProgress,
+                },
+              })
+            }}
             onViewRecap={() => navigate('/history')}
             onLogRecovery={() => navigate('/workout', { state: { mode: 'custom', preset: 'recovery' } })}
             onMobility={() => navigate('/workout', { state: { mode: 'custom', preset: 'mobility' } })}
@@ -183,7 +310,120 @@ export default function HomeScreen() {
             onStartNewPlan={() => navigate('/program-selector')}
           />
         )}
+        {resolution?.skipped && (
+          <p className="font-commons text-[14px] text-text-muted mt-3">Today's session was skipped.</p>
+        )}
+
+        {/* Headline-lift prescription preview */}
+        {heroVariant === 'in-plan' && headlinePrescription && (
+          <p className="font-commons text-[14px] text-accent mt-3 tracking-[-0.2px]">
+            {headlinePrescription.name}: {headlinePrescription.label}
+          </p>
+        )}
+
+        {/* Override actions */}
+        {!isLoading && !programCompleted && program && (
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+            {heroVariant === 'in-plan' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSwapSheetOpen(true)}
+                  className="inline-flex items-center gap-1.5 font-commons text-[14px] text-accent hover:underline"
+                >
+                  <Repeat size={14} />
+                  {swapInProgress ? 'Swap again' : 'Swap'}
+                </button>
+                {!swapInProgress && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmSkipOpen(true)}
+                    className="font-commons text-[14px] text-text-muted hover:text-text-secondary"
+                  >
+                    Skip today
+                  </button>
+                )}
+                {swapInProgress && (
+                  <button
+                    type="button"
+                    onClick={handleCancelOverride}
+                    disabled={deletingOverride}
+                    className="inline-flex items-center gap-1 font-commons text-[14px] text-text-muted hover:text-text-secondary disabled:opacity-50"
+                  >
+                    <X size={14} />
+                    {wasSwappedFromRest ? 'Cancel train-anyway' : 'Cancel swap'}
+                  </button>
+                )}
+              </>
+            )}
+            {skipInProgress && (
+              <button
+                type="button"
+                onClick={handleCancelOverride}
+                disabled={deletingOverride}
+                className="inline-flex items-center gap-1 font-commons text-[14px] text-accent hover:underline disabled:opacity-50"
+              >
+                <X size={14} />
+                Undo skip
+              </button>
+            )}
+            {heroVariant === 'rest' && !skipInProgress && (
+              <button
+                type="button"
+                onClick={() => setSwapSheetOpen(true)}
+                className="inline-flex items-center gap-1.5 font-commons text-[14px] text-accent hover:underline"
+              >
+                <Repeat size={14} />
+                Train anyway
+              </button>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Session picker for swap / train-anyway */}
+      {program && (
+        <SessionPickerSheet
+          open={swapSheetOpen}
+          onClose={() => setSwapSheetOpen(false)}
+          program={program}
+          weekInMeso={macroPosition?.weekInMeso}
+          excludeSessionId={resolution?.session?.id}
+          title={heroVariant === 'rest' ? 'Train anyway' : 'Swap session'}
+          note={heroVariant === 'rest' ? "This won't affect your program timeline." : null}
+          onSelect={handleSwapPick}
+        />
+      )}
+
+      {/* Skip confirmation */}
+      {confirmSkipOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+          <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
+            <h3 className="font-bold text-text-primary text-lg mb-2">
+              Skip today's {resolution?.session?.name ?? 'session'}?
+            </h3>
+            <p className="text-text-secondary text-sm mb-5">
+              You can't undo this without manually editing the schedule.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmSkipOpen(false)}
+                disabled={creatingOverride}
+                className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSkipConfirm}
+                disabled={creatingOverride}
+                className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+              >
+                {creatingOverride ? 'Skipping…' : 'Skip'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Horizontal rule — only after in-plan hero, 36px below hero */}
       {heroVariant === 'in-plan' && <div className="h-px bg-[#3e3e3e] mt-9" />}
@@ -263,6 +503,18 @@ export default function HomeScreen() {
       )}
 
       <CustomWorkoutSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />
+
+      {/* 5/3/1 block-end TM update prompt */}
+      <BlockEndProgressionModal
+        open={tmPromptOpen}
+        program={program}
+        currentInputs={config?.inputs ?? {}}
+        weightUnit={weightUnit}
+        blockNumber={macroPosition?.blockNumber}
+        busy={savingInputs}
+        onConfirm={handleBlockEndConfirm}
+        onSkip={handleBlockEndSkip}
+      />
     </div>
   )
 }

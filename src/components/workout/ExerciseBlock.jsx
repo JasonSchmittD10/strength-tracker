@@ -7,14 +7,26 @@ import SetRow from './SetRow'
 import { EXERCISE_LIBRARY } from '@/lib/exercises'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
 import ExerciseInfoSheet from './ExerciseInfoSheet'
+import { resolveSetCount, resolveRIR, resolveExerciseDisplay } from '@/lib/exerciseResolution'
 
-export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetComplete, isProgramMode = false, onRemoveSet, isInSuperset = false, isSelected = false, onSelect, onAddSet, isActive = false, onRemove, isBuilderMode = false }) {
+export default function ExerciseBlock({
+  exercise, exIdx, sets, onChange, onSetComplete,
+  isProgramMode = false, onRemoveSet, isInSuperset = false,
+  isSelected = false, onSelect, onAddSet, isActive = false,
+  onRemove, isBuilderMode = false,
+  weekInMeso, programInputs,
+}) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-  const info = EXERCISE_LIBRARY[exercise.name] || {}
+  const display = resolveExerciseDisplay(exercise, programInputs)
+  const exerciseName = display.name
+  const info = EXERCISE_LIBRARY[exerciseName] || {}
   const primaryMuscle = info.muscles?.primary?.[0] || ''
   const inputType = info.inputType ?? 'reps'
+
+  const resolvedSets = resolveSetCount(exercise, weekInMeso) || (typeof exercise.sets === 'number' ? exercise.sets : null)
+  const rir = resolveRIR(exercise, weekInMeso)
 
   useEffect(() => {
     if (sets.length > 0 && sets.every(s => s.completed)) {
@@ -45,8 +57,10 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
 
   const metaParts = []
   if (primaryMuscle) metaParts.push(primaryMuscle)
-  if (exercise.sets && exercise.reps) metaParts.push(`${exercise.sets}×${exercise.reps} ${inputType === 'time' ? 'sec' : 'reps'}`)
+  if (resolvedSets && exercise.reps) metaParts.push(`${resolvedSets}×${exercise.reps} ${inputType === 'time' ? 'sec' : 'reps'}`)
+  if (rir != null) metaParts.push(`RIR ${rir}`)
   if (exercise.tempo) metaParts.push(`Tempo ${exercise.tempo}`)
+  if (display.cues) metaParts.push(display.cues)
 
   return (
     <div className={`bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] p-[16px] ${isInSuperset ? 'mb-0' : 'mb-[12px]'}`}>
@@ -70,7 +84,7 @@ export default function ExerciseBlock({ exercise, exIdx, sets, onChange, onSetCo
                 className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-snug"
                 onClick={e => { e.stopPropagation(); setInfoOpen(true) }}
               >
-                {exercise.name}
+                {exerciseName}
               </span>
               {collapsed && sets.every(s => s.completed) && (
                 <span className="text-xs text-success font-semibold">Done</span>

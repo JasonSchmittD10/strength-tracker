@@ -1,30 +1,23 @@
 import JourneyTile from './JourneyTile'
-
-function getSessionsPerWeek(program) {
-  const isWeekIndexed = program.sessionOrder.some(id => /-w\d+$/.test(id))
-  return isWeekIndexed
-    ? program.sessionOrder.length / program.blockStructure.weeksPerBlock
-    : program.sessionOrder.length
-}
+import { getWeeksInMacrocycle, getMesoForWeek, getSessionsPerWeek } from '@/lib/scheduling'
 
 export default function JourneyBlocks({ program, blockInfo }) {
-  const { weeksPerBlock, blockNames, phaseByWeek } = program.blockStructure
+  const weeksPerBlock = getWeeksInMacrocycle(program)
+  const blockName = program.macrocycle.name
   const sessionsPerWeek = getSessionsPerWeek(program)
+  const isOneShot = program.macrocycle.repeatStrategy === 'one-shot'
 
   // Use safe fallback if no start date yet
   const currentBlock = blockInfo?.blockNumber ?? 1
   const currentWeek = blockInfo?.weekInBlock ?? 1
 
-  // Show 3 blocks starting from max(1, currentBlock - 1)
-  const startBlock = Math.max(1, currentBlock - 1)
-  const displayBlocks = [startBlock, startBlock + 1, startBlock + 2]
+  // Show 3 blocks for repeating programs; just 1 for one-shot
+  const startBlock = isOneShot ? 1 : Math.max(1, currentBlock - 1)
+  const displayBlocks = isOneShot ? [1] : [startBlock, startBlock + 1, startBlock + 2]
 
   return (
     <div className="flex flex-col gap-[24px] w-full">
       {displayBlocks.map((blockNum, idx) => {
-        // Block name: cycle through blockNames array
-        const blockNameIdx = (blockNum - 1) % blockNames.length
-        const blockName = blockNames[blockNameIdx]
         const isCurrent = blockNum === currentBlock
         const isPast = blockNum < currentBlock
 
@@ -54,8 +47,9 @@ export default function JourneyBlocks({ program, blockInfo }) {
             <div className="flex gap-[8px]">
               {Array.from({ length: weeksPerBlock }, (_, weekIdx) => {
                 const weekNum = weekIdx + 1
-                const isDeload = weekNum === weeksPerBlock
-                const weekLabel = isDeload ? 'DELOAD' : `Week ${weekNum}`
+                const lookup = getMesoForWeek(program, weekNum)
+                const isDeload = !!lookup?.isDeload
+                const weekLabel = isDeload ? 'DELOAD' : (lookup?.weekLabel ?? `Week ${weekNum}`)
 
                 let tileState
                 if (isPast) {

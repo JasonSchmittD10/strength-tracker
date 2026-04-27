@@ -4,6 +4,7 @@ import { epley, formatDuration, totalVolume } from '@/lib/utils'
 import { useSessions } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
 import { useUnitPreference } from '@/hooks/useProfile'
+import { formatWeight, convertWeight } from '@/lib/units'
 import { normalizeExerciseName } from '@/lib/exercises'
 import copyIcon from '@/assets/icons/icon-copy.svg'
 import trendUpIcon from '@/assets/icons/icon-trend-up.svg'
@@ -33,7 +34,7 @@ function StatTile({ label, value }) {
 }
 
 function SetRow({ setNum, set, unit, isLast }) {
-  const weightStr = set.weight ? `${set.weight} ${unit}` : ''
+  const weightStr = set.weight ? formatWeight(set.weight, unit) : ''
   const repsStr = set.duration_seconds
     ? `${set.duration_seconds} sec`
     : set.reps ? `${set.reps} reps` : '—'
@@ -118,7 +119,7 @@ export default function WorkoutSummary({
     const lines = session.exercises.map(ex => {
       const sets = ex.sets
         .filter(s => s.completed && (s.weight || s.reps))
-        .map(s => s.weight ? `${s.weight}×${s.reps}` : `${s.reps} reps`)
+        .map(s => s.weight ? `${formatWeight(s.weight, unit, { showUnit: false })}×${s.reps}` : `${s.reps} reps`)
         .join(' ')
       return sets ? `${ex.name}\n${sets}` : ex.name
     }).join('\n')
@@ -143,8 +144,12 @@ export default function WorkoutSummary({
     }
   }
 
-  const volDisplay = vol >= 1000 ? (vol / 1000).toFixed(1) : String(vol)
-  const showK = vol >= 1000
+  const displayVol = unit === 'kg' ? convertWeight(vol, 'lbs', 'kg') : vol
+  const volDisplay = displayVol >= 1000 ? (displayVol / 1000).toFixed(1) : String(Math.round(displayVol))
+  const showK = displayVol >= 1000
+  const displayVolDiff = volDiff == null
+    ? null
+    : Math.round(unit === 'kg' ? convertWeight(volDiff, 'lbs', 'kg') : volDiff)
 
   if (!open) return null
 
@@ -182,13 +187,13 @@ export default function WorkoutSummary({
           </div>
 
           {/* Volume comparison badge */}
-          {volDiff !== null && (
+          {displayVolDiff !== null && (
             <div className="flex items-center gap-[8px] bg-[rgba(19,134,75,0.05)] border border-[rgba(19,134,75,0.15)] rounded-[8px] px-[8px] py-[4px]">
               <div className="w-[14px] h-[24px] flex-shrink-0 flex items-center justify-center">
                 <img src={trendUpIcon} alt="" className="w-full h-full object-contain" />
               </div>
               <span className="font-commons font-semibold text-[18px] text-[#13864b] tracking-[-0.5px] whitespace-nowrap">
-                {volDiff >= 0 ? '+' : ''}{volDiff} {unit} vs. last session
+                {displayVolDiff >= 0 ? '+' : ''}{displayVolDiff} {unit} vs. last session
               </span>
             </div>
           )}

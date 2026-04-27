@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useProgram, useSaveConfig } from '@/hooks/useProgram'
-import { PROGRAMS } from '@/lib/programs'
+import { useEndProgram, useUpdateInputs } from '@/hooks/useProgramConfig'
+import { useTodaysSession } from '@/hooks/useTodaysSession'
+import { useProfile } from '@/hooks/useProfile'
+import { formatWeight } from '@/lib/units'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import DestructiveButton from '@/components/shared/DestructiveButton'
 import clockIcon from '@/assets/icons/icon-clock.svg'
 import ProgressIndicator from '@/components/progress/ProgressIndicator'
 import JourneyBlocks from '@/components/progress/JourneyBlocks'
-import ProgramTile from '@/components/progress/ProgramTile'
+import ProgramBrowser from '@/components/ProgramBrowser'
+import ProgramInputsForm from '@/components/ProgramInputsForm'
 
 // ─── Next Up session tile ─────────────────────────────────────────────────────
 function NextUpTile({ session, programId, onStart }) {
@@ -43,20 +46,43 @@ function NextUpTile({ session, programId, onStart }) {
 }
 
 // ─── On-program state ─────────────────────────────────────────────────────────
-function OnProgram({ program, blockInfo, nextSession, config }) {
+function OnProgram({ program, config, resolution, macroPosition, completedToday }) {
   const navigate = useNavigate()
-  const saveConfig = useSaveConfig()
+  const endProgram = useEndProgram()
+  const { mutateAsync: updateInputs, isPending: savingInputs } = useUpdateInputs()
+  const { data: profile } = useProfile()
   const [confirmEndOpen, setConfirmEndOpen] = useState(false)
+  const [editInputsOpen, setEditInputsOpen] = useState(false)
+  const today = new Date().toISOString().slice(0, 10)
+  const todaySession = resolution?.type === 'session' ? resolution.session : null
+  const programDone = resolution?.type === 'completed'
+  const weightUnit = profile?.weightUnit ?? 'lbs'
+  const hasInputs = !!program.userInputs?.length
+  const inputs = config?.inputs ?? {}
 
   function handleStart() {
-    navigate('/workout', { state: { session: nextSession, programId: program.id } })
+    const route = todaySession?.type === 'conditioning' ? '/conditioning' : '/workout'
+    navigate(route, {
+      state: {
+        session: todaySession,
+        programId: program.id,
+        programConfigId: config?.id,
+        scheduledDate: today,
+      },
+    })
   }
 
   function handleEndConfirmed() {
-    saveConfig.mutate(
-      { ...config, activeProgramId: null, programStartDate: null },
-      { onSuccess: () => setConfirmEndOpen(false) }
-    )
+    endProgram.mutate(today, { onSuccess: () => setConfirmEndOpen(false) })
+  }
+
+  async function handleSaveInputs(nextInputs) {
+    try {
+      await updateInputs({ inputs: nextInputs })
+      setEditInputsOpen(false)
+    } catch (e) {
+      console.error('Failed to save inputs', e)
+    }
   }
 
   return (
@@ -67,36 +93,109 @@ function OnProgram({ program, blockInfo, nextSession, config }) {
           <span className="font-commons text-[14px] text-[#8b8b8b] leading-[14px]">PROGRAM</span>
           <p className="font-judge text-[48px] text-white leading-[60px]">{program.name}</p>
         </div>
-        {blockInfo && (
+        {macroPosition && !programDone && (
           <ProgressIndicator
-            blockNumber={blockInfo.blockNumber}
-            phaseName={blockInfo.phaseName}
-            weeksPerBlock={blockInfo.weeksPerBlock}
-            weekInBlock={blockInfo.weekInBlock}
+            blockNumber={macroPosition.blockNumber}
+            phaseName={macroPosition.weekLabel}
+            weeksPerBlock={macroPosition.weeksInBlock}
+            weekInBlock={macroPosition.weekInBlock}
           />
         )}
       </div>
 
-      {/* Next Up */}
-      {nextSession && (
+      {/* Today's session — or rest / completed state */}
+      {todaySession && !completedToday && (
         <div className="flex flex-col gap-[8px]">
-          <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">Next Up</span>
-          <NextUpTile
-            session={nextSession}
-            programId={program.id}
-            onStart={handleStart}
-          />
+          <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">Today</span>
+          <NextUpTile session={todaySession} programId={program.id} onStart={handleStart} />
+        </div>
+      )}
+      {todaySession && completedToday && (
+        <div className="flex flex-col gap-[8px]">
+          <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">Today</span>
+          <p className="font-commons text-[18px] text-white tracking-[-0.5px]">
+            {todaySession.name} — done.
+          </p>
+        </div>
+      )}
+      {resolution?.type === 'rest' && (
+        <div className="flex flex-col gap-[8px]">
+          <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">Today</span>
+          <p className="font-commons text-[18px] text-white tracking-[-0.5px]">
+            Rest day{resolution.skipped ? ' (skipped session)' : '.'}
+          </p>
+        </div>
+      )}
+      {programDone && (
+        <div className="flex flex-col gap-[8px]">
+          <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">Status</span>
+          <p className="font-commons text-[18px] text-white tracking-[-0.5px]">
+            Program complete. Pick a new one below.
+          </p>
         </div>
       )}
 
       {/* Journey — all blocks */}
       <JourneyBlocks
         program={program}
-        blockInfo={blockInfo ?? { blockNumber: 1, weekInBlock: 1, weeksPerBlock: program.blockStructure.weeksPerBlock }}
+        blockInfo={macroPosition ?? { blockNumber: 1, weekInBlock: 1 }}
       />
 
-      {/* Switch + End Program */}
+      {/* Program inputs (TMs / 1RMs) — only for programs that need them */}
+      {hasInputs && (
+        <div className="flex flex-col gap-[12px]">
+          <div className="flex items-center justify-between">
+            <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">Your numbers</span>
+            <button
+              onClick={() => setEditInputsOpen(true)}
+              className="font-commons text-[14px] text-accent hover:underline"
+            >
+              Edit
+            </button>
+          </div>
+          <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] divide-y divide-[rgba(255,255,255,0.06)]">
+            {program.userInputs.map(field => {
+              const v = inputs[field.id]
+              return (
+                <div key={field.id} className="flex items-center justify-between px-[16px] py-[12px]">
+                  <span className="font-commons text-[16px] text-white tracking-[-0.2px]">{field.label}</span>
+                  <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px]">
+                    {v == null || v === '' ? '—' : formatWeight(v, weightUnit)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Edit inputs modal */}
+      {editInputsOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+          <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <ProgramInputsForm
+              program={program}
+              weightUnit={weightUnit}
+              initialValues={inputs}
+              title="Edit your numbers"
+              description="Used to prescribe weights for the main lifts."
+              submitLabel="Save"
+              busy={savingInputs}
+              onSubmit={handleSaveInputs}
+              onCancel={() => setEditInputsOpen(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Switch + Edit Schedule + End Program */}
       <div className="flex flex-col gap-[16px]">
+        <button
+          onClick={() => navigate('/edit-schedule')}
+          className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] px-[16px] py-[12px] font-commons font-bold text-[18px] text-white tracking-[-0.36px]"
+        >
+          Edit Schedule
+        </button>
         <button
           onClick={() => navigate('/program-selector')}
           className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] px-[16px] py-[12px] font-commons font-bold text-[18px] text-white tracking-[-0.36px]"
@@ -119,12 +218,12 @@ function OnProgram({ program, blockInfo, nextSession, config }) {
               </p>
             </div>
             <div className="flex flex-col gap-[10px]">
-              <DestructiveButton onClick={handleEndConfirmed} disabled={saveConfig.isPending}>
-                {saveConfig.isPending ? 'Ending…' : 'End Program'}
+              <DestructiveButton onClick={handleEndConfirmed} disabled={endProgram.isPending}>
+                {endProgram.isPending ? 'Ending…' : 'End Program'}
               </DestructiveButton>
               <button
                 onClick={() => setConfirmEndOpen(false)}
-                disabled={saveConfig.isPending}
+                disabled={endProgram.isPending}
                 className="w-full h-[46px] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] font-commons font-bold text-[18px] text-white disabled:opacity-50"
               >
                 Cancel
@@ -139,9 +238,6 @@ function OnProgram({ program, blockInfo, nextSession, config }) {
 
 // ─── No-program state ─────────────────────────────────────────────────────────
 function NoProgram() {
-  const navigate = useNavigate()
-  const programs = Object.values(PROGRAMS)
-
   return (
     <div className="px-[16px] pt-[90px] pb-[40px] flex flex-col gap-[36px]">
       {/* Header */}
@@ -153,32 +249,16 @@ function NoProgram() {
         </p>
       </div>
 
-      {/* Program list */}
-      <div className="flex flex-col gap-[12px]">
-        <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px]">
-          All Programs — {programs.length}
-        </span>
-        {programs.map(program => (
-          <button
-            key={program.id}
-            onClick={() => navigate(`/program-detail/${program.id}`)}
-            className="w-full text-left"
-          >
-            <ProgramTile program={program} />
-          </button>
-        ))}
-      </div>
+      <ProgramBrowser />
     </div>
   )
 }
 
 // ─── Main tab ─────────────────────────────────────────────────────────────────
 export default function ProgressTab() {
-  const { data: programData, isLoading } = useProgram()
+  const { resolution, macroPosition, completedToday, isLoading, config, program } = useTodaysSession()
 
   if (isLoading) return <LoadingSpinner />
-
-  const { program, blockInfo, nextSession, config } = programData || {}
 
   if (!program) {
     return <NoProgram />
@@ -187,9 +267,10 @@ export default function ProgressTab() {
   return (
     <OnProgram
       program={program}
-      blockInfo={blockInfo}
-      nextSession={nextSession}
       config={config}
+      resolution={resolution}
+      macroPosition={macroPosition}
+      completedToday={completedToday}
     />
   )
 }

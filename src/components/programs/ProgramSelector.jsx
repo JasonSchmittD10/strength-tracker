@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check } from 'lucide-react'
-import { useProgram, useSaveConfig } from '@/hooks/useProgram'
+import { useProgramConfig, useStartProgram } from '@/hooks/useProgramConfig'
+import { useProfile } from '@/hooks/useProfile'
 import { PROGRAMS } from '@/lib/programs'
+import { getWeeksInMacrocycle } from '@/lib/scheduling'
+import ProgramInputsForm from '@/components/ProgramInputsForm'
 
 const COMING_SOON = []
 
@@ -13,30 +16,41 @@ function deriveStructureSummary(program) {
 }
 
 function deriveBlockSummary(program) {
-  const { weeksPerBlock, phaseByWeek } = program.blockStructure
-  const phases = [...new Set(Object.values(phaseByWeek).filter(p => !p.toLowerCase().includes('deload')))]
-  return `${weeksPerBlock}-week blocks · ${phases.slice(0, 2).join(' & ')}`
+  const weeks = getWeeksInMacrocycle(program)
+  const mesoNames = program.macrocycle.mesocycles.map(m => m.name)
+  const unique = [...new Set(mesoNames)]
+  return `${weeks}-week blocks · ${unique.slice(0, 2).join(' & ')}`
 }
 
 export default function ProgramSelector() {
   const navigate = useNavigate()
-  const { data: programData } = useProgram()
-  const { mutateAsync: saveConfig, isPending } = useSaveConfig()
+  const { config } = useProgramConfig()
+  const { data: profile } = useProfile()
+  const { mutateAsync: startProgram, isPending } = useStartProgram()
 
-  const activeId = programData?.config?.activeProgramId ?? 'ppl-x2'
+  const activeId = config?.program_id ?? null
+  const weightUnit = profile?.weightUnit ?? 'lbs'
   const [confirmProgram, setConfirmProgram] = useState(null)
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0])
   const [configError, setConfigError] = useState(null)
+  const [inputsOpen, setInputsOpen] = useState(false)
+
+  const requiresInputs = !!confirmProgram?.userInputs?.some(i => i.required)
 
   async function handleStartProgram() {
+    if (requiresInputs) {
+      setInputsOpen(true)
+      return
+    }
+    await activateProgram({})
+  }
+
+  async function activateProgram(inputs) {
     setConfigError(null)
     try {
-      await saveConfig({
-        ...programData?.config,
-        activeProgramId: confirmProgram.id,
-        programStartDate: startDate,
-      })
+      await startProgram({ programId: confirmProgram.id, startedAt: startDate, inputs })
       setConfirmProgram(null)
+      setInputsOpen(false)
       navigate('/program')
     } catch {
       setConfigError('Failed to update program. Please try again.')
@@ -107,7 +121,7 @@ export default function ProgramSelector() {
       </div>
 
       {/* Confirm program change dialog */}
-      {confirmProgram && (
+      {confirmProgram && !inputsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
           <div
             role="dialog"
@@ -139,9 +153,28 @@ export default function ProgramSelector() {
                 disabled={isPending}
                 className="flex-1 py-2.5 bg-accent text-black rounded-xl text-sm font-semibold disabled:opacity-50"
               >
-                {isPending ? 'Starting\u2026' : 'Start Program'}
+                {isPending ? 'Starting\u2026' : requiresInputs ? 'Next' : 'Start Program'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding inputs modal */}
+      {inputsOpen && confirmProgram && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+          <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <ProgramInputsForm
+              program={confirmProgram}
+              weightUnit={weightUnit}
+              title={`${confirmProgram.name} needs a few details`}
+              description="These drive the prescribed weights for the main lifts."
+              submitLabel="Start Program"
+              busy={isPending}
+              error={configError}
+              onSubmit={activateProgram}
+              onCancel={() => { setInputsOpen(false); setConfigError(null) }}
+            />
           </div>
         </div>
       )}

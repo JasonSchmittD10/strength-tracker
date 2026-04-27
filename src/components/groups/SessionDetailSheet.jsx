@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 import { supabase } from '@/lib/supabase'
 import { formatDuration, formatVolume } from '@/lib/utils'
+import { useUnitPreference } from '@/hooks/useProfile'
+import { formatWeight, convertWeight } from '@/lib/units'
 
 const TAG_COLORS = {
   push: 'bg-push/15 text-push border-push/30',
@@ -24,6 +26,7 @@ function getSessionTag(sessionName) {
 export default function SessionDetailSheet({ open, onClose, activity }) {
   const [sessionData, setSessionData] = useState(null)
   const [loading, setLoading] = useState(false)
+  const unit = useUnitPreference()
 
   useEffect(() => {
     if (!open || !activity?.session_id) return
@@ -73,8 +76,8 @@ export default function SessionDetailSheet({ open, onClose, activity }) {
       <div className="flex gap-4 mb-5 text-sm">
         {totalVolume != null && (
           <div>
-            <span className="font-bold text-text-primary">{formatVolume(totalVolume)}</span>
-            <span className="text-text-muted ml-1">kg</span>
+            <span className="font-bold text-text-primary">{formatVolume(convertWeight(totalVolume, 'lbs', unit))}</span>
+            <span className="text-text-muted ml-1">{unit}</span>
           </div>
         )}
         {durationSeconds > 0 && (
@@ -116,14 +119,14 @@ export default function SessionDetailSheet({ open, onClose, activity }) {
                       className={`text-xs flex items-center gap-2 py-1 px-2 rounded-lg ${s.completed === false ? 'opacity-40' : 'bg-bg-primary/50'}`}
                     >
                       <span className="text-text-muted w-10">Set {j + 1}</span>
-                      <span className="text-text-primary font-medium">{s.weight}kg × {s.reps}</span>
+                      <span className="text-text-primary font-medium">{formatWeight(s.weight, unit)} × {s.reps}</span>
                       {s.rpe && <span className="text-text-muted">@ RPE {s.rpe}</span>}
                     </div>
                   ))}
                 </div>
                 {exVolume > 0 && (
                   <div className="text-xs text-text-muted mt-1.5 px-2">
-                    Total: {formatVolume(exVolume)} kg
+                    Total: {formatVolume(convertWeight(exVolume, 'lbs', unit))} {unit}
                   </div>
                 )}
               </div>

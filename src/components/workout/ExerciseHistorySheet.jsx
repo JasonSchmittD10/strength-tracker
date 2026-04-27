@@ -1,6 +1,7 @@
 import { useSessionsByExercise } from '@/hooks/useSessions'
 import { epley, formatDate } from '@/lib/utils'
 import { useUnitPreference } from '@/hooks/useProfile'
+import { formatWeight } from '@/lib/units'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 
 export default function ExerciseHistorySheet({ open, onClose, exerciseName }) {
@@ -24,10 +25,10 @@ export default function ExerciseHistorySheet({ open, onClose, exerciseName }) {
             <div className="text-xs text-text-muted mb-1">{formatDate(s.date, true)} · {s.sessionName}</div>
             {sets.map((set, j) => (
               <div key={j} className="text-sm text-text-secondary">
-                {j + 1}. {set.weight}{unit} × {set.reps} reps{set.rpe ? ` @ ${set.rpe} RPE` : ''}
+                {j + 1}. {formatWeight(set.weight, unit)} × {set.reps} reps{set.rpe ? ` @ ${set.rpe} RPE` : ''}
               </div>
             ))}
-            {e1rm && <div className="text-xs text-accent mt-1">e1RM: {e1rm}{unit}</div>}
+            {e1rm && <div className="text-xs text-accent mt-1">e1RM: {formatWeight(e1rm, unit)}</div>}
           </div>
         )
       })}
