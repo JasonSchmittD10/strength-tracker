@@ -3,6 +3,10 @@ export const PROGRAMS = {
     id: 'phat',
     name: 'PHAT',
     description: 'Power Hypertrophy Adaptive Training — heavy power days paired with high-volume hypertrophy days.',
+    designer: 'Layne Norton',
+    tags: ['BEGINNER', 'HYPERTROPHY'],
+    equipmentNeeded: ['Barbell', 'Squat Rack', 'Bench', 'Dumbbells', 'Cables'],
+    equipmentNote: 'This is considered a full gym plan, meaning you’ll need access to most equipment types.',
     blockStructure: {
       weeksPerBlock: 4,
       deloadWeek: 4,
@@ -10,6 +14,7 @@ export const PROGRAMS = {
       phaseByWeek: { 1: 'Foundation', 2: 'Accumulation', 3: 'Intensification', 4: 'Deload' },
     },
     sessionOrder: ['upper-power', 'lower-power', 'back-shoulders-hyp', 'lower-hyp', 'chest-arms-hyp'],
+    weekSchedule: ['upper-power', 'lower-power', null, 'back-shoulders-hyp', 'lower-hyp', 'chest-arms-hyp', null],
     sessions: [
       {
         id: 'upper-power', name: 'Upper Power', tag: 'push', tagLabel: 'POWER',
@@ -74,6 +79,9 @@ export const PROGRAMS = {
     id: 'ppl-x2',
     name: 'PPL × 2',
     description: 'Push / Pull / Legs twice per week — strength & hypertrophy',
+    tags: ['INTERMEDIATE', 'STRENGTH', 'HYPERTROPHY'],
+    equipmentNeeded: ['Barbell', 'Squat Rack', 'Bench', 'Dumbbells', 'Cables'],
+    equipmentNote: 'This is considered a full gym plan, meaning you’ll need access to most equipment types.',
     blockStructure: {
       weeksPerBlock: 4,
       deloadWeek: 4,
@@ -81,6 +89,7 @@ export const PROGRAMS = {
       phaseByWeek: { 1: 'Foundation', 2: 'Accumulation', 3: 'Intensification', 4: 'Deload' },
     },
     sessionOrder: ['push-a', 'pull-a', 'legs-a', 'push-b', 'pull-b', 'legs-b'],
+    weekSchedule: ['push-a', 'pull-a', 'legs-a', null, 'push-b', 'pull-b', 'legs-b'],
     sessions: [
       {
         id: 'push-a', name: 'Push A', tag: 'push', tagLabel: 'PUSH',
@@ -160,6 +169,10 @@ export const PROGRAMS = {
     id: '531',
     name: '5/3/1 — Wendler',
     description: 'Percentage-based strength program. All % use your Training Max (TM) = 90% of true 1RM. Set a TM for each lift before starting. After each 4-week cycle: +5 lb OHP & Bench, +10 lb Squat & Deadlift.',
+    designer: 'Jim Wendler',
+    tags: ['INTERMEDIATE', 'STRENGTH'],
+    equipmentNeeded: ['Barbell', 'Squat Rack', 'Bench', 'Pull-Up Bar'],
+    equipmentNote: 'Barbell-focused strength program. You’ll need a rack, bench, and a place to pull from the floor.',
     blockStructure: {
       weeksPerBlock: 4,
       deloadWeek: 4,
@@ -172,6 +185,7 @@ export const PROGRAMS = {
       'ohp-w3', 'dead-w3', 'bench-w3', 'squat-w3',
       'ohp-w4', 'dead-w4', 'bench-w4', 'squat-w4',
     ],
+    weekSchedule: ['ohp-w1', 'dead-w1', null, 'bench-w1', 'squat-w1', null, null],
     sessions: [
       // ── Week 1 — The 5s (65%×5 / 75%×5 / 85%×5+) ──────────────────────
       {
@@ -339,6 +353,9 @@ export const PROGRAMS = {
     id: 'phul',
     name: 'PHUL',
     description: 'Power Hypertrophy Upper Lower — 4 days/week alternating power and hypertrophy focus for upper and lower body.',
+    tags: ['INTERMEDIATE', 'POWER', 'HYPERTROPHY'],
+    equipmentNeeded: ['Barbell', 'Squat Rack', 'Bench', 'Dumbbells', 'Cables'],
+    equipmentNote: 'This is considered a full gym plan, meaning you’ll need access to most equipment types.',
     blockStructure: {
       weeksPerBlock: 4,
       deloadWeek: 4,
@@ -346,6 +363,7 @@ export const PROGRAMS = {
       phaseByWeek: { 1: 'Foundation', 2: 'Accumulation', 3: 'Intensification', 4: 'Deload' },
     },
     sessionOrder: ['upper-power', 'lower-power', 'upper-hyp', 'lower-hyp'],
+    weekSchedule: ['upper-power', 'lower-power', null, 'upper-hyp', 'lower-hyp', null, null],
     sessions: [
       {
         id: 'upper-power', name: 'Upper Power', tag: 'push', tagLabel: 'POWER',
@@ -405,6 +423,10 @@ export const PROGRAMS = {
     id: 'gvt-6wk',
     name: 'German Volume Training',
     description: 'Classic Poliquin 10×10 hypertrophy block. Main lifts start at 60% 1RM (weeks 1–2), advance to 62.5% (weeks 3–4), then 65% (weeks 5–6). Only increase load when all 10×10 reps are completed with clean tempo. Set your weights manually based on your 1RM.',
+    designer: 'Charles Poliquin',
+    tags: ['ADVANCED', 'HYPERTROPHY'],
+    equipmentNeeded: ['Barbell', 'Squat Rack', 'Bench', 'Dumbbells', 'Cables', 'Pull-Up Bar'],
+    equipmentNote: 'High-volume program. You’ll need access to most equipment types and enough rest space between supersets.',
     blockStructure: {
       weeksPerBlock: 6,
       deloadWeek: null,
@@ -412,6 +434,7 @@ export const PROGRAMS = {
       phaseByWeek: { 1: '60% Phase', 2: '60% Phase', 3: '62.5% Phase', 4: '62.5% Phase', 5: '65% Phase', 6: '65% Phase' },
     },
     sessionOrder: ['gvt-chest-back', 'gvt-legs-abs', 'gvt-arms-shoulders'],
+    weekSchedule: ['gvt-chest-back', null, 'gvt-legs-abs', null, 'gvt-arms-shoulders', null, null],
     sessions: [
       {
         id: 'gvt-chest-back', name: 'Chest & Back', tag: 'push', tagLabel: 'GVT',
