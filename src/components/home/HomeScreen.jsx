@@ -9,6 +9,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { totalVolume, formatVolume } from '@/lib/utils'
 import { computePrescribedWeight } from '@/lib/loadPrescription'
 import PrimaryButton from '@/components/shared/PrimaryButton'
+import DestructiveButton from '@/components/shared/DestructiveButton'
 import CustomWorkoutSheet from '@/components/workout/CustomWorkoutSheet'
 import HomeHero from '@/components/home/HomeHero'
 import SessionPickerSheet from '@/components/SessionPickerSheet'
@@ -403,7 +404,7 @@ export default function HomeScreen() {
 
       {/* Skip confirmation */}
       {confirmSkipOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
           <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
             <h3 className="font-bold text-text-primary text-lg mb-2">
               Skip today's {resolution?.session?.name ?? 'session'}?
@@ -412,20 +413,12 @@ export default function HomeScreen() {
               You can't undo this without manually editing the schedule.
             </p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmSkipOpen(false)}
-                disabled={creatingOverride}
-                className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary disabled:opacity-50"
-              >
+              <PrimaryButton variant="secondary" onClick={() => setConfirmSkipOpen(false)} disabled={creatingOverride}>
                 Cancel
-              </button>
-              <button
-                onClick={handleSkipConfirm}
-                disabled={creatingOverride}
-                className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50"
-              >
+              </PrimaryButton>
+              <DestructiveButton onClick={handleSkipConfirm} disabled={creatingOverride}>
                 {creatingOverride ? 'Skipping…' : 'Skip'}
-              </button>
+              </DestructiveButton>
             </div>
           </div>
         </div>

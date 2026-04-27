@@ -6,6 +6,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { formatWeight } from '@/lib/units'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
 import DestructiveButton from '@/components/shared/DestructiveButton'
+import PrimaryButton from '@/components/shared/PrimaryButton'
 import clockIcon from '@/assets/icons/icon-clock.svg'
 import ProgressIndicator from '@/components/progress/ProgressIndicator'
 import JourneyBlocks from '@/components/progress/JourneyBlocks'
@@ -171,7 +172,7 @@ function OnProgram({ program, config, resolution, macroPosition, completedToday 
 
       {/* Edit inputs modal */}
       {editInputsOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
           <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <ProgramInputsForm
               program={program}
@@ -209,7 +210,7 @@ function OnProgram({ program, config, resolution, macroPosition, completedToday 
 
       {/* Confirm end-program dialog */}
       {confirmEndOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-[24px]">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-[24px]">
           <div className="bg-[#161616] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-[24px] w-full max-w-sm flex flex-col gap-[20px]">
             <div className="flex flex-col gap-[6px]">
               <h3 className="font-judge text-[22px] text-white leading-snug">End program?</h3>
@@ -221,13 +222,9 @@ function OnProgram({ program, config, resolution, macroPosition, completedToday 
               <DestructiveButton onClick={handleEndConfirmed} disabled={endProgram.isPending}>
                 {endProgram.isPending ? 'Ending…' : 'End Program'}
               </DestructiveButton>
-              <button
-                onClick={() => setConfirmEndOpen(false)}
-                disabled={endProgram.isPending}
-                className="w-full h-[46px] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] font-commons font-bold text-[18px] text-white disabled:opacity-50"
-              >
+              <PrimaryButton variant="secondary" onClick={() => setConfirmEndOpen(false)} disabled={endProgram.isPending}>
                 Cancel
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         </div>

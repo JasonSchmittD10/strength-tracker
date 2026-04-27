@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { convertWeight } from '@/lib/units'
+import PrimaryButton from '@/components/shared/PrimaryButton'
 
 // Reusable form for collecting / editing a program's userInputs.
 //
@@ -128,22 +129,13 @@ export default function ProgramInputsForm({
 
       <div className="flex gap-3">
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={busy}
-            className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary disabled:opacity-50"
-          >
+          <PrimaryButton variant="secondary" onClick={onCancel} disabled={busy}>
             Cancel
-          </button>
+          </PrimaryButton>
         )}
-        <button
-          type="submit"
-          disabled={!allValid || busy}
-          className="flex-1 py-2.5 bg-accent text-black rounded-xl text-sm font-semibold disabled:opacity-50"
-        >
+        <PrimaryButton type="submit" disabled={!allValid || busy}>
           {busy ? 'Saving…' : submitLabel}
-        </button>
+        </PrimaryButton>
       </div>
     </form>
   )

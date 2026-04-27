@@ -6,6 +6,8 @@ import { useGroupActivity } from '@/hooks/useActivity'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import WorkoutActivityCard from './WorkoutActivityCard'
+import PrimaryButton from '@/components/shared/PrimaryButton'
+import DestructiveButton from '@/components/shared/DestructiveButton'
 
 function MemberRow({ member }) {
   const profile = member.profiles
@@ -35,7 +37,7 @@ function MemberRow({ member }) {
 
 function LeaveConfirmDialog({ isAdmin, isLastMember, onConfirm, onCancel, isLeaving }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
       <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-text-primary text-lg mb-2">Leave Group?</h3>
         <p className="text-text-secondary text-sm mb-5">
@@ -46,19 +48,10 @@ function LeaveConfirmDialog({ isAdmin, isLastMember, onConfirm, onCancel, isLeav
               : 'You will no longer see this group or its activity feed.'}
         </p>
         <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isLeaving}
-            className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50"
-          >
+          <PrimaryButton variant="secondary" onClick={onCancel}>Cancel</PrimaryButton>
+          <DestructiveButton onClick={onConfirm} disabled={isLeaving}>
             {isLeaving ? 'Leaving…' : isLastMember ? 'Delete & Leave' : 'Leave'}
-          </button>
+          </DestructiveButton>
         </div>
       </div>
     </div>

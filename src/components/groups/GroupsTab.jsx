@@ -6,6 +6,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { formatVolume } from '@/lib/utils'
 import WorkoutActivityCard from './WorkoutActivityCard'
+import PrimaryButton from '@/components/shared/PrimaryButton'
+import DestructiveButton from '@/components/shared/DestructiveButton'
 
 // ─── Dialogs ──────────────────────────────────────────────────────────────────
 
@@ -27,7 +29,7 @@ function CreateGroupDialog({ onClose, onCreated }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
       <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-text-primary text-lg mb-4">Create a Group</h3>
         <div className="space-y-3 mb-4">
@@ -48,10 +50,10 @@ function CreateGroupDialog({ onClose, onCreated }) {
           {error && <p className="text-danger text-sm">{error}</p>}
         </div>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Cancel</button>
-          <button onClick={handleCreate} disabled={isPending} className="flex-1 py-2.5 bg-accent text-black rounded-xl text-sm font-semibold disabled:opacity-50">
+          <PrimaryButton variant="secondary" onClick={onClose}>Cancel</PrimaryButton>
+          <PrimaryButton onClick={handleCreate} disabled={isPending}>
             {isPending ? 'Creating…' : 'Create'}
-          </button>
+          </PrimaryButton>
         </div>
       </div>
     </div>
@@ -75,7 +77,7 @@ function JoinGroupDialog({ onClose, onJoined }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
       <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-text-primary text-lg mb-4">Join with Code</h3>
         <div className="space-y-3 mb-4">
@@ -90,10 +92,10 @@ function JoinGroupDialog({ onClose, onJoined }) {
           {error && <p className="text-danger text-sm">{error}</p>}
         </div>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Cancel</button>
-          <button onClick={handleJoin} disabled={isPending} className="flex-1 py-2.5 bg-accent text-black rounded-xl text-sm font-semibold disabled:opacity-50">
+          <PrimaryButton variant="secondary" onClick={onClose}>Cancel</PrimaryButton>
+          <PrimaryButton onClick={handleJoin} disabled={isPending}>
             {isPending ? 'Joining…' : 'Join'}
-          </button>
+          </PrimaryButton>
         </div>
       </div>
     </div>
@@ -102,7 +104,7 @@ function JoinGroupDialog({ onClose, onJoined }) {
 
 function LeaveConfirmDialog({ isAdmin, isLastMember, onConfirm, onCancel, isLeaving }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
       <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-text-primary text-lg mb-2">Leave Group?</h3>
         <p className="text-text-secondary text-sm mb-5">
@@ -113,10 +115,10 @@ function LeaveConfirmDialog({ isAdmin, isLastMember, onConfirm, onCancel, isLeav
               : 'You will no longer see this group or its activity feed.'}
         </p>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Cancel</button>
-          <button onClick={onConfirm} disabled={isLeaving} className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50">
+          <PrimaryButton variant="secondary" onClick={onCancel}>Cancel</PrimaryButton>
+          <DestructiveButton onClick={onConfirm} disabled={isLeaving}>
             {isLeaving ? 'Leaving…' : isLastMember ? 'Delete & Leave' : 'Leave'}
-          </button>
+          </DestructiveButton>
         </div>
       </div>
     </div>
