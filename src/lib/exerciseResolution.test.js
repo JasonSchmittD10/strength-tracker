@@ -32,7 +32,8 @@ describe('resolveSetCount — byWeek loadPattern', () => {
 describe('resolveSetCount — flat numeric (legacy)', () => {
   const ex = findExercise(phat, 'upper-power', 'Barbell Bench Press')
   it('returns the numeric sets value', () => {
-    expect(resolveSetCount(ex, 1)).toBe(3)
+    // PHAT Upper Power bench is 4 sets in the corrected version.
+    expect(resolveSetCount(ex, 1)).toBe(4)
   })
 })
 
