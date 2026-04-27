@@ -65,6 +65,9 @@ function DayTile({ dayLabel, letter, state, onClick }) {
 }
 
 function SessionCard({ session }) {
+  const isConditioning = session.type === 'conditioning'
+  const blocks = session.conditioning ?? []
+
   return (
     <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] p-[16px] flex flex-col gap-[16px]">
       <div className="flex flex-col gap-[8px]">
@@ -79,13 +82,40 @@ function SessionCard({ session }) {
             {session.focus}
           </span>
           <span className="font-commons text-[16px] text-[#f2a655] tracking-[-0.2px] leading-[18px] whitespace-nowrap">
-            {session.exercises.length} exercises
+            {isConditioning
+              ? `${blocks.length} block${blocks.length === 1 ? '' : 's'}`
+              : `${session.exercises?.length ?? 0} exercises`}
           </span>
         </div>
       </div>
       <div className="h-px bg-[rgba(255,255,255,0.1)]" />
       <div className="flex flex-col gap-[12px]">
-        {session.exercises.map((ex, i) => {
+        {isConditioning ? (
+          blocks.map((b, i) => (
+            <div key={i} className="flex flex-col gap-[4px]">
+              <div className="flex items-center justify-between gap-[8px]">
+                <span className="font-commons text-[16px] text-white tracking-[-0.2px] leading-[18px] truncate">
+                  {b.name ?? b.type}
+                </span>
+                <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] uppercase whitespace-nowrap flex-shrink-0">
+                  {b.modality}
+                  {b.duration ? ` · ${b.duration} min` : ''}
+                  {b.rounds ? ` · ${b.rounds} rounds` : ''}
+                </span>
+              </div>
+              {b.targetIntensity && (
+                <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px]">
+                  Target: {b.targetIntensity}
+                </span>
+              )}
+              {b.description && (
+                <span className="font-commons text-[14px] text-[#5c5c5c] tracking-[-0.2px] leading-[18px]">
+                  {b.description}
+                </span>
+              )}
+            </div>
+          ))
+        ) : (session.exercises ?? []).map((ex, i) => {
           // Detail-view preview: assume week 1 (resolves week-indexed sets)
           const display = resolveExerciseDisplay(ex, undefined)
           const setCount = resolveSetCount(ex, 1) || ex.sets

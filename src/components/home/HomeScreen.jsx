@@ -172,7 +172,13 @@ export default function HomeScreen() {
     ? todaySessionObj.focus.split('·').slice(1).join('·').trim()
     : todaySessionObj?.focus || ''
 
-  const estimatedMins = todaySessionObj ? Math.round(todaySessionObj.exercises.length * 8) : 0
+  // Estimated session length: 8 min/exercise for resistance, or sum of block
+  // durations (or 30 min default) for conditioning.
+  const estimatedMins = !todaySessionObj
+    ? 0
+    : todaySessionObj.type === 'conditioning'
+      ? (todaySessionObj.conditioning ?? []).reduce((m, b) => m + (b.duration ?? 0), 0) || 30
+      : Math.round((todaySessionObj.exercises?.length ?? 0) * 8)
 
   // Headline-lift prescription preview (first exercise with a prescription)
   const headlinePrescription = useMemo(() => {
@@ -286,7 +292,7 @@ export default function HomeScreen() {
           <HomeHero
             variant={heroVariant}
             sessionName={heroVariant === 'in-plan-done' ? completedSessionName : sessionName}
-            exerciseCount={todaySessionObj?.exercises.length}
+            exerciseCount={todaySessionObj?.exercises?.length ?? todaySessionObj?.conditioning?.length ?? 0}
             estimatedMins={estimatedMins}
             muscles={muscles}
             daysThisWeek={thisWeekSessions.length}
