@@ -46,6 +46,16 @@ export const NAME_ALIASES = {
   'Pull-Up':                            'Weighted Pull-Up',
   'Pull Up':                            'Weighted Pull-Up',
   'Pullup':                             'Weighted Pull-Up',
+  // PHAT — Pendlay row is a sub-variant of barbell row; aggregate history under one name
+  'Barbell Row (Pendlay)':              'Barbell Row (Pronated)',
+  'Pendlay Row':                        'Barbell Row (Pronated)',
+  // PHAT — speed-day variants share history with the parent power lift
+  'Bench Press (Speed)':                'Barbell Bench Press',
+  'Back Squat (Speed)':                 'Back Squat (Barbell)',
+  'Barbell Row (Speed)':                'Barbell Row (Pronated)',
+  // PHAT — phrasing variants used in the new program data
+  'Hack Squat (or Leg Press)':          'Hack Squat / Leg Press',
+  'Leg Extension':                      'Leg Extension (Machine)',
 }
 
 export function normalizeExerciseName(name) {
