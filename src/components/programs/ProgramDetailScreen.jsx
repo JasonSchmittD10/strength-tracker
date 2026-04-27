@@ -1,99 +1,104 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PROGRAMS } from '@/lib/programs'
 import { useProgram, useSaveConfig } from '@/hooks/useProgram'
 import backArrowIcon from '@/assets/icons/icon-back-arrow.svg'
 
-// ─── Static metadata ──────────────────────────────────────────────────────────
 const PROGRAM_META = {
-  'phat':    { gear: 'Full gym', avgSession: '60 min' },
-  'ppl-x2':  { gear: 'Full gym', avgSession: '60 min' },
-  '531':     { gear: 'Barbell',  avgSession: '45 min' },
-  'phul':    { gear: 'Full gym', avgSession: '60 min' },
-  'gvt-6wk': { gear: 'Full gym', avgSession: '75 min' },
+  'phat':    { gear: 'Full gym', avgSession: '60 min', frequency: '5 x week' },
+  'ppl-x2':  { gear: 'Full gym', avgSession: '60 min', frequency: '6 x week' },
+  '531':     { gear: 'Barbell',  avgSession: '45 min', frequency: '4 x week' },
+  'phul':    { gear: 'Full gym', avgSession: '60 min', frequency: '4 x week' },
+  'gvt-6wk': { gear: 'Full gym', avgSession: '75 min', frequency: '3 x week' },
 }
 
-function getSessionsPerWeek(program) {
-  const isWeekIndexed = program.sessionOrder.some(id => /-w\d+$/.test(id))
-  return isWeekIndexed
-    ? program.sessionOrder.length / program.blockStructure.weeksPerBlock
-    : program.sessionOrder.length
-}
+const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-function StatItem({ label, value }) {
+function Pill({ children }) {
   return (
-    <div className="flex flex-col gap-[2px]">
+    <span className="font-commons text-[12px] text-[rgba(255,255,255,0.4)] tracking-[-0.2px] leading-[14px] border border-[rgba(255,255,255,0.1)] rounded-[4px] pt-[4px] pb-[2px] px-[6px] whitespace-nowrap">
+      {children}
+    </span>
+  )
+}
+
+function Stat({ label, value }) {
+  return (
+    <div className="flex flex-col gap-[4px]">
       <span className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
         {label}
       </span>
-      <span className="font-commons font-bold text-[14px] text-white tracking-[-0.28px]">
+      <span className="font-commons font-bold text-[16px] text-white tracking-[-0.32px]">
         {value}
       </span>
     </div>
   )
 }
 
-function TagBadge({ label }) {
+function DayTile({ dayLabel, letter, state, onClick }) {
+  if (state === 'rest') {
+    return (
+      <div className="flex-1 h-[62px] bg-[#161616] border border-[#383838] rounded-[8px] p-[8px] flex flex-col gap-[4px] items-start overflow-hidden">
+        <span className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">{dayLabel}</span>
+        <span className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">REST</span>
+      </div>
+    )
+  }
+  const isSelected = state === 'selected'
   return (
-    <span className="font-commons font-semibold text-[11px] text-[#8b8b8b] tracking-[0.4px] border border-[rgba(255,255,255,0.12)] rounded-[4px] px-[6px] py-[2px] leading-[normal]">
-      {label}
-    </span>
+    <button
+      onClick={onClick}
+      className={`flex-1 h-[62px] bg-[rgba(242,166,85,0.1)] rounded-[8px] p-[8px] flex flex-col gap-[4px] items-start overflow-hidden border ${
+        isSelected ? 'border-[#f2a655]' : 'border-[#362819]'
+      }`}
+    >
+      <span className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">{dayLabel}</span>
+      <span className={`font-judge font-bold text-[32px] leading-[40px] ${isSelected ? 'text-white' : 'text-[#908d89]'}`}>
+        {letter}
+      </span>
+    </button>
   )
 }
 
 function SessionCard({ session }) {
-  const [expanded, setExpanded] = useState(false)
-
   return (
-    <div className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-[8px] overflow-hidden">
-      {/* Session header — always visible */}
-      <button
-        onClick={() => setExpanded(e => !e)}
-        className="w-full px-[16px] py-[14px] flex items-center justify-between gap-[12px] text-left"
-      >
-        <div className="flex flex-col gap-[6px] flex-1 min-w-0">
-          <div className="flex items-center gap-[8px] flex-wrap">
-            <span className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-[1.19]">
-              {session.name}
-            </span>
-            <TagBadge label={session.tagLabel} />
-          </div>
-          <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[1.3]">
+    <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] p-[16px] flex flex-col gap-[16px]">
+      <div className="flex flex-col gap-[8px]">
+        <div className="flex gap-[8px] items-center flex-wrap">
+          <span className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-[1.19]">
+            {session.name}
+          </span>
+          <Pill>{session.tagLabel}</Pill>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px]">
             {session.focus}
           </span>
+          <span className="font-commons text-[16px] text-[#f2a655] tracking-[-0.2px] leading-[18px] whitespace-nowrap">
+            {session.exercises.length} exercises
+          </span>
         </div>
-        {/* Chevron */}
-        <span className={`font-commons text-[#8b8b8b] text-[18px] flex-shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}>
-          ›
-        </span>
-      </button>
-
-      {/* Exercises — shown when expanded */}
-      {expanded && (
-        <div className="border-t border-[rgba(255,255,255,0.08)]">
-          {session.exercises.map((ex, i) => (
-            <div
-              key={i}
-              className={`px-[16px] py-[10px] flex items-center justify-between gap-[12px] ${
-                i < session.exercises.length - 1 ? 'border-b border-[rgba(255,255,255,0.05)]' : ''
-              }`}
-            >
-              <span className="font-commons text-[16px] text-white tracking-[-0.2px] leading-[18px] flex-1 min-w-0">
+      </div>
+      <div className="h-px bg-[rgba(255,255,255,0.1)]" />
+      <div className="flex flex-col gap-[12px]">
+        {session.exercises.map((ex, i) => (
+          <div key={i} className="flex items-center justify-between gap-[8px]">
+            <div className="flex items-center gap-[6px] min-w-0">
+              <span className="w-[4px] h-[4px] rounded-full bg-[#8b8b8b] flex-shrink-0" />
+              <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] truncate">
                 {ex.name}
               </span>
-              <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] flex-shrink-0 whitespace-nowrap">
-                {ex.sets} × {ex.reps}
-              </span>
             </div>
-          ))}
-        </div>
-      )}
+            <span className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] whitespace-nowrap flex-shrink-0">
+              {ex.sets} x {ex.reps}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
-// ─── Main screen ──────────────────────────────────────────────────────────────
 export default function ProgramDetailScreen() {
   const { programId } = useParams()
   const navigate = useNavigate()
@@ -101,8 +106,16 @@ export default function ProgramDetailScreen() {
   const { mutateAsync: saveConfig, isPending } = useSaveConfig()
 
   const program = PROGRAMS[programId]
-  const currentProgramId = programData?.config?.activeProgramId
-  const isCurrentProgram = currentProgramId === programId
+  const isCurrentProgram = programData?.config?.activeProgramId === programId
+
+  const weekSchedule = program?.weekSchedule ?? []
+  const firstWorkoutIdx = weekSchedule.findIndex(s => s != null)
+  const [selectedDay, setSelectedDay] = useState(firstWorkoutIdx === -1 ? 0 : firstWorkoutIdx)
+
+  // Reset selection when navigating to a different program
+  useEffect(() => {
+    setSelectedDay(firstWorkoutIdx === -1 ? 0 : firstWorkoutIdx)
+  }, [programId, firstWorkoutIdx])
 
   if (!program) {
     return (
@@ -112,10 +125,11 @@ export default function ProgramDetailScreen() {
     )
   }
 
-  const { weeksPerBlock, blockNames } = program.blockStructure
-  const totalWeeks = weeksPerBlock * blockNames.length
-  const freq = getSessionsPerWeek(program)
-  const meta = PROGRAM_META[program.id] ?? { gear: 'Full gym', avgSession: '60 min' }
+  const meta = PROGRAM_META[program.id] ?? { gear: 'Full gym', avgSession: '60 min', frequency: '4 x week' }
+  const totalWeeks = program.blockStructure.weeksPerBlock * program.blockStructure.blockNames.length
+  const onCount = weekSchedule.filter(s => s != null).length
+  const restCount = weekSchedule.length - onCount
+  const selectedSession = program.sessions.find(s => s.id === weekSchedule[selectedDay])
 
   async function handleStart() {
     const today = new Date().toISOString().split('T')[0]
@@ -125,7 +139,7 @@ export default function ProgramDetailScreen() {
         activeProgramId: program.id,
         programStartDate: today,
       })
-      navigate('/progress')
+      navigate('/program')
     } catch (e) {
       console.error('Failed to start program', e)
     }
@@ -134,85 +148,113 @@ export default function ProgramDetailScreen() {
   return (
     <div>
       {/* ── Sticky header ── */}
-      <div className="sticky top-0 z-10 bg-[#0a0a0a]">
-        <div className="pt-[66px] px-[16px] pb-[16px] flex items-center justify-between border-b border-[rgba(255,255,255,0.1)]">
-          {/* Back + title */}
-          <div className="flex items-center gap-[12px]">
+      <div className="sticky top-0 z-10 bg-gradient-to-b from-[#0a0a0a] to-[#0a0a0a]">
+        <div className="pt-[66px] px-[16px] pb-[16px] flex items-center justify-between gap-[12px] border-b border-[rgba(255,255,255,0.1)]">
+          <div className="flex items-center gap-[12px] min-w-0 flex-1">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center justify-center w-[28px] h-[28px] -ml-[6px]"
+              className="flex items-center justify-center w-[28px] h-[28px] -ml-[6px] flex-shrink-0"
               aria-label="Go back"
             >
               <img src={backArrowIcon} alt="" className="w-[5px] h-[11px]" />
             </button>
-            <span className="font-judge text-[26px] text-white leading-[1.2]">
+            <span className="font-judge font-bold text-[26px] text-white leading-[1.2] truncate">
               {program.name}
             </span>
           </div>
-          {/* invisible spacer to optically balance the header */}
-          <div className="w-[28px] opacity-0" />
+          {program.tags?.length > 0 && (
+            <div className="flex items-center gap-[4px] flex-shrink-0">
+              {program.tags.map(tag => (
+                <Pill key={tag}>{tag}</Pill>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* ── Scrollable body ── */}
-      <div className="px-[16px] pt-[28px] pb-[32px] flex flex-col gap-[32px]">
+      {/* ── Body ── */}
+      <div className="px-[16px] pt-[24px] pb-[40px] flex flex-col gap-[24px]">
+        {/* Description */}
+        <p className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] whitespace-pre-line">
+          {program.description}
+          {program.designer ? `\n\nDesigned by ${program.designer}.` : ''}
+        </p>
 
-        {/* Overview: description + stats */}
-        <div className="flex flex-col gap-[16px]">
-          <p className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[1.5]">
-            {program.description}
-          </p>
-          <div className="flex gap-[24px] flex-wrap">
-            <StatItem label="DURATION"    value={`${totalWeeks} weeks`} />
-            <StatItem label="FREQ"        value={`${freq}/wk`} />
-            <StatItem label="GEAR"        value={meta.gear} />
-            <StatItem label="AVG SESSION" value={meta.avgSession} />
-          </div>
+        {/* Stats */}
+        <div className="flex gap-[20px] items-start">
+          <Stat label="DURATION"    value={`${totalWeeks} weeks`} />
+          <Stat label="FREQUENCY"   value={meta.frequency} />
+          <Stat label="GEAR"        value={meta.gear} />
+          <Stat label="AVG SESSION" value={meta.avgSession} />
         </div>
 
         <div className="h-px bg-[rgba(255,255,255,0.1)]" />
 
-        {/* Sessions list */}
+        {/* Sample week */}
         <div className="flex flex-col gap-[12px]">
-          <div className="flex items-baseline justify-between">
-            <span className="font-commons text-[14px] text-[rgba(255,255,255,0.4)] tracking-[1px]">
-              SESSIONS
-            </span>
-            <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px]">
-              {program.sessions.length} total
+          <div className="flex items-center justify-between">
+            <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">SAMPLE WEEK</span>
+            <span className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+              {onCount} ON · {restCount} REST
             </span>
           </div>
-
-          {program.sessions.map((session, i) => (
-            <SessionCard key={session.id ?? i} session={session} />
-          ))}
+          <div className="flex gap-[4px] items-center w-full">
+            {weekSchedule.map((sessionId, idx) => {
+              const dayLabel = DAY_LABELS[idx]
+              if (sessionId == null) {
+                return <DayTile key={idx} dayLabel={dayLabel} state="rest" />
+              }
+              const session = program.sessions.find(s => s.id === sessionId)
+              const letter = session?.tagLabel?.charAt(0) ?? '?'
+              return (
+                <DayTile
+                  key={idx}
+                  dayLabel={dayLabel}
+                  letter={letter}
+                  state={idx === selectedDay ? 'selected' : 'workout'}
+                  onClick={() => setSelectedDay(idx)}
+                />
+              )
+            })}
+          </div>
+          {selectedSession && <SessionCard session={selectedSession} />}
         </div>
 
         <div className="h-px bg-[rgba(255,255,255,0.1)]" />
 
-        {/* Start CTA */}
-        <div className="flex flex-col gap-[10px]">
-          {isCurrentProgram && (
-            <p className="font-commons text-[14px] text-[#8b8b8b] text-center tracking-[-0.2px]">
-              You're currently running this program.
+        {/* What you'll need */}
+        <div className="flex flex-col gap-[12px]">
+          <span className="font-commons text-[16px] text-[#8b8b8b] leading-[normal]">WHAT YOU’LL NEED</span>
+          {program.equipmentNote && (
+            <p className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px]">
+              {program.equipmentNote}
             </p>
           )}
-          <button
-            onClick={handleStart}
-            disabled={isPending}
-            className={`w-full h-[54px] rounded-[6px] font-commons font-bold text-[18px] tracking-[-0.36px] disabled:opacity-50 ${
-              isCurrentProgram
-                ? 'bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.1)] text-white'
-                : 'bg-accent text-black'
-            }`}
-          >
-            {isPending
-              ? 'Starting…'
-              : isCurrentProgram
-                ? 'Restart Program'
-                : `Start ${program.name}`}
-          </button>
+          {program.equipmentNeeded?.length > 0 && (
+            <div className="flex gap-[8px] items-start flex-wrap">
+              {program.equipmentNeeded.map(eq => (
+                <Pill key={eq}>{eq}</Pill>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Start CTA */}
+        <button
+          onClick={handleStart}
+          disabled={isPending}
+          className={`w-full h-[46px] rounded-[6px] font-commons font-bold text-[18px] tracking-[-0.36px] disabled:opacity-50 ${
+            isCurrentProgram
+              ? 'bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white'
+              : 'bg-accent text-black'
+          }`}
+        >
+          {isPending
+            ? 'Starting…'
+            : isCurrentProgram
+              ? 'Restart Program'
+              : 'Start Program'}
+        </button>
       </div>
     </div>
   )
