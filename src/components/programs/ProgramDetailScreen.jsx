@@ -200,8 +200,11 @@ export default function ProgramDetailScreen() {
   return (
     <div>
       {/* ── Sticky header ── */}
-      <div className="sticky top-0 z-10 bg-gradient-to-b from-[#0a0a0a] to-[#0a0a0a]">
-        <div className="pt-[66px] px-[16px] pb-[16px] flex items-center justify-between gap-[12px] border-b border-[rgba(255,255,255,0.1)]">
+      <div className="sticky top-0 z-10 bg-[#0a0a0a]">
+        <div
+          className="px-[16px] pb-[16px] flex items-center justify-between gap-[12px] border-b border-[rgba(255,255,255,0.1)]"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+        >
           <div className="flex items-center gap-[12px] min-w-0 flex-1">
             <button
               onClick={() => navigate(-1)}
