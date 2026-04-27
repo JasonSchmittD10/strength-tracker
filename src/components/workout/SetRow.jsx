@@ -1,18 +1,62 @@
 // src/components/workout/SetRow.jsx
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Pencil } from 'lucide-react'
 import checkIcon from '@/assets/icons/icon-check.svg'
 import { useUnitPreference } from '@/hooks/useProfile'
+import { convertWeight } from '@/lib/units'
 
 const RPE_VALUES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 const SWIPE_THRESHOLD = 60
 const REMOVE_ZONE_WIDTH = 80
+
+// Display the canonical lbs `set.weight` as a kg input string.
+function lbsToKgInput(lbs) {
+  if (lbs === '' || lbs == null) return ''
+  const kg = convertWeight(parseFloat(lbs), 'lbs', 'kg')
+  if (isNaN(kg)) return ''
+  // Round to 1 decimal, trim trailing zero so editing feels natural
+  return String(Math.round(kg * 10) / 10)
+}
 
 export default function SetRow({ setNumber, set, onChange, onComplete, onRemove, highlighted = false, hideComplete = false, inputType = 'reps', showLabels = false }) {
   const { weight = '', reps = '', rpe = '', completed = false } = set
   const unit = useUnitPreference()
   const [swipeX, setSwipeX] = useState(0)
   const touchStartXRef = useRef(null)
+
+  // Local string for the kg input so user typing doesn't drift via lbs round-trip
+  const [kgInput, setKgInput] = useState(() => unit === 'kg' ? lbsToKgInput(weight) : '')
+  const lastInternalLbsRef = useRef(weight)
+
+  // Sync local kg input when set.weight changes externally or the unit toggles
+  useEffect(() => {
+    if (unit !== 'kg') return
+    if (weight === lastInternalLbsRef.current) return // change came from us; skip
+    setKgInput(lbsToKgInput(weight))
+    lastInternalLbsRef.current = weight
+  }, [weight, unit])
+
+  function handleWeightChange(e) {
+    const v = e.target.value
+    if (unit === 'kg') {
+      setKgInput(v)
+      const lbs = v === '' ? '' : convertWeight(parseFloat(v), 'kg', 'lbs')
+      const stored = lbs === '' || isNaN(lbs) ? '' : lbs
+      lastInternalLbsRef.current = stored
+      onChange({ ...set, weight: stored, suggested: false })
+    } else {
+      onChange({ ...set, weight: v, suggested: false })
+    }
+  }
+
+  function handleRepsChange(e) {
+    const v = e.target.value
+    onChange(
+      inputType === 'time'
+        ? { ...set, duration_seconds: v, suggested: false }
+        : { ...set, reps: v, suggested: false }
+    )
+  }
 
   function handleComplete() {
     if (!completed) onComplete()
@@ -90,15 +134,22 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
 
           {/* Weight */}
           <div className="flex flex-1 flex-col gap-[8px] min-w-0">
-            {showLabels && <span className={labelClass}>Weight</span>}
+            {showLabels && (
+              <span className={labelClass}>
+                Weight ({unit})
+                {set.suggested && (
+                  <span className="ml-1 text-accent">· Suggested</span>
+                )}
+              </span>
+            )}
             <input
               type="number"
               inputMode="decimal"
-              value={weight}
-              onChange={e => onChange({ ...set, weight: e.target.value })}
+              value={unit === 'kg' ? kgInput : weight}
+              onChange={handleWeightChange}
               placeholder={unit}
               readOnly={completed}
-              className={cellBase}
+              className={`${cellBase} ${set.suggested ? 'border-accent/50' : ''}`}
             />
           </div>
 
@@ -109,11 +160,7 @@ export default function SetRow({ setNumber, set, onChange, onComplete, onRemove,
               type="number"
               inputMode="numeric"
               value={inputType === 'time' ? (set.duration_seconds ?? '') : reps}
-              onChange={e => onChange(
-                inputType === 'time'
-                  ? { ...set, duration_seconds: e.target.value }
-                  : { ...set, reps: e.target.value }
-              )}
+              onChange={handleRepsChange}
               placeholder={inputType === 'time' ? 'sec' : 'reps'}
               readOnly={completed}
               className={cellBase}

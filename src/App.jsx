@@ -15,6 +15,8 @@ import ProgramTab from '@/components/programs/ProgramTab'
 import GroupsTab from '@/components/groups/GroupsTab'
 import GroupDetailScreen from '@/components/groups/GroupDetailScreen'
 import ProgramDetailScreen from '@/components/programs/ProgramDetailScreen'
+import EditSchedule from '@/components/EditSchedule'
+import ConditioningSession from '@/components/ConditioningSession'
 
 function MainApp() {
   return (
@@ -41,10 +43,12 @@ const router = createHashRouter([
       { path: 'settings', element: <SettingsTab /> },
       { path: 'program-selector', element: <ProgramSelector /> },
       { path: 'program-detail/:programId', element: <ProgramDetailScreen /> },
+      { path: 'edit-schedule', element: <EditSchedule /> },
     ],
   },
   { path: '/groups/:groupId', element: <GroupDetailScreen /> },
   { path: '/workout', element: <WorkoutScreen /> },
+  { path: '/conditioning', element: <ConditioningSession /> },
   { path: '/build-workout', element: <BuildWorkoutScreen /> },
 ])
 

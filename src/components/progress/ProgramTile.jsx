@@ -1,3 +1,5 @@
+import { getWeeksInMacrocycle, getSessionsPerWeek } from '@/lib/scheduling'
+
 // Static metadata that can't be derived from program structure
 const PROGRAM_META = {
   'phat':    { gear: 'Full',    avgSession: '60 min' },
@@ -7,16 +9,8 @@ const PROGRAM_META = {
   'gvt-6wk': { gear: 'Full',    avgSession: '75 min' },
 }
 
-function getSessionsPerWeek(program) {
-  const isWeekIndexed = program.sessionOrder.some(id => /-w\d+$/.test(id))
-  return isWeekIndexed
-    ? program.sessionOrder.length / program.blockStructure.weeksPerBlock
-    : program.sessionOrder.length
-}
-
 export default function ProgramTile({ program }) {
-  const { weeksPerBlock, blockNames } = program.blockStructure
-  const totalWeeks = weeksPerBlock * blockNames.length
+  const totalWeeks = getWeeksInMacrocycle(program)
   const freq = getSessionsPerWeek(program)
   const meta = PROGRAM_META[program.id] ?? { gear: 'Full', avgSession: '60 min' }
 

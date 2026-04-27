@@ -21,7 +21,7 @@ const TABS = [
 
 export default function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#181818] border-t border-[rgba(255,255,255,0.1)] overflow-hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-30 bg-[#181818] border-t border-[rgba(255,255,255,0.1)] overflow-hidden">
       <div className="flex">
         {TABS.map(({ to, label, icons }) => (
           <NavLink

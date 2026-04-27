@@ -1,6 +1,7 @@
 // src/components/workout/WorkoutScreen.jsx
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate, useBlocker } from 'react-router-dom'
+import useElapsedTimer from '@/hooks/useElapsedTimer'
 import workoutIcon from '@/assets/icons/icon-workout.svg'
 import pauseIcon from '@/assets/icons/icon-pause.svg'
 import playIcon from '@/assets/icons/icon-play.svg'
@@ -11,28 +12,13 @@ import RestTimer from './RestTimer'
 import WorkoutSummary from './WorkoutSummary'
 import { useSessions, useSaveSession } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
-import { useProgram } from '@/hooks/useProgram'
+import { useProgramConfig } from '@/hooks/useProgramConfig'
+import { useProfile } from '@/hooks/useProfile'
 import { normalizeExerciseName } from '@/lib/exercises'
 import { totalVolume } from '@/lib/utils'
-import { getBlockAndWeek } from '@/lib/programs'
-
-function useElapsedTimer(isPaused) {
-  const [elapsed, setElapsed] = useState(0)
-  const accumulatedRef = useRef(0)
-  const segmentStartRef = useRef(Date.now())
-  useEffect(() => {
-    if (isPaused) {
-      accumulatedRef.current += Math.floor((Date.now() - segmentStartRef.current) / 1000)
-      return
-    }
-    segmentStartRef.current = Date.now()
-    const id = setInterval(() => {
-      setElapsed(accumulatedRef.current + Math.floor((Date.now() - segmentStartRef.current) / 1000))
-    }, 1000)
-    return () => clearInterval(id)
-  }, [isPaused])
-  return elapsed
-}
+import { resolveMacroPosition } from '@/lib/scheduling'
+import { getSetPrescription } from '@/lib/loadPrescription'
+import { resolveSetCount, resolveExerciseDisplay } from '@/lib/exerciseResolution'
 
 function formatElapsed(s) {
   const m = Math.floor(s / 60), sec = s % 60
@@ -46,6 +32,9 @@ export default function WorkoutScreen() {
   const mode = state?.mode || (state?.session ? 'program' : 'custom')
   const session = state?.session
   const programId = state?.programId
+  const programConfigId = state?.programConfigId ?? null
+  const scheduledDate = state?.scheduledDate ?? null
+  const wasSwapped = state?.wasSwapped ?? false
   const template = state?.template
   const prebuiltExercises = state?.prebuiltExercises
 
@@ -55,6 +44,20 @@ export default function WorkoutScreen() {
   const { data: allSessions = [] } = useSessions()
   const { mutateAsync: saveSession } = useSaveSession()
   const { mutateAsync: saveTemplate } = useSaveTemplate()
+  const { program: activeProgram, config: activeConfig } = useProgramConfig()
+  const { data: profile } = useProfile()
+  const weightUnit = profile?.weightUnit ?? 'lbs'
+
+  // Prescription helper: returns { weight, reps, source } | null for a given exercise/set.
+  const programInputs = activeConfig?.inputs ?? {}
+  const programMacroPos = (mode === 'program' && activeConfig && activeProgram)
+    ? resolveMacroPosition(new Date(), activeConfig, activeProgram)
+    : null
+  const prescriptionFor = useCallback((exercise, setIndex) => {
+    if (mode !== 'program') return null
+    return getSetPrescription(exercise, setIndex, programInputs, programMacroPos, weightUnit)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, weightUnit, activeConfig?.id, activeConfig?.inputs, programMacroPos?.mesoIndex])
 
   // ─── Custom/template exercises ────────────────────────────────────────────
   const [customExercises, setCustomExercises] = useState(() => {
@@ -92,12 +95,28 @@ export default function WorkoutScreen() {
           const prevSets = lastMatch?.exercises?.find(
             e => normalizeExerciseName(e.name) === normalizeExerciseName(ex.name)
           )?.sets ?? []
-          const sets = Array.from({ length: ex.sets }, (_, j) => ({
-            weight: prevSets[j]?.weight ?? '',
-            reps: prevSets[j]?.reps ?? ex.reps?.split('–')[0] ?? '',
-            rpe: '',
-            completed: false,
-          }))
+          const setCount = resolveSetCount(ex, programMacroPos?.weekInMeso) || 1
+          const sets = Array.from({ length: setCount }, (_, j) => {
+            const rx = getSetPrescription(ex, j, programInputs, programMacroPos, weightUnit)
+            if (rx) {
+              // rx.reps may be '5+' / '3+' / '1+' (AMRAP). Numeric input takes
+              // digits only, so use the numeric prefix as the suggested target.
+              const repsDigits = rx.reps != null ? String(rx.reps).match(/^\d+/)?.[0] ?? '' : ''
+              return {
+                weight: rx.weight,
+                reps: repsDigits || prevSets[j]?.reps || ex.reps?.split('–')[0] || '',
+                rpe: '',
+                completed: false,
+                suggested: true,
+              }
+            }
+            return {
+              weight: prevSets[j]?.weight ?? '',
+              reps: prevSets[j]?.reps ?? ex.reps?.split('–')[0] ?? '',
+              rpe: '',
+              completed: false,
+            }
+          })
           return [i, sets]
         })
       )
@@ -109,7 +128,7 @@ export default function WorkoutScreen() {
           const prevSets = lastMatch?.exercises?.find(
             e => normalizeExerciseName(e.name) === normalizeExerciseName(ex.name)
           )?.sets ?? []
-          const setsCount = ex.sets ?? 3
+          const setsCount = (typeof ex.sets === 'number' ? ex.sets : null) ?? 3
           const sets = Array.from({ length: setsCount }, (_, j) => ({
             weight: prevSets[j]?.weight ?? '',
             reps: prevSets[j]?.reps ?? ex.reps?.split('–')[0] ?? '',
@@ -144,11 +163,15 @@ export default function WorkoutScreen() {
           e => normalizeExerciseName(e.name) === normalizeExerciseName(ex.name)
         )?.sets ?? []
         if (!prevSets.length) return
-        next[i] = prev[i].map((s, j) => ({
-          ...s,
-          weight: prevSets[j]?.weight ?? s.weight,
-          reps: prevSets[j]?.reps ?? s.reps,
-        }))
+        next[i] = prev[i].map((s, j) => {
+          // Don't overwrite prescription-pre-filled sets
+          if (s.suggested) return s
+          return {
+            ...s,
+            weight: prevSets[j]?.weight ?? s.weight,
+            reps: prevSets[j]?.reps ?? s.reps,
+          }
+        })
       })
       return next
     })
@@ -192,10 +215,10 @@ export default function WorkoutScreen() {
   const [builderSaving, setBuilderSaving] = useState(false)
   const [builderSaveError, setBuilderSaveError] = useState(null)
   const allowNavRef = useRef(false)
-  const { program, config: programConfig } = useProgram()
-  const blockInfo = mode === 'program' && programConfig ? getBlockAndWeek(programConfig) : null
-  const programSubtitle = program && blockInfo
-    ? `${program.name} · Block ${blockInfo.blockNumber} · Week ${blockInfo.weekInBlock} · ${blockInfo.phaseName}`
+  const { program, config: programConfig } = useProgramConfig()
+  const macroPos = mode === 'program' && programConfig && program ? resolveMacroPosition(new Date(), programConfig, program) : null
+  const programSubtitle = program && macroPos && !macroPos.completed
+    ? `${program.name} · Block ${macroPos.blockNumber} · Week ${macroPos.weekInBlock} · ${macroPos.weekLabel}`
     : null
 
   // Block swipe-back and browser back button during workout
@@ -366,6 +389,11 @@ export default function WorkoutScreen() {
         tag: session.tag,
         tagLabel: session.tagLabel,
         programId,
+        program_session_id: session.id,
+        program_config_id: programConfigId,
+        scheduled_date: scheduledDate ?? new Date().toISOString().split('T')[0],
+        was_swapped: wasSwapped,
+        session_type: 'resistance',
         startedAt: startedAt.current,
         completedAt: new Date().toISOString(),
         durationSeconds: elapsed,
@@ -380,6 +408,11 @@ export default function WorkoutScreen() {
       tag: null,
       tagLabel: null,
       programId: 'custom',
+      program_session_id: null,
+      program_config_id: null,
+      scheduled_date: null,
+      was_swapped: false,
+      session_type: 'resistance',
       startedAt: startedAt.current,
       completedAt: new Date().toISOString(),
       durationSeconds: elapsed,
@@ -387,7 +420,7 @@ export default function WorkoutScreen() {
       date: new Date().toISOString().split('T')[0],
       exercises,
     }
-  }, [mode, session, programId, elapsed, exerciseSets, activeExercises])
+  }, [mode, session, programId, programConfigId, scheduledDate, wasSwapped, elapsed, exerciseSets, activeExercises])
 
   async function handleSaveBuilder() {
     if (activeExercises.length === 0) return
@@ -553,6 +586,8 @@ export default function WorkoutScreen() {
                 isActive={exIdx === activeExIdx}
                 onRemove={isCustomMode ? () => handleRemoveExercise(exIdx) : undefined}
                 isBuilderMode={mode === 'builder'}
+                weekInMeso={programMacroPos?.weekInMeso}
+                programInputs={programInputs}
               />
             )
           }
@@ -581,6 +616,8 @@ export default function WorkoutScreen() {
                   isActive={exIdx === activeExIdx}
                   onRemove={isCustomMode ? () => handleRemoveExercise(exIdx) : undefined}
                   isBuilderMode={mode === 'builder'}
+                  weekInMeso={programMacroPos?.weekInMeso}
+                  programInputs={programInputs}
                 />
               ))}
             </div>

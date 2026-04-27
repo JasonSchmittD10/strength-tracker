@@ -2,20 +2,28 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Camera, Clock, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { useProfile, useUpdateProfile, useUnitPreference } from '@/hooks/useProfile'
+import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { useSessions, usePRs } from '@/hooks/useSessions'
-import { useProgram } from '@/hooks/useProgram'
+import { useProgramConfig } from '@/hooks/useProgramConfig'
 import { migrateExerciseNames } from '@/lib/exercises'
 import { supabase } from '@/lib/supabase'
-import { formatWeight } from '@/lib/utils'
+import { formatWeight } from '@/lib/units'
+
+const WEEK_START_OPTIONS = [
+  { value: 1, label: 'Mon' },
+  { value: 0, label: 'Sun' },
+  { value: 6, label: 'Sat' },
+]
 
 export default function SettingsTab() {
   const { user, signOut } = useAuth()
   const { data: profile } = useProfile()
   const { mutateAsync: updateProfile } = useUpdateProfile()
   const { data: sessions = [] } = useSessions()
-  const { data: programData } = useProgram()
-  const unit = useUnitPreference()
+  const { program: activeProgram } = useProgramConfig()
+  const weightUnit = profile?.weightUnit ?? 'lbs'
+  const distanceUnit = profile?.distanceUnit ?? 'mi'
+  const weekStartDay = profile?.weekStartDay ?? 1
   const prs = usePRs()
   const [displayName, setDisplayName] = useState('')
   const [editingName, setEditingName] = useState(false)
@@ -157,11 +165,25 @@ export default function SettingsTab() {
         </button>
       </Section>
 
-      <Section title="App Settings">
-        <ToggleRow
-          label="Use pounds (lb)"
-          checked={unit === 'lb'}
-          onChange={() => updateProfile({ unit_preference: unit === 'lb' ? 'kg' : 'lb' })}
+      <Section title="Preferences">
+        <SegmentedRow
+          label="Week starts on"
+          value={weekStartDay}
+          options={WEEK_START_OPTIONS}
+          onChange={v => updateProfile({ week_start_day: v })}
+        />
+        <SegmentedRow
+          label="Weight unit"
+          value={weightUnit}
+          options={[{ value: 'lbs', label: 'lbs' }, { value: 'kg', label: 'kg' }]}
+          onChange={v => updateProfile({ weight_unit: v })}
+        />
+        <SegmentedRow
+          label="Distance unit"
+          description="Used for conditioning sessions (coming soon)"
+          value={distanceUnit}
+          options={[{ value: 'mi', label: 'mi' }, { value: 'km', label: 'km' }]}
+          onChange={v => updateProfile({ distance_unit: v })}
         />
       </Section>
 
@@ -171,7 +193,7 @@ export default function SettingsTab() {
             <div key={name} className="bg-bg-tertiary rounded-xl p-3">
               <div className="text-xs text-text-muted mb-1 leading-tight">{name}</div>
               <div className="font-bold text-text-primary text-base">
-                {e1rm ? formatWeight(Math.round(e1rm * 10) / 10, unit) : '—'}
+                {formatWeight(e1rm, weightUnit)}
               </div>
               <div className="text-xs text-text-muted">e1RM</div>
             </div>
@@ -182,7 +204,7 @@ export default function SettingsTab() {
       <Section title="Program">
         <div className="flex items-center justify-between py-2">
           <div>
-            <div className="text-sm font-medium text-text-primary">{programData?.program?.name || 'PPL × 2'}</div>
+            <div className="text-sm font-medium text-text-primary">{activeProgram?.name || 'No active program'}</div>
             <div className="text-xs text-text-muted">Active program</div>
           </div>
           <button
@@ -240,6 +262,38 @@ function ToggleRow({ label, description, checked, onChange }) {
       >
         <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
       </button>
+    </div>
+  )
+}
+
+function SegmentedRow({ label, description, value, options, onChange }) {
+  return (
+    <div className="py-2">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-sm text-text-primary">{label}</div>
+          {description && <div className="text-xs text-text-muted">{description}</div>}
+        </div>
+        <div className="flex bg-bg-tertiary rounded-lg p-0.5 flex-shrink-0">
+          {options.map(opt => {
+            const active = opt.value === value
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => { if (!active) onChange(opt.value) }}
+                className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                  active
+                    ? 'bg-accent text-black'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

@@ -12,12 +12,24 @@ async function fetchProfile(userId) {
   return data
 }
 
+// camelCase preference accessors with fallbacks for null columns
+function withPrefDefaults(profile) {
+  if (!profile) return profile
+  return {
+    ...profile,
+    weekStartDay: profile.week_start_day ?? 1,
+    weightUnit: profile.weight_unit ?? 'lbs',
+    distanceUnit: profile.distance_unit ?? 'mi',
+  }
+}
+
 export function useProfile() {
   const { user } = useAuth()
   return useQuery({
     queryKey: ['profile', user?.id],
     queryFn: () => fetchProfile(user.id),
     enabled: !!user?.id,
+    select: withPrefDefaults,
   })
 }
 
@@ -32,12 +44,26 @@ export function useUpdateProfile() {
         .upsert({ id: user.id, ...updates })
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['profile', user?.id] }),
+    onMutate: async (updates) => {
+      // Optimistic update so toggles feel instant
+      await queryClient.cancelQueries({ queryKey: ['profile', user?.id] })
+      const previous = queryClient.getQueryData(['profile', user?.id])
+      if (previous) {
+        queryClient.setQueryData(['profile', user?.id], { ...previous, ...updates })
+      }
+      return { previous }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(['profile', user?.id], ctx.previous)
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['profile', user?.id] }),
   })
 }
 
+// Returns the user's preferred weight unit ('lbs' | 'kg'). Defaults to 'lbs'.
 export function useUnitPreference() {
   const { data: profile } = useProfile()
-  // TODO: when unit preference changes, convert historical weight values in exerciseSets
-  return profile?.unit_preference ?? 'lb'
+  return profile?.weightUnit ?? 'lbs'
 }
