@@ -9,6 +9,8 @@ import {
   modalityLabel,
 } from '@/lib/conditioning'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
+import PrimaryButton from '@/components/shared/PrimaryButton'
+import DestructiveButton from '@/components/shared/DestructiveButton'
 
 const TAG_COLORS = {
   push: 'bg-push/15 text-push border-push/30',
@@ -100,20 +102,12 @@ export default function SessionCard({ session }) {
           <div className="space-y-2">
             <p className="text-sm text-text-secondary text-center">Delete this workout? This can't be undone.</p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmDelete(false)}
-                disabled={deleting}
-                className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary disabled:opacity-50"
-              >
+              <PrimaryButton variant="secondary" onClick={() => setConfirmDelete(false)} disabled={deleting}>
                 Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold disabled:opacity-50"
-              >
+              </PrimaryButton>
+              <DestructiveButton onClick={handleDelete} disabled={deleting}>
                 {deleting ? 'Deleting…' : 'Delete'}
-              </button>
+              </DestructiveButton>
             </div>
           </div>
         ) : (

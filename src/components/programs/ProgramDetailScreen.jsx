@@ -311,7 +311,7 @@ export default function ProgramDetailScreen() {
 
       {/* Onboarding inputs modal */}
       {inputsOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
           <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <ProgramInputsForm
               program={program}

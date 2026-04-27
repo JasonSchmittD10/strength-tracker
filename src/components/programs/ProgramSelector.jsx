@@ -6,6 +6,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { PROGRAMS } from '@/lib/programs'
 import { getWeeksInMacrocycle } from '@/lib/scheduling'
 import ProgramInputsForm from '@/components/ProgramInputsForm'
+import PrimaryButton from '@/components/shared/PrimaryButton'
 
 const COMING_SOON = []
 
@@ -122,7 +123,7 @@ export default function ProgramSelector() {
 
       {/* Confirm program change dialog */}
       {confirmProgram && !inputsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
           <div
             role="dialog"
             aria-modal="true"
@@ -142,19 +143,12 @@ export default function ProgramSelector() {
               <p className="text-xs text-danger mb-3">{configError}</p>
             )}
             <div className="flex gap-3">
-              <button
-                onClick={() => { setConfirmProgram(null); setConfigError(null) }}
-                className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary"
-              >
+              <PrimaryButton variant="secondary" onClick={() => { setConfirmProgram(null); setConfigError(null) }}>
                 Cancel
-              </button>
-              <button
-                onClick={handleStartProgram}
-                disabled={isPending}
-                className="flex-1 py-2.5 bg-accent text-black rounded-xl text-sm font-semibold disabled:opacity-50"
-              >
+              </PrimaryButton>
+              <PrimaryButton onClick={handleStartProgram} disabled={isPending}>
                 {isPending ? 'Starting\u2026' : requiresInputs ? 'Next' : 'Start Program'}
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         </div>
@@ -162,7 +156,7 @@ export default function ProgramSelector() {
 
       {/* Onboarding inputs modal */}
       {inputsOpen && confirmProgram && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
           <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <ProgramInputsForm
               program={confirmProgram}

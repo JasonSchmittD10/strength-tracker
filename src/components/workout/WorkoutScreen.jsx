@@ -10,6 +10,8 @@ import ExerciseBlock from './ExerciseBlock'
 import ExerciseSearchSheet from './ExerciseSearchSheet'
 import RestTimer from './RestTimer'
 import WorkoutSummary from './WorkoutSummary'
+import PrimaryButton from '@/components/shared/PrimaryButton'
+import DestructiveButton from '@/components/shared/DestructiveButton'
 import { useSessions, useSaveSession } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
 import { useProgramConfig } from '@/hooks/useProgramConfig'
@@ -740,7 +742,7 @@ export default function WorkoutScreen() {
 
       {/* Confirm finish dialog */}
       {confirmFinishOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-[24px]">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-[24px]">
           <div className="bg-[#161616] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-[24px] w-full max-w-sm flex flex-col gap-[20px]">
             <div className="flex flex-col gap-[6px]">
               <h3 className="font-judge text-[22px] text-white leading-snug">Finish workout?</h3>
@@ -766,7 +768,7 @@ export default function WorkoutScreen() {
 
       {/* Confirm leave dialog */}
       {confirmBack && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
           <div
             role="dialog"
             aria-modal="true"
@@ -776,8 +778,8 @@ export default function WorkoutScreen() {
             <h3 id="confirm-back-title" className="font-bold text-text-primary mb-2">Cancel workout?</h3>
             <p className="text-text-secondary text-sm mb-5">Your progress will be lost.</p>
             <div className="flex gap-3">
-              <button autoFocus onClick={() => { setConfirmBack(false); blocker.reset?.() }} className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary">Keep going</button>
-              <button onClick={() => { allowNavRef.current = true; setConfirmBack(false); blocker.proceed?.() ?? navigate(-1) }} className="flex-1 py-2.5 bg-danger text-white rounded-xl text-sm font-semibold">Cancel Workout</button>
+              <PrimaryButton variant="secondary" onClick={() => { setConfirmBack(false); blocker.reset?.() }}>Keep going</PrimaryButton>
+              <DestructiveButton onClick={() => { allowNavRef.current = true; setConfirmBack(false); blocker.proceed?.() ?? navigate(-1) }}>Cancel Workout</DestructiveButton>
             </div>
           </div>
         </div>

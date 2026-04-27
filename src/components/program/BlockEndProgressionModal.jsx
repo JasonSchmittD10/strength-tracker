@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { convertWeight, formatWeight } from '@/lib/units'
+import PrimaryButton from '@/components/shared/PrimaryButton'
 
 // Block-end progression prompt. Generalized over `userInputs[i].progression`:
 //
@@ -111,7 +112,7 @@ export default function BlockEndProgressionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
       <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
           <h2 className="font-judge text-[26px] text-white leading-tight">Block {blockNumber} starting</h2>
@@ -177,22 +178,12 @@ export default function BlockEndProgressionModal({
         </div>
 
         <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onSkip}
-            disabled={busy}
-            className="flex-1 py-2.5 border border-bg-tertiary rounded-xl text-sm text-text-secondary disabled:opacity-50"
-          >
+          <PrimaryButton variant="secondary" onClick={onSkip} disabled={busy}>
             Skip
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={busy}
-            className="flex-1 py-2.5 bg-accent text-black rounded-xl text-sm font-semibold disabled:opacity-50"
-          >
+          </PrimaryButton>
+          <PrimaryButton onClick={handleConfirm} disabled={busy}>
             {busy ? 'Saving…' : 'Update'}
-          </button>
+          </PrimaryButton>
         </div>
       </div>
     </div>
