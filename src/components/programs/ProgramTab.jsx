@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useProgram } from '@/hooks/useProgram'
+import { useProgram, useSaveConfig } from '@/hooks/useProgram'
 import { PROGRAMS } from '@/lib/programs'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import DestructiveButton from '@/components/shared/DestructiveButton'
 import clockIcon from '@/assets/icons/icon-clock.svg'
 import ProgressIndicator from '@/components/progress/ProgressIndicator'
 import JourneyBlocks from '@/components/progress/JourneyBlocks'
@@ -43,9 +45,18 @@ function NextUpTile({ session, programId, onStart }) {
 // ─── On-program state ─────────────────────────────────────────────────────────
 function OnProgram({ program, blockInfo, nextSession, config }) {
   const navigate = useNavigate()
+  const saveConfig = useSaveConfig()
+  const [confirmEndOpen, setConfirmEndOpen] = useState(false)
 
   function handleStart() {
     navigate('/workout', { state: { session: nextSession, programId: program.id } })
+  }
+
+  function handleEndConfirmed() {
+    saveConfig.mutate(
+      { ...config, activeProgramId: null, programStartDate: null },
+      { onSuccess: () => setConfirmEndOpen(false) }
+    )
   }
 
   return (
@@ -84,13 +95,44 @@ function OnProgram({ program, blockInfo, nextSession, config }) {
         blockInfo={blockInfo ?? { blockNumber: 1, weekInBlock: 1, weeksPerBlock: program.blockStructure.weeksPerBlock }}
       />
 
-      {/* Switch Program */}
-      <button
-        onClick={() => navigate('/program-selector')}
-        className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] px-[16px] py-[12px] font-commons font-bold text-[18px] text-white tracking-[-0.36px]"
-      >
-        Switch Program
-      </button>
+      {/* Switch + End Program */}
+      <div className="flex flex-col gap-[16px]">
+        <button
+          onClick={() => navigate('/program-selector')}
+          className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] px-[16px] py-[12px] font-commons font-bold text-[18px] text-white tracking-[-0.36px]"
+        >
+          Switch Program
+        </button>
+        <DestructiveButton onClick={() => setConfirmEndOpen(true)}>
+          End Program
+        </DestructiveButton>
+      </div>
+
+      {/* Confirm end-program dialog */}
+      {confirmEndOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-[24px]">
+          <div className="bg-[#161616] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-[24px] w-full max-w-sm flex flex-col gap-[20px]">
+            <div className="flex flex-col gap-[6px]">
+              <h3 className="font-judge text-[22px] text-white leading-snug">End program?</h3>
+              <p className="font-commons text-[16px] text-[rgba(255,255,255,0.6)] leading-[1.4]">
+                You'll lose your current progress and return to program selection. You can start a new program any time.
+              </p>
+            </div>
+            <div className="flex flex-col gap-[10px]">
+              <DestructiveButton onClick={handleEndConfirmed} disabled={saveConfig.isPending}>
+                {saveConfig.isPending ? 'Ending…' : 'End Program'}
+              </DestructiveButton>
+              <button
+                onClick={() => setConfirmEndOpen(false)}
+                disabled={saveConfig.isPending}
+                className="w-full h-[46px] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[6px] font-commons font-bold text-[18px] text-white disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
