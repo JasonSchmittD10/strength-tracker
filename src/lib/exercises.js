@@ -1,3 +1,5 @@
+import { supabase } from '@/lib/supabase'
+
 export const NAME_ALIASES = {
   // Push A variants
   'Barbell Overhead Press':             'Overhead Press (Barbell)',
@@ -56,10 +58,106 @@ export const NAME_ALIASES = {
   // PHAT — phrasing variants used in the new program data
   'Hack Squat (or Leg Press)':          'Hack Squat / Leg Press',
   'Leg Extension':                      'Leg Extension (Machine)',
+  // ── Phase 3 reconciliation: collapse program-name variants onto canonical
+  // DB rows. See docs/phase-3-name-reconciliation.md for rationale.
+  // Conflict-resolution overflow (where multiple program names mapped to one
+  // DB row; the most-specific name became canonical and the rest alias here):
+  'Tricep Pushdown':                    'Tricep Pushdown (Cable)',
+  'Lat Pulldown (Wide)':                'Lat Pulldown (Wide Grip)',
+  'Incline Bench Press':                'Incline Barbell Press',
+  'Bent-Over Rear Delt Raise':          'Rear Delt Fly (DB)',
+  'Dips (Weighted)':                    'Parallel Bar Dip',
+  'Tricep Dip':                         'Parallel Bar Dip',
+  'Dumbbell Row':                       'Single-Arm DB Row',
+  'Tricep Extension (DB)':              'Overhead Tricep Extension',
+  'Overhead Press (Seated DB)':         'Seated Dumbbell Shoulder Press',
+  'Seated DB Shoulder Press':           'Seated Dumbbell Shoulder Press',
+  // Westside speed-day variants share PR history with the parent lift.
+  'Box Squat (Speed)':                  'Back Squat (Barbell)',
+  'Speed Bench (3 grips)':              'Barbell Bench Press',
+  'Speed Deadlift':                     'Deadlift (Barbell)',
 }
 
 export function normalizeExerciseName(name) {
   return NAME_ALIASES[name] || name
+}
+
+// In-memory cache of canonical name → exercise UUID. The exercises table is
+// read-only at runtime (admin-managed), so caching for the page lifetime is safe.
+// `null` is cached for misses to avoid re-querying broken names.
+const _exerciseIdCache = new Map()
+
+export function _clearExerciseIdCache() {
+  _exerciseIdCache.clear()
+}
+
+export async function resolveExerciseId(rawName) {
+  if (!rawName) return null
+  const canonical = normalizeExerciseName(rawName)
+  if (_exerciseIdCache.has(canonical)) return _exerciseIdCache.get(canonical)
+
+  const { data, error } = await supabase
+    .from('exercises')
+    .select('id')
+    .eq('name', canonical)
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (error) {
+    console.error('[resolveExerciseId] query failed for', canonical, error)
+    return null
+  }
+  const id = data?.id ?? null
+  _exerciseIdCache.set(canonical, id)
+  return id
+}
+
+export async function resolveAllExerciseIds(rawNames) {
+  const result = new Map()
+  const canonicalByRaw = new Map()
+  const toFetch = new Set()
+
+  for (const raw of rawNames) {
+    if (!raw) { result.set(raw, null); continue }
+    const canonical = normalizeExerciseName(raw)
+    canonicalByRaw.set(raw, canonical)
+    if (_exerciseIdCache.has(canonical)) {
+      result.set(raw, _exerciseIdCache.get(canonical))
+    } else {
+      toFetch.add(canonical)
+    }
+  }
+
+  if (toFetch.size > 0) {
+    const { data, error } = await supabase
+      .from('exercises')
+      .select('id, name')
+      .in('name', Array.from(toFetch))
+      .eq('is_active', true)
+
+    if (error) {
+      console.error('[resolveAllExerciseIds] query failed:', error)
+      // Cache nothing on error; let caller decide
+      for (const raw of rawNames) {
+        if (!result.has(raw)) result.set(raw, null)
+      }
+      return result
+    }
+
+    const idByCanonical = new Map((data ?? []).map(r => [r.name, r.id]))
+    for (const canonical of toFetch) {
+      const id = idByCanonical.get(canonical) ?? null
+      _exerciseIdCache.set(canonical, id)
+    }
+    for (const raw of rawNames) {
+      if (!result.has(raw)) {
+        const canonical = canonicalByRaw.get(raw)
+        result.set(raw, idByCanonical.get(canonical) ?? null)
+      }
+    }
+  }
+
+  return result
 }
 
 export const EXERCISE_LIBRARY = {
