@@ -4,6 +4,9 @@ import { supabase } from '@/lib/supabase'
 import { formatDuration, formatVolume } from '@/lib/utils'
 import { useUnitPreference } from '@/hooks/useProfile'
 import { formatWeight, convertWeight } from '@/lib/units'
+import { WORKOUT_SESSION_SELECT, normalizeNewSession } from '@/hooks/useSessions'
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const TAG_COLORS = {
   push: 'bg-push/15 text-push border-push/30',
@@ -31,15 +34,30 @@ export default function SessionDetailSheet({ open, onClose, activity }) {
   useEffect(() => {
     if (!open || !activity?.session_id) return
     setLoading(true)
-    supabase
-      .from('sessions')
-      .select('id, data, created_at')
-      .eq('id', activity.session_id)
-      .single()
-      .then(({ data, error }) => {
-        setLoading(false)
-        if (!error && data) setSessionData(data.data)
-      })
+    const sid = String(activity.session_id)
+    // Post-cutover, activity.session_id may be a uuid (workout_sessions) or a
+    // bigint-string (legacy sessions). Dispatch on shape.
+    if (UUID_RE.test(sid)) {
+      supabase
+        .from('workout_sessions')
+        .select(WORKOUT_SESSION_SELECT)
+        .eq('id', sid)
+        .single()
+        .then(({ data, error }) => {
+          setLoading(false)
+          if (!error && data) setSessionData(normalizeNewSession(data))
+        })
+    } else {
+      supabase
+        .from('sessions')
+        .select('id, data, created_at')
+        .eq('id', Number(sid))
+        .single()
+        .then(({ data, error }) => {
+          setLoading(false)
+          if (!error && data) setSessionData(data.data)
+        })
+    }
   }, [open, activity?.session_id])
 
   const summary = activity?.summary ?? {}
