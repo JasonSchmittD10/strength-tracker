@@ -17,7 +17,7 @@ export default function PreferencesScreen() {
 
   return (
     <SettingsSubScreen title="Preferences">
-      <div className="bg-bg-card border border-bg-tertiary rounded-2xl divide-y divide-bg-tertiary mt-4">
+      <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] divide-y divide-[rgba(255,255,255,0.1)] mt-[16px]">
         <SegmentedRow
           label="Weight"
           value={weightUnit}
@@ -43,9 +43,9 @@ export default function PreferencesScreen() {
 
 function SegmentedRow({ label, value, options, onChange }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <div className="text-sm text-text-primary">{label}</div>
-      <div className="flex bg-bg-tertiary rounded-lg p-0.5">
+    <div className="flex items-center justify-between px-[16px] py-[14px] gap-[12px]">
+      <p className="font-commons text-[16px] text-white tracking-[-0.2px]">{label}</p>
+      <div className="flex bg-bg-tertiary rounded-[6px] p-[2px]">
         {options.map(opt => {
           const active = opt.value === value
           return (
@@ -53,8 +53,8 @@ function SegmentedRow({ label, value, options, onChange }) {
               key={String(opt.value)}
               type="button"
               onClick={() => { if (!active) onChange(opt.value) }}
-              className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
-                active ? 'bg-accent text-black' : 'text-text-secondary hover:text-text-primary'
+              className={`px-[12px] py-[4px] font-commons font-bold text-[12px] rounded-[4px] transition-colors tracking-[-0.2px] ${
+                active ? 'bg-accent text-black' : 'text-[#8b8b8b] hover:text-white'
               }`}
             >
               {opt.label}

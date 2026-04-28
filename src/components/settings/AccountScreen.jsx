@@ -46,67 +46,73 @@ export default function AccountScreen() {
 
   return (
     <SettingsSubScreen title="My Account">
-      <div className="flex flex-col items-center gap-4 py-6">
-        <button
-          className="relative flex-shrink-0 group"
-          onClick={() => fileInputRef.current?.click()}
-          aria-label="Change profile photo"
-        >
-          {profile?.avatar_url ? (
-            <img src={profile.avatar_url} className="w-20 h-20 rounded-full object-cover" alt="Profile" />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-accent flex items-center justify-center text-white text-2xl font-bold">
-              {initial}
+      <div className="flex flex-col gap-[24px] mt-[16px]">
+        <div className="flex justify-center">
+          <button
+            className="relative flex-shrink-0 group"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Change profile photo"
+          >
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} className="w-20 h-20 rounded-full object-cover" alt="Profile" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-accent flex items-center justify-center text-white text-2xl font-bold">
+                {initial}
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
+              <Camera size={20} className="text-white" />
             </div>
-          )}
-          <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
-            <Camera size={20} className="text-white" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="user"
+            className="hidden"
+            onChange={handlePhotoUpload}
+          />
+        </div>
+
+        <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] divide-y divide-[rgba(255,255,255,0.1)]">
+          <div className="px-[16px] py-[14px]">
+            <p className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px] uppercase mb-[6px]">
+              Display Name
+            </p>
+            {editingName ? (
+              <div className="flex gap-[8px] items-center">
+                <input
+                  autoFocus
+                  value={displayName}
+                  onChange={e => setDisplayName(e.target.value)}
+                  className="flex-1 bg-bg-tertiary rounded-[6px] px-[12px] py-[8px] font-commons text-[16px] text-white focus:outline-none focus:ring-1 focus:ring-accent"
+                  onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
+                />
+                <button onClick={saveName} className="font-commons font-bold text-[14px] text-accent px-[8px]">Save</button>
+                <button onClick={() => setEditingName(false)} className="font-commons text-[14px] text-[#8b8b8b] px-[4px]">✕</button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setDisplayName(name); setEditingName(true) }}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <span className="font-commons text-[16px] text-white tracking-[-0.2px]">{name}</span>
+                <span className="font-commons font-bold text-[14px] text-accent tracking-[-0.28px]">Edit</span>
+              </button>
+            )}
           </div>
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="user"
-          className="hidden"
-          onChange={handlePhotoUpload}
-        />
-      </div>
-
-      <div className="bg-bg-card border border-bg-tertiary rounded-2xl divide-y divide-bg-tertiary mb-5">
-        <div className="px-4 py-3">
-          <div className="text-xs text-text-muted mb-1">Display Name</div>
-          {editingName ? (
-            <div className="flex gap-2 items-center">
-              <input
-                autoFocus
-                value={displayName}
-                onChange={e => setDisplayName(e.target.value)}
-                className="flex-1 bg-bg-tertiary rounded-lg px-3 py-2 text-text-primary text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
-              />
-              <button onClick={saveName} className="text-accent text-sm font-medium px-2">Save</button>
-              <button onClick={() => setEditingName(false)} className="text-text-muted text-sm px-1">✕</button>
-            </div>
-          ) : (
-            <button
-              onClick={() => { setDisplayName(name); setEditingName(true) }}
-              className="flex items-center justify-between w-full text-left"
-            >
-              <span className="text-text-primary text-sm">{name}</span>
-              <span className="text-accent text-xs">Edit</span>
-            </button>
-          )}
+          <div className="px-[16px] py-[14px]">
+            <p className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px] uppercase mb-[6px]">
+              Email
+            </p>
+            <p className="font-commons text-[16px] text-white tracking-[-0.2px]">{user?.email}</p>
+          </div>
         </div>
-        <div className="px-4 py-3">
-          <div className="text-xs text-text-muted mb-1">Email</div>
-          <div className="text-text-primary text-sm">{user?.email}</div>
-        </div>
-      </div>
 
-      <DestructiveButton onClick={signOut} className="w-full">
-        Sign Out
-      </DestructiveButton>
+        <DestructiveButton onClick={signOut}>
+          Sign Out
+        </DestructiveButton>
+      </div>
     </SettingsSubScreen>
   )
 }
