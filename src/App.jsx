@@ -17,6 +17,9 @@ import GroupDetailScreen from '@/components/groups/GroupDetailScreen'
 import ProgramDetailScreen from '@/components/programs/ProgramDetailScreen'
 import EditSchedule from '@/components/EditSchedule'
 import ConditioningSession from '@/components/ConditioningSession'
+import AccountScreen from '@/components/settings/AccountScreen'
+import PreferencesScreen from '@/components/settings/PreferencesScreen'
+import PrivacyScreen from '@/components/settings/PrivacyScreen'
 
 function MainApp() {
   return (
@@ -50,6 +53,9 @@ const router = createHashRouter([
   { path: '/workout', element: <WorkoutScreen /> },
   { path: '/conditioning', element: <ConditioningSession /> },
   { path: '/build-workout', element: <BuildWorkoutScreen /> },
+  { path: '/settings/account', element: <AccountScreen /> },
+  { path: '/settings/preferences', element: <PreferencesScreen /> },
+  { path: '/settings/privacy', element: <PrivacyScreen /> },
 ])
 
 export default function App() {

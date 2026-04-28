@@ -55,3 +55,29 @@ export function weekStart(dateStr) {
   return d.toISOString().split('T')[0]
 }
 
+function getMonday(date = new Date()) {
+  const d = new Date(date)
+  const day = d.getDay()
+  d.setDate(d.getDate() - ((day + 6) % 7))
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+export function computeWeekStreak(sessions) {
+  if (!sessions.length) return 0
+  const monday = getMonday()
+  let streak = 0
+  for (let w = 0; w < 52; w++) {
+    const start = new Date(monday)
+    start.setDate(monday.getDate() - w * 7)
+    const end = new Date(start)
+    end.setDate(start.getDate() + 7)
+    if (sessions.some(s => { const d = new Date(s.date + 'T00:00:00'); return d >= start && d < end })) {
+      streak++
+    } else {
+      break
+    }
+  }
+  return streak
+}
+

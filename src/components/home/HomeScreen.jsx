@@ -6,7 +6,7 @@ import { useTodaysSession } from '@/hooks/useTodaysSession'
 import { useCreateOverride, useDeleteOverride } from '@/hooks/useScheduleOverrides'
 import { useUpdateInputs } from '@/hooks/useProgramConfig'
 import { useProfile } from '@/hooks/useProfile'
-import { totalVolume, formatVolume } from '@/lib/utils'
+import { totalVolume, formatVolume, computeWeekStreak } from '@/lib/utils'
 import { computePrescribedWeight } from '@/lib/loadPrescription'
 import PrimaryButton from '@/components/shared/PrimaryButton'
 import DestructiveButton from '@/components/shared/DestructiveButton'
@@ -22,24 +22,6 @@ function getMonday(date = new Date()) {
   d.setDate(d.getDate() - ((day + 6) % 7))
   d.setHours(0, 0, 0, 0)
   return d
-}
-
-function computeWeekStreak(sessions) {
-  if (!sessions.length) return 0
-  const monday = getMonday()
-  let streak = 0
-  for (let w = 0; w < 52; w++) {
-    const start = new Date(monday)
-    start.setDate(monday.getDate() - w * 7)
-    const end = new Date(start)
-    end.setDate(start.getDate() + 7)
-    if (sessions.some(s => { const d = new Date(s.date + 'T00:00:00'); return d >= start && d < end })) {
-      streak++
-    } else {
-      break
-    }
-  }
-  return streak
 }
 
 function computePRsThisMonth(sessions) {
