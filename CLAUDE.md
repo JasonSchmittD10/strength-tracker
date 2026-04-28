@@ -97,11 +97,52 @@ The codebase uses literal pixel values heavily: `px-[16px]`, `py-[12px]`, `gap-[
 
 `src/App.jsx` defines routes via `createHashRouter`. Tab routes (`/home`, `/program`, `/progress`, `/groups`, `/settings`) live inside the `MainApp` layout (which renders `BottomNav`). Full-screen routes (`/workout`, `/conditioning`, `/groups/:groupId`, `/settings/account|preferences|privacy`) live outside.
 
-## Data layer
+## Data layer (READ BEFORE WRITING DB CODE)
+
+### Plumbing
 
 - TanStack Query for all server state. Hooks live in `src/hooks/` (`useProfile`, `useSessions`, `useProgramConfig`, `useGroups`, etc.).
 - Supabase for persistence. Client at `src/lib/supabase.js`.
 - Mutations use `useMutation` with optimistic updates and query invalidation.
+
+### Schema
+
+```
+DEFINITION (curated by hand)
+  base_movements ──┐
+  equipment      ──┼─→ exercises  (joins both; is_active soft-delete)
+                   │
+EXECUTION (written by the app on every workout)
+  workout_sessions ─→ workout_exercises ─→ sets
+                       └── exercise_id (FK → exercises, ON DELETE RESTRICT)
+
+ARCHIVE
+  sessions  (deprecated; read-only historical rows pre-cutover)
+```
+
+`exercises` is the canonical library, joined to `base_movements` and `equipment`. `workout_sessions` is the per-workout parent, `workout_exercises` orders exercises within it, `sets` holds one row per completed set. Cascades: `workout_sessions → workout_exercises → sets` (`ON DELETE CASCADE`); `workout_exercises → exercises` is `ON DELETE RESTRICT` so history can't be orphaned.
+
+### Conventions
+
+- **Exercise naming:** `<Equipment> <Movement>` unless universally known by a single name (Pull-up, Plank, Push-up). `NAME_ALIASES` in `src/lib/exercises.js` collapses historical/program variants onto canonical names.
+- **`modifiers` JSONB:** Free-text by design. A modifier exists only when it distinguishes from a sibling sharing `(base_movement_id, equipment_id)`. Don't add modifiers for their own sake.
+- **`is_unilateral`:** TRUE only when the exercise is performed one side at a time (Single-Arm DB Row, Bulgarian Split Squat, Cable Lateral Raise). FALSE when both sides work simultaneously even if loaded independently (DB Bench, DB Lateral Raise).
+- **`is_active`:** Soft-delete flag on `exercises`. NEVER hard-delete an exercise — `workout_exercises.exercise_id` is `ON DELETE RESTRICT` and history must stay intact. Set `is_active = false` instead.
+- **Exercise IDs are immutable.** Names can be edited; IDs cannot. Renaming is fine; renumbering breaks history.
+
+### Adding a new exercise
+
+1. Confirm the `(base_movement, equipment, modifiers, is_unilateral)` tuple isn't already covered.
+2. If a new mechanical pattern doesn't fit any existing `base_movements`, add the base movement first.
+3. Use the CTE + lookup-by-name SQL pattern (see `docs/phase-2-expansion.sql`). Never hardcode UUIDs.
+
+### Reading session history
+
+Always go through `useSessions.fetchSessions()`. Never query `workout_sessions` directly from a component. The hook returns reshaped session objects with `exercises[].sets[]` matching the in-memory shape the UI consumes.
+
+### Resolving exercise names → IDs
+
+Use `resolveExerciseId(name)` (single) or `resolveAllExerciseIds(names)` (batch) from `src/lib/exercises.js`. Both apply `NAME_ALIASES` then query `exercises` (with an in-memory cache). If the returned id is `null`, the save flow MUST throw rather than silently drop data — see `useSessions.saveSession()` for the pattern.
 
 ## Utilities
 
