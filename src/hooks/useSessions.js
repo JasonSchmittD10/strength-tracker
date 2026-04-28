@@ -4,27 +4,6 @@ import { supabase } from '@/lib/supabase'
 import { normalizeExerciseName, resolveAllExerciseIds } from '@/lib/exercises'
 import { epley, totalVolume } from '@/lib/utils'
 
-function normalizeSession(row) {
-  const d = row.data
-  const base = { _id: row.id }
-  if (d.sessionName && d.exercises) return { ...d, ...base }
-  // Legacy format
-  const exercises = (d.lifts || []).map(lift => ({
-    name: lift.name,
-    sets: (lift.sets || []).map(s => ({ weight: s.weight ?? '', reps: s.reps ?? '', rpe: s.rpe ?? '' })),
-  }))
-  return {
-    ...base,
-    id: d.id,
-    sessionId: (d.type || 'push') + '-a',
-    sessionName: d.day || d.sessionName || 'Session',
-    date: d.date || new Date().toISOString().split('T')[0],
-    duration: d.duration || null,
-    notes: d.notes || '',
-    exercises,
-  }
-}
-
 // PostgREST nested-select for hydrating a workout_sessions row back into the
 // shape the UI consumes. Exported for SessionDetailSheet's per-row fetch.
 export const WORKOUT_SESSION_SELECT = `
@@ -37,9 +16,9 @@ export const WORKOUT_SESSION_SELECT = `
 `
 
 // Reshape a normalized workout_sessions row (with nested exercises + sets)
-// into the same in-memory shape as legacy normalizeSession output.
-// Stage 3.2 only persists completed sets, so every set is rehydrated as
-// completed: true. Program metadata rides along in `notes` as JSON.
+// into the in-memory shape the UI consumes. Only completed sets are persisted,
+// so every set is rehydrated as completed: true. Program metadata rides
+// along in `notes` as JSON.
 export function normalizeNewSession(row) {
   let meta = {}
   try { meta = row.notes ? JSON.parse(row.notes) : {} } catch {}
@@ -96,34 +75,14 @@ async function fetchSessions() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
-  const [legacyRes, newRes] = await Promise.all([
-    supabase
-      .from('sessions')
-      .select('id, data, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('workout_sessions')
-      .select(WORKOUT_SESSION_SELECT)
-      .eq('user_id', user.id)
-      .order('session_date', { ascending: false }),
-  ])
+  const { data, error } = await supabase
+    .from('workout_sessions')
+    .select(WORKOUT_SESSION_SELECT)
+    .eq('user_id', user.id)
+    .order('session_date', { ascending: false })
 
-  if (legacyRes.error) throw legacyRes.error
-  if (newRes.error) throw newRes.error
-
-  const legacy = (legacyRes.data ?? []).map(normalizeSession)
-  const normalized = (newRes.data ?? []).map(normalizeNewSession)
-
-  // Merge and sort by display date descending. Both branches yield a `date`
-  // field (legacy from JSONB, new from session_date).
-  const merged = [...normalized, ...legacy]
-  merged.sort((a, b) => {
-    const da = a.date || a.completedAt || ''
-    const db = b.date || b.completedAt || ''
-    return db.localeCompare(da)
-  })
-  return merged
+  if (error) throw error
+  return (data ?? []).map(normalizeNewSession)
 }
 
 // Build the JSON metadata blob stored in workout_sessions.notes. The normalized
