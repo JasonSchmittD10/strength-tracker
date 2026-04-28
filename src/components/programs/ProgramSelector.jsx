@@ -7,6 +7,7 @@ import { PROGRAMS } from '@/lib/programs'
 import { getWeeksInMacrocycle } from '@/lib/scheduling'
 import ProgramInputsForm from '@/components/ProgramInputsForm'
 import PrimaryButton from '@/components/shared/PrimaryButton'
+import ModalOverlay from '@/components/shared/ModalOverlay'
 
 const COMING_SOON = []
 
@@ -123,7 +124,7 @@ export default function ProgramSelector() {
 
       {/* Confirm program change dialog */}
       {confirmProgram && !inputsOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
+        <ModalOverlay className="flex items-center justify-center bg-black/60 px-6">
           <div
             role="dialog"
             aria-modal="true"
@@ -151,12 +152,12 @@ export default function ProgramSelector() {
               </PrimaryButton>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* Onboarding inputs modal */}
       {inputsOpen && confirmProgram && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+        <ModalOverlay className="flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
           <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <ProgramInputsForm
               program={confirmProgram}
@@ -170,7 +171,7 @@ export default function ProgramSelector() {
               onCancel={() => { setInputsOpen(false); setConfigError(null) }}
             />
           </div>
-        </div>
+        </ModalOverlay>
       )}
     </div>
   )

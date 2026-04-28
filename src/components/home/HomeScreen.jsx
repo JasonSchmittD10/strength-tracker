@@ -14,6 +14,7 @@ import CustomWorkoutSheet from '@/components/workout/CustomWorkoutSheet'
 import HomeHero from '@/components/home/HomeHero'
 import SessionPickerSheet from '@/components/SessionPickerSheet'
 import BlockEndProgressionModal from '@/components/program/BlockEndProgressionModal'
+import ModalOverlay from '@/components/shared/ModalOverlay'
 
 function getMonday(date = new Date()) {
   const d = new Date(date)
@@ -404,7 +405,7 @@ export default function HomeScreen() {
 
       {/* Skip confirmation */}
       {confirmSkipOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
+        <ModalOverlay className="flex items-center justify-center bg-black/60 px-6">
           <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
             <h3 className="font-bold text-text-primary text-lg mb-2">
               Skip today's {resolution?.session?.name ?? 'session'}?
@@ -421,7 +422,7 @@ export default function HomeScreen() {
               </DestructiveButton>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* Horizontal rule — only after in-plan hero, 36px below hero */}

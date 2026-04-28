@@ -6,6 +6,7 @@ import { useProfile } from '@/hooks/useProfile'
 import { getWeekSchedule, getWeeksInMacrocycle } from '@/lib/scheduling'
 import { resolveSetCount, resolveExerciseDisplay } from '@/lib/exerciseResolution'
 import ProgramInputsForm from '@/components/ProgramInputsForm'
+import ModalOverlay from '@/components/shared/ModalOverlay'
 import backArrowIcon from '@/assets/icons/icon-back-arrow.svg'
 
 const PROGRAM_META = {
@@ -314,7 +315,7 @@ export default function ProgramDetailScreen() {
 
       {/* Onboarding inputs modal */}
       {inputsOpen && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+        <ModalOverlay className="flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
           <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <ProgramInputsForm
               program={program}
@@ -328,7 +329,7 @@ export default function ProgramDetailScreen() {
               onCancel={() => { setInputsOpen(false); setStartError(null) }}
             />
           </div>
-        </div>
+        </ModalOverlay>
       )}
     </div>
   )

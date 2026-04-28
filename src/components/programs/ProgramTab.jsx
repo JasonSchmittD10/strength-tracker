@@ -12,6 +12,7 @@ import ProgressIndicator from '@/components/progress/ProgressIndicator'
 import JourneyBlocks from '@/components/progress/JourneyBlocks'
 import ProgramBrowser from '@/components/ProgramBrowser'
 import ProgramInputsForm from '@/components/ProgramInputsForm'
+import ModalOverlay from '@/components/shared/ModalOverlay'
 
 // ─── Next Up session tile ─────────────────────────────────────────────────────
 function NextUpTile({ session, programId, onStart }) {
@@ -172,7 +173,7 @@ function OnProgram({ program, config, resolution, macroPosition, completedToday 
 
       {/* Edit inputs modal */}
       {editInputsOpen && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+        <ModalOverlay className="flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
           <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <ProgramInputsForm
               program={program}
@@ -186,7 +187,7 @@ function OnProgram({ program, config, resolution, macroPosition, completedToday 
               onCancel={() => setEditInputsOpen(false)}
             />
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* Switch + Edit Schedule + End Program */}
@@ -210,7 +211,7 @@ function OnProgram({ program, config, resolution, macroPosition, completedToday 
 
       {/* Confirm end-program dialog */}
       {confirmEndOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-[24px]">
+        <ModalOverlay className="flex items-center justify-center bg-black/60 px-[24px]">
           <div className="bg-[#161616] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-[24px] w-full max-w-sm flex flex-col gap-[20px]">
             <div className="flex flex-col gap-[6px]">
               <h3 className="font-judge text-[22px] text-white leading-snug">End program?</h3>
@@ -227,7 +228,7 @@ function OnProgram({ program, config, resolution, macroPosition, completedToday 
               </PrimaryButton>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
     </div>
   )
