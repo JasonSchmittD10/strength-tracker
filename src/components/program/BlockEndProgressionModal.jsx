@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { convertWeight, formatWeight } from '@/lib/units'
 import PrimaryButton from '@/components/shared/PrimaryButton'
+import ModalOverlay from '@/components/shared/ModalOverlay'
 
 // Block-end progression prompt. Generalized over `userInputs[i].progression`:
 //
@@ -112,7 +113,7 @@ export default function BlockEndProgressionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
+    <ModalOverlay className="flex items-end sm:items-center justify-center bg-black/60 px-0 sm:px-6">
       <div className="bg-bg-secondary rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
           <h2 className="font-judge text-[26px] text-white leading-tight">Block {blockNumber} starting</h2>
@@ -186,6 +187,6 @@ export default function BlockEndProgressionModal({
           </PrimaryButton>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   )
 }

@@ -8,6 +8,7 @@ import { formatVolume } from '@/lib/utils'
 import WorkoutActivityCard from './WorkoutActivityCard'
 import PrimaryButton from '@/components/shared/PrimaryButton'
 import DestructiveButton from '@/components/shared/DestructiveButton'
+import ModalOverlay from '@/components/shared/ModalOverlay'
 
 // ─── Dialogs ──────────────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ function CreateGroupDialog({ onClose, onCreated }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
+    <ModalOverlay className="flex items-center justify-center bg-black/60 px-6">
       <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-text-primary text-lg mb-4">Create a Group</h3>
         <div className="space-y-3 mb-4">
@@ -56,7 +57,7 @@ function CreateGroupDialog({ onClose, onCreated }) {
           </PrimaryButton>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   )
 }
 
@@ -77,7 +78,7 @@ function JoinGroupDialog({ onClose, onJoined }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
+    <ModalOverlay className="flex items-center justify-center bg-black/60 px-6">
       <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-text-primary text-lg mb-4">Join with Code</h3>
         <div className="space-y-3 mb-4">
@@ -98,13 +99,13 @@ function JoinGroupDialog({ onClose, onJoined }) {
           </PrimaryButton>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   )
 }
 
 function LeaveConfirmDialog({ isAdmin, isLastMember, onConfirm, onCancel, isLeaving }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
+    <ModalOverlay className="flex items-center justify-center bg-black/60 px-6">
       <div className="bg-bg-secondary rounded-2xl p-6 w-full max-w-sm">
         <h3 className="font-bold text-text-primary text-lg mb-2">Leave Group?</h3>
         <p className="text-text-secondary text-sm mb-5">
@@ -121,7 +122,7 @@ function LeaveConfirmDialog({ isAdmin, isLastMember, onConfirm, onCancel, isLeav
           </DestructiveButton>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   )
 }
 

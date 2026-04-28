@@ -12,6 +12,7 @@ import RestTimer from './RestTimer'
 import WorkoutSummary from './WorkoutSummary'
 import PrimaryButton from '@/components/shared/PrimaryButton'
 import DestructiveButton from '@/components/shared/DestructiveButton'
+import ModalOverlay from '@/components/shared/ModalOverlay'
 import { useSessions, useSaveSession } from '@/hooks/useSessions'
 import { useSaveTemplate } from '@/hooks/useTemplates'
 import { useProgramConfig } from '@/hooks/useProgramConfig'
@@ -742,7 +743,7 @@ export default function WorkoutScreen() {
 
       {/* Confirm finish dialog */}
       {confirmFinishOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-[24px]">
+        <ModalOverlay className="flex items-center justify-center bg-black/60 px-[24px]">
           <div className="bg-[#161616] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-[24px] w-full max-w-sm flex flex-col gap-[20px]">
             <div className="flex flex-col gap-[6px]">
               <h3 className="font-judge text-[22px] text-white leading-snug">Finish workout?</h3>
@@ -763,12 +764,12 @@ export default function WorkoutScreen() {
               </button>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
       {/* Confirm leave dialog */}
       {confirmBack && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 px-6">
+        <ModalOverlay className="flex items-center justify-center bg-black/60 px-6">
           <div
             role="dialog"
             aria-modal="true"
@@ -782,7 +783,7 @@ export default function WorkoutScreen() {
               <DestructiveButton onClick={() => { allowNavRef.current = true; setConfirmBack(false); blocker.proceed?.() ?? navigate(-1) }}>Cancel Workout</DestructiveButton>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
     </div>
   )
