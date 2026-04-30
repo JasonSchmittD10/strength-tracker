@@ -4,7 +4,7 @@ import { Check } from 'lucide-react'
 import historyIcon from '@/assets/icons/icon-history.svg'
 import trashIcon from '@/assets/icons/icon-trash.svg'
 import SetRow from './SetRow'
-import { EXERCISE_LIBRARY } from '@/lib/exercises'
+import { useExerciseByName } from '@/hooks/useExerciseLibrary'
 import ExerciseHistorySheet from './ExerciseHistorySheet'
 import ExerciseInfoSheet from './ExerciseInfoSheet'
 import { resolveSetCount, resolveRIR, resolveExerciseDisplay } from '@/lib/exerciseResolution'
@@ -21,9 +21,9 @@ export default function ExerciseBlock({
   const [collapsed, setCollapsed] = useState(false)
   const display = resolveExerciseDisplay(exercise, programInputs)
   const exerciseName = display.name
-  const info = EXERCISE_LIBRARY[exerciseName] || {}
-  const primaryMuscle = info.muscles?.primary?.[0] || ''
-  const inputType = info.inputType ?? 'reps'
+  const { data: info } = useExerciseByName(exerciseName)
+  const primaryMuscle = info?.primaryMuscle ?? ''
+  const inputType = info?.input_type ?? 'reps'
 
   const resolvedSets = resolveSetCount(exercise, weekInMeso) || (typeof exercise.sets === 'number' ? exercise.sets : null)
   const rir = resolveRIR(exercise, weekInMeso)
