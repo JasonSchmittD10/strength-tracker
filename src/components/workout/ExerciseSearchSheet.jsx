@@ -1,29 +1,14 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 import PrimaryButton from '@/components/shared/PrimaryButton'
 import ExerciseTile from './ExerciseTile'
-import { EXERCISE_LIBRARY } from '@/lib/exercises'
+import { useAlphaGroupedExercises } from '@/hooks/useExerciseLibrary'
 import xmarkIcon from '@/assets/icons/icon-xmark.svg'
 import searchIcon from '@/assets/icons/icon-search.svg'
 import plusSmIcon from '@/assets/icons/icon-plus-sm.svg'
 
-// All exercises sorted A–Z with muscle info
-const ALL_EXERCISES = Object.keys(EXERCISE_LIBRARY)
-  .sort()
-  .map(name => {
-    const primaryMuscle = EXERCISE_LIBRARY[name].muscles?.primary?.[0] || ''
-    return { name, primaryMuscle }
-  })
-
-// Grouped alphabetically by first letter
-const ALPHA_GROUPS = ALL_EXERCISES.reduce((acc, ex) => {
-  const letter = ex.name[0].toUpperCase()
-  if (!acc[letter]) acc[letter] = []
-  acc[letter].push(ex)
-  return acc
-}, {})
-
 export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperset }) {
+  const { data: allExercises = [], groups: alphaGroups = {}, isLoading } = useAlphaGroupedExercises()
   const [query, setQuery] = useState('')
   const [selections, setSelections] = useState(new Set())
   const inputRef = useRef(null)
@@ -39,12 +24,13 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
   }, [open])
 
   const q = query.trim().toLowerCase()
-  const filtered = q
-    ? ALL_EXERCISES.filter(ex =>
-        ex.name.toLowerCase().includes(q) ||
-        ex.primaryMuscle.toLowerCase().includes(q)
-      )
-    : null
+  const filtered = useMemo(() => {
+    if (!q) return null
+    return allExercises.filter(ex =>
+      ex.name.toLowerCase().includes(q) ||
+      ex.primaryMuscle.toLowerCase().includes(q)
+    )
+  }, [q, allExercises])
 
   function toggleSelection(name) {
     setSelections(prev => {
@@ -114,7 +100,11 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
   return (
     <SlideUpSheet open={open} onClose={onClose} topOffset={48} footer={footer} stickyHeader={stickyHeader}>
       {/* Exercise list */}
-      {filtered ? (
+      {isLoading ? (
+        <p className="text-center font-commons text-[16px] text-[#8b8b8b] py-[24px]">
+          Loading exercises…
+        </p>
+      ) : filtered ? (
         <div className="flex flex-col gap-[12px] pb-[16px]">
           {filtered.map(ex => (
             <ExerciseTile
@@ -132,7 +122,7 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
         </div>
       ) : (
         <div className="flex flex-col gap-[24px] pb-[16px]">
-          {Object.entries(ALPHA_GROUPS).map(([letter, exercises]) => (
+          {Object.entries(alphaGroups).map(([letter, exercises]) => (
             <div key={letter} className="flex flex-col gap-[16px]">
               <p className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-[1.19]">
                 {letter}
