@@ -1,4 +1,4 @@
-import exerciseInfoIcon from '@/assets/icons/icon-exercise-info.svg'
+import plusSmIcon from '@/assets/icons/icon-plus-sm.svg'
 
 export default function ExerciseTile({ exercise, isSelected, onSelect }) {
   return (
@@ -18,7 +18,11 @@ export default function ExerciseTile({ exercise, isSelected, onSelect }) {
           {exercise.primaryMuscle}
         </span>
       </div>
-      <img src={exerciseInfoIcon} alt="" className="w-[16px] h-[16px] flex-shrink-0" />
+      <img
+        src={plusSmIcon}
+        alt=""
+        className={`w-[16px] h-[16px] flex-shrink-0 ${isSelected ? '' : 'brightness-0 invert opacity-60'}`}
+      />
     </button>
   )
 }

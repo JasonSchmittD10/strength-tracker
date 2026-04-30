@@ -66,13 +66,21 @@ export default function SlideUpSheet({ open, onClose, title, children, footer, t
         onClick={onClose}
       />
 
-      {/* Sheet */}
+      {/* Sheet
+          When `topOffset` is set, the sheet locks to a fixed height of
+          `100lvh - topOffset`. Two reasons:
+            1. `lvh` (large-viewport-height) instead of `dvh` so it doesn't
+               shrink when the on-screen keyboard opens — `dvh` tracks the
+               visible area excluding keyboard.
+            2. `height` instead of `maxHeight` so the sheet doesn't resize
+               when content shrinks (e.g. filtering an exercise list while
+               typing in the search input). */}
       <div
         ref={sheetRef}
         className="relative bg-[#161616] border-t border-[rgba(255,255,255,0.1)] rounded-tl-[16px] rounded-tr-[16px] flex flex-col transition-transform duration-300"
         style={{
           transform: visible ? 'translateY(0)' : 'translateY(100%)',
-          maxHeight: topOffset ? `calc(100dvh - ${topOffset}px)` : undefined,
+          height: topOffset ? `calc(100lvh - ${topOffset}px)` : undefined,
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
