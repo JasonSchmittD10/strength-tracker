@@ -1,81 +1,89 @@
 import { supabase } from '@/lib/supabase'
 
+// Maps non-canonical exercise names (variants from programs, historical
+// session blobs, freeform user typing) onto the canonical name in the
+// `exercises` table. The canonical naming style is documented in
+// CLAUDE.md → Data layer → Conventions:
+//   - equipment-prefix (Dumbbell X, Cable X, Machine X) by default
+//   - modifier-first when more natural (Incline Dumbbell Press)
+//   - paren-suffix only for grip / style / tempo modifiers (Cable Curl (Rope))
+//   - no equipment-name suffixes, no "DB" abbreviations
+//
+// Each entry's right-hand side MUST exist as a row in the exercises table.
+// Identity entries (LHS === RHS) are omitted — normalizeExerciseName falls
+// through to the input unchanged.
 export const NAME_ALIASES = {
-  // Push A variants
-  'Barbell Overhead Press':             'Overhead Press (Barbell)',
-  'Dumbbell Incline Press':             'Incline Dumbbell Press',
-  'Cable Tricep Pushdown':              'Tricep Pushdown (Cable)',
-  'Dumbbell Overhead Tricep Extension': 'Overhead Tricep Extension',
-  // Pull A variants
+  // ── Equipment-prefix variants of program/historical names ────────────────
   'Pull-up':                            'Weighted Pull-Up',
-  'Barbell Bent-over Row':              'Barbell Row (Pronated)',
-  'Machine Chest-supported Row':        'Chest-Supported Row (DB)',
-  'Cable Face Pull':                    'Face Pull (Cable)',
-  'Barbell Bicep Curl':                 'Barbell Curl',
-  'Dumbbell Hammer Curl':               'Hammer Curl (DB)',
-  // Legs A variants
-  'Barbell Back Squat':                 'Back Squat (Barbell)',
-  'Barbell Romanian Deadlift':          'Romanian Deadlift',
-  'Machine Leg Press':                  'Leg Press',
-  'Machine Leg Curl':                   'Leg Curl (Machine)',
-  'Dumbbell Walking Lunge':             'Walking Lunge (DB)',
-  'Machine Standing Calf Raise':        'Standing Calf Raise',
-  // Push B variants
-  'Barbell Incline Bench Press':        'Incline Barbell Press',
-  'Cable Chest Fly':                    'Cable Fly (Low-to-High)',
-  'Dumbbell Lateral Raise':             'Lateral Raise (DB)',
-  'Barbell Close Grip Bench Press':     'Close-Grip Bench Press',
-  'EZ Bar Skull Crusher':               'Skull Crusher (EZ Bar)',
-  // Pull B variants
-  'Cable Lat Pulldown':                 'Lat Pulldown (Wide Grip)',
-  'Cable Seated Row':                   'Cable Row (Neutral Grip)',
-  'Dumbbell Single-arm Row':            'Single-Arm DB Row',
-  'Cable Straight-arm Pulldown':        'Straight-Arm Pulldown',
-  'Dumbbell Incline Curl':              'Incline DB Curl',
-  'Cable Curl':                         'Cable Curl (Rope)',
-  // Legs B variants
-  'Barbell Bulgarian Split Squat':      'Bulgarian Split Squat (DB)',
-  'Barbell Hack Squat':                 'Hack Squat / Leg Press',
-  'Nordic Hamstring Curl':              'Nordic Curl / Lying Leg Curl',
-  'Dumbbell Goblet Squat':              'Goblet Squat (Tempo)',
-  'Barbell Seated Calf Raise':          'Seated Calf Raise',
-  // GVT exercise name variants
-  'Chest-Supported Row':                'Chest-Supported Row (DB)',
-  'Wide-Grip Lat Pulldown':             'Lat Pulldown (Wide Grip)',
-  'Back Squat':                         'Back Squat (Barbell)',
-  'Lying Leg Curl':                     'Leg Curl (Machine)',
-  // Known freeform historical variants
   'Pull-Up':                            'Weighted Pull-Up',
   'Pull Up':                            'Weighted Pull-Up',
   'Pullup':                             'Weighted Pull-Up',
-  // PHAT — Pendlay row is a sub-variant of barbell row; aggregate history under one name
-  'Barbell Row (Pendlay)':              'Barbell Row (Pronated)',
-  'Pendlay Row':                        'Barbell Row (Pronated)',
-  // PHAT — speed-day variants share history with the parent power lift
-  'Bench Press (Speed)':                'Barbell Bench Press',
-  'Back Squat (Speed)':                 'Back Squat (Barbell)',
-  'Barbell Row (Speed)':                'Barbell Row (Pronated)',
-  // PHAT — phrasing variants used in the new program data
-  'Hack Squat (or Leg Press)':          'Hack Squat / Leg Press',
-  'Leg Extension':                      'Leg Extension (Machine)',
-  // ── Phase 3 reconciliation: collapse program-name variants onto canonical
-  // DB rows. See docs/phase-3-name-reconciliation.md for rationale.
-  // Conflict-resolution overflow (where multiple program names mapped to one
-  // DB row; the most-specific name became canonical and the rest alias here):
-  'Tricep Pushdown':                    'Tricep Pushdown (Cable)',
-  'Lat Pulldown (Wide)':                'Lat Pulldown (Wide Grip)',
+  'Barbell Bent-over Row':              'Barbell Row (Pronated)',
+  'Barbell Bicep Curl':                 'Barbell Curl',
+  'Barbell Romanian Deadlift':          'Romanian Deadlift',
+  'Barbell Close Grip Bench Press':     'Close-Grip Bench Press',
+  'Barbell Seated Calf Raise':          'Seated Calf Raise',
+  'Barbell Incline Bench Press':        'Incline Barbell Press',
   'Incline Bench Press':                'Incline Barbell Press',
-  'Bent-Over Rear Delt Raise':          'Rear Delt Fly (DB)',
+  'Cable Chest Fly':                    'Cable Fly (Low-to-High)',
+  'Cable Seated Row':                   'Cable Row (Neutral Grip)',
+  'Cable Straight-arm Pulldown':        'Straight-Arm Pulldown',
+  'Cable Curl':                         'Cable Curl (Rope)',
+  'Cable Lat Pulldown':                 'Cable Lat Pulldown (Wide Grip)',
+  'Wide-Grip Lat Pulldown':             'Cable Lat Pulldown (Wide Grip)',
+  'Lat Pulldown (Wide)':                'Cable Lat Pulldown (Wide Grip)',
+  'Machine Chest-supported Row':        'Dumbbell Chest-Supported Row',
+  'Chest-Supported Row':                'Dumbbell Chest-Supported Row',
+  'Machine Leg Press':                  'Leg Press',
+  'Machine Standing Calf Raise':        'Standing Calf Raise',
+  'Lying Leg Curl':                     'Machine Leg Curl',
+  'Leg Extension':                      'Machine Leg Extension',
+  'Dumbbell Incline Press':             'Incline Dumbbell Press',
+  'Dumbbell Overhead Tricep Extension': 'Overhead Tricep Extension',
+  'Tricep Extension (DB)':              'Overhead Tricep Extension',
+  'Tricep Pushdown':                    'Cable Tricep Pushdown',
+  'Dumbbell Goblet Squat':              'Goblet Squat (Tempo)',
+  'Bent-Over Rear Delt Raise':          'Dumbbell Rear Delt Fly',
   'Dips (Weighted)':                    'Parallel Bar Dip',
   'Tricep Dip':                         'Parallel Bar Dip',
-  'Dumbbell Row':                       'Single-Arm DB Row',
-  'Tricep Extension (DB)':              'Overhead Tricep Extension',
+  'Dumbbell Row':                       'Dumbbell Single-Arm Row',
   'Overhead Press (Seated DB)':         'Seated Dumbbell Shoulder Press',
   'Seated DB Shoulder Press':           'Seated Dumbbell Shoulder Press',
-  // Westside speed-day variants share PR history with the parent lift.
-  'Box Squat (Speed)':                  'Back Squat (Barbell)',
+  'Back Squat':                         'Barbell Back Squat',
+  'Nordic Hamstring Curl':              'Nordic Curl',
+  // PHAT — Pendlay row is a sub-variant of barbell row; aggregate under one canonical
+  'Barbell Row (Pendlay)':              'Barbell Row (Pronated)',
+  'Pendlay Row':                        'Barbell Row (Pronated)',
+  // Speed-day variants share PR history with the parent lift
+  'Bench Press (Speed)':                'Barbell Bench Press',
   'Speed Bench (3 grips)':              'Barbell Bench Press',
-  'Speed Deadlift':                     'Deadlift (Barbell)',
+  'Back Squat (Speed)':                 'Barbell Back Squat',
+  'Box Squat (Speed)':                  'Barbell Back Squat',
+  'Barbell Row (Speed)':                'Barbell Row (Pronated)',
+  'Speed Deadlift':                     'Barbell Deadlift',
+  // PHAT phrasing variants
+  'Hack Squat (or Leg Press)':          'Barbell Hack Squat',
+  // ── Pre-Phase-8 canonicals (kept so historical session blobs and any
+  // pre-update program references continue to resolve)
+  'Walking Lunge (DB)':                 'Dumbbell Walking Lunge',
+  'Bulgarian Split Squat (DB)':         'Dumbbell Bulgarian Split Squat',
+  'Hammer Curl (DB)':                   'Dumbbell Hammer Curl',
+  'Lateral Raise (DB)':                 'Dumbbell Lateral Raise',
+  'Rear Delt Fly (DB)':                 'Dumbbell Rear Delt Fly',
+  'Chest-Supported Row (DB)':           'Dumbbell Chest-Supported Row',
+  'Single-Arm DB Row':                  'Dumbbell Single-Arm Row',
+  'Incline DB Curl':                    'Incline Dumbbell Curl',
+  'Back Squat (Barbell)':               'Barbell Back Squat',
+  'Deadlift (Barbell)':                 'Barbell Deadlift',
+  'Overhead Press (Barbell)':           'Barbell Overhead Press',
+  'Face Pull (Cable)':                  'Cable Face Pull',
+  'Tricep Pushdown (Cable)':            'Cable Tricep Pushdown',
+  'Skull Crusher (EZ Bar)':             'EZ Bar Skull Crusher',
+  'Leg Curl (Machine)':                 'Machine Leg Curl',
+  'Leg Extension (Machine)':            'Machine Leg Extension',
+  'Lat Pulldown (Wide Grip)':           'Cable Lat Pulldown (Wide Grip)',
+  'Hack Squat / Leg Press':             'Barbell Hack Squat',
+  'Nordic Curl / Lying Leg Curl':       'Nordic Curl',
 }
 
 export function normalizeExerciseName(name) {
