@@ -98,7 +98,7 @@ export default function ExerciseSearchSheet({ open, onClose, onAdd, onAddSuperse
   )
 
   return (
-    <SlideUpSheet open={open} onClose={onClose} topOffset={48} footer={footer} stickyHeader={stickyHeader}>
+    <SlideUpSheet open={open} onClose={onClose} topOffset={48} footer={footer} stickyHeader={stickyHeader} lockContentDrag>
       {/* Exercise list */}
       {isLoading ? (
         <p className="text-center font-commons text-[16px] text-[#8b8b8b] py-[24px]">

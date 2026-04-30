@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-export default function SlideUpSheet({ open, onClose, title, children, footer, topOffset = 0, stickyHeader }) {
+export default function SlideUpSheet({ open, onClose, title, children, footer, topOffset = 0, stickyHeader, lockContentDrag = false }) {
   const [mounted, setMounted] = useState(false)
   const [visible, setVisible] = useState(false)
   const contentRef = useRef(null)
@@ -32,6 +32,10 @@ export default function SlideUpSheet({ open, onClose, title, children, footer, t
   }, [open])
 
   function onTouchStart(e) {
+    // When lockContentDrag is set (e.g. for sheets with a long scrollable
+    // list), don't initiate drag-to-close if the touch began inside the
+    // scrollable content area — let it scroll instead.
+    if (lockContentDrag && contentRef.current?.contains(e.target)) return
     dragStartY.current = e.touches[0].clientY
     dragCurrentY.current = e.touches[0].clientY
   }
