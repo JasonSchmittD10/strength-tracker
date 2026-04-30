@@ -297,7 +297,7 @@ export default function HomeScreen() {
             onLogRecovery={() => navigate('/workout', { state: { mode: 'custom', preset: 'recovery' } })}
             onMobility={() => navigate('/workout', { state: { mode: 'custom', preset: 'mobility' } })}
             onStartCustom={() => setPickerOpen(true)}
-            onStartNewPlan={() => navigate('/program-selector')}
+            onStartNewPlan={() => navigate('/program')}
           />
         )}
         {resolution?.skipped && (
