@@ -44,11 +44,11 @@ export function ActiveWorkoutProvider({ children }) {
     return () => clearInterval(id)
   }, [segmentStartMs])
 
-  const elapsedSeconds = useMemo(() => {
-    if (segmentStartMs === null) return accumulatedSeconds
-    return accumulatedSeconds + Math.floor((Date.now() - segmentStartMs) / 1000)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accumulatedSeconds, segmentStartMs])
+  // Recomputed each render; setTick above triggers a re-render every second
+  // while running. Don't memoize — Date.now() isn't a hook dep.
+  const elapsedSeconds = segmentStartMs === null
+    ? accumulatedSeconds
+    : accumulatedSeconds + Math.floor((Date.now() - segmentStartMs) / 1000)
 
   useEffect(() => {
     if (!isActive) return

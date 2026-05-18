@@ -549,7 +549,7 @@ export default function WorkoutScreen() {
         {/* Left: minimize button + session name + subtitle */}
         <div className="flex items-center gap-[8px] flex-1 min-w-0">
           <button
-            onClick={minimize}
+            onClick={() => { minimize(); navigate('/home') }}
             className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex-shrink-0 active:opacity-70"
             aria-label="Minimize workout"
           >

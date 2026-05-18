@@ -28,7 +28,7 @@ function MainApp() {
   const showBar = isActive && isMinimized
   return (
     <div className="flex flex-col h-screen bg-bg-primary overflow-hidden">
-      <div className={`flex-1 overflow-y-scroll overscroll-y-contain ${showBar ? 'pb-[119px]' : 'pb-[54px]'}`}>
+      <div className={`flex-1 overflow-y-scroll overscroll-y-contain ${showBar ? 'pb-[149px]' : 'pb-[54px]'}`}>
         <Outlet />
       </div>
       {showBar && <MinimizedWorkoutBar />}
