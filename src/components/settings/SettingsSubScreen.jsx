@@ -11,7 +11,7 @@ export default function SettingsSubScreen({ title, children }) {
           className="flex items-center justify-center w-8 h-8 -ml-1"
           aria-label="Back"
         >
-          <img src={backArrow} alt="" className="w-5 h-5" />
+          <img src={backArrow} alt="" className="w-[5px] h-[11px]" />
         </button>
         <h1 className="font-judge font-bold text-[26px] text-white leading-[1.2]">{title}</h1>
       </div>

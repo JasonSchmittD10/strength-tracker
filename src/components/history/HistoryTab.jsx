@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import SessionCard from './SessionCard'
 import LoadingSpinner from '@/components/shared/LoadingSpinner'
+import backArrow from '@/assets/icons/icon-back-arrow.svg'
+import emptyWorkoutIcon from '@/assets/icons/icon-empty-workout.svg'
 
 function groupByRelativeDate(sessions) {
   const groups = {}
@@ -30,38 +31,42 @@ export default function HistoryTab() {
   const navigate = useNavigate()
   const { data: sessions = [], isLoading } = useSessions()
 
-  if (isLoading) return <LoadingSpinner />
-
-  if (!sessions.length) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-center px-6 mt-12">
-        <div className="text-4xl mb-3">📋</div>
-        <p className="text-text-secondary">No sessions logged yet.</p>
-      </div>
-    )
-  }
-
-  const groups = groupByRelativeDate(sessions)
-
   return (
-    <div className="safe-top px-4 pb-4 max-w-lg mx-auto">
-      <div className="flex items-center gap-3 py-4">
+    <div className="flex flex-col min-h-screen bg-bg-primary">
+      <div className="safe-top flex items-center gap-[12px] px-4 pt-[14px] pb-[12px]">
         <button
           onClick={() => navigate(-1)}
-          className="text-text-muted hover:text-text-primary transition-colors p-1"
+          className="flex items-center justify-center w-8 h-8 -ml-1"
+          aria-label="Back"
         >
-          <ArrowLeft size={20} />
+          <img src={backArrow} alt="" className="w-[5px] h-[11px]" />
         </button>
-        <h1 className="font-bold text-xl text-text-primary">History</h1>
+        <h1 className="font-judge font-bold text-[26px] text-white leading-[1.2]">History</h1>
       </div>
-      {Object.entries(groups).map(([label, items]) => (
-        <div key={label} className="mb-5">
-          <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">{label}</div>
-          <div className="space-y-2">
-            {items.map((s, i) => <SessionCard key={s._id || i} session={s} />)}
-          </div>
+
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : sessions.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-[80px] gap-[16px]">
+          <img src={emptyWorkoutIcon} alt="" className="w-[48px] h-[48px] opacity-60" />
+          <p className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] text-center">
+            No sessions logged yet.
+          </p>
         </div>
-      ))}
+      ) : (
+        <div className="px-4 pb-8 flex flex-col gap-[24px]">
+          {Object.entries(groupByRelativeDate(sessions)).map(([label, items]) => (
+            <div key={label} className="flex flex-col gap-[12px]">
+              <p className="font-commons font-semibold text-[18px] text-[rgba(255,255,255,0.6)] tracking-[-0.36px] leading-[14px]">
+                {label}
+              </p>
+              <div className="flex flex-col gap-[8px]">
+                {items.map((s, i) => <SessionCard key={s._id || i} session={s} />)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

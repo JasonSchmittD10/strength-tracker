@@ -12,11 +12,35 @@ import SlideUpSheet from '@/components/shared/SlideUpSheet'
 import PrimaryButton from '@/components/shared/PrimaryButton'
 import DestructiveButton from '@/components/shared/DestructiveButton'
 
-const TAG_COLORS = {
-  push: 'bg-push/15 text-push border-push/30',
-  pull: 'bg-pull/15 text-pull border-pull/30',
-  legs: 'bg-legs/15 text-legs border-legs/30',
-  conditioning: 'bg-accent/15 text-accent border-accent/30',
+const TAG_CLASSES = {
+  push: 'border-push/40 text-push',
+  pull: 'border-pull/40 text-pull',
+  legs: 'border-legs/40 text-legs',
+  conditioning: 'border-accent/40 text-accent',
+}
+
+function CategoryPill({ tag, label }) {
+  const cls = TAG_CLASSES[tag] || 'border-[rgba(255,255,255,0.1)] text-[rgba(255,255,255,0.4)]'
+  return (
+    <span
+      className={`border ${cls} rounded-[4px] pt-[4px] pb-[2px] px-[6px] font-commons text-[12px] tracking-[-0.2px] leading-[14px] uppercase`}
+    >
+      {label}
+    </span>
+  )
+}
+
+function StatTile({ label, value }) {
+  return (
+    <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] pt-[16px] pb-[12px] px-[16px] flex flex-col gap-[4px]">
+      <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px] uppercase whitespace-nowrap overflow-hidden text-ellipsis">
+        {label}
+      </p>
+      <p className="font-judge font-bold text-[28px] text-white leading-none">
+        {value}
+      </p>
+    </div>
+  )
 }
 
 export default function SessionCard({ session }) {
@@ -26,68 +50,89 @@ export default function SessionCard({ session }) {
   const unit = useUnitPreference()
 
   const isConditioning = session.session_type === 'conditioning'
+  const cs = session.conditioning_summary ?? null
 
   async function handleDelete() {
     await deleteSession(session._id)
     setDetailOpen(false)
     setConfirmDelete(false)
   }
+
   const vol = totalVolume(session.exercises || [])
-  const completedSets = (session.exercises || []).reduce((n, ex) => n + (ex.sets || []).filter(s => s.completed !== false).length, 0)
-  const cs = session.conditioning_summary ?? null
+  const volDisplay = formatVolume(convertWeight(vol, 'lbs', unit))
+  const completedSets = (session.exercises || []).reduce(
+    (n, ex) => n + (ex.sets || []).filter(s => s.completed !== false).length,
+    0,
+  )
+
+  const conditioningPillLabel = modalityLabel(cs?.modality ?? session.modality) || 'Conditioning'
 
   return (
     <>
       <button
         onClick={() => setDetailOpen(true)}
-        className="w-full bg-bg-card border border-bg-tertiary rounded-2xl p-4 text-left hover:border-accent/30 transition-colors"
+        className="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] p-[16px] text-left active:opacity-80 transition-opacity"
       >
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              {isConditioning ? (
-                <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${TAG_COLORS.conditioning}`}>
-                  {modalityLabel(cs?.modality ?? session.modality) || 'Conditioning'}
-                </span>
-              ) : session.tag ? (
-                <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-full border ${TAG_COLORS[session.tag] || 'bg-accent/15 text-accent border-accent/30'}`}>
-                  {session.tagLabel || session.tag}
-                </span>
-              ) : null}
-            </div>
-            <div className="font-bold text-text-primary">{session.sessionName}</div>
-            <div className="text-xs text-text-muted mt-0.5">{formatDate(session.date)}</div>
+        <div className="flex items-start justify-between gap-[12px]">
+          <div className="flex flex-col gap-[8px] min-w-0 flex-1">
+            {(isConditioning || session.tag) && (
+              <div className="flex flex-wrap gap-[8px]">
+                {isConditioning ? (
+                  <CategoryPill tag="conditioning" label={conditioningPillLabel} />
+                ) : (
+                  <CategoryPill tag={session.tag} label={session.tagLabel || session.tag} />
+                )}
+              </div>
+            )}
+            <p className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-[1.19] truncate">
+              {session.sessionName}
+            </p>
+            <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+              {formatDate(session.date)}
+            </p>
           </div>
-          <div className="text-right">
+          <div className="flex flex-col items-end gap-[2px] flex-shrink-0">
             {isConditioning ? (
               <>
-                {session.duration && (
-                  <div className="text-sm font-medium text-text-secondary">
+                {session.duration != null && (
+                  <p className="font-judge font-bold text-[22px] text-white leading-none">
                     {formatDurationHMS(session.duration)}
-                  </div>
+                  </p>
                 )}
                 {cs?.distance_value != null && (
-                  <div className="text-xs text-text-muted">
+                  <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
                     {cs.distance_value} {cs.distance_unit}
-                  </div>
+                  </p>
                 )}
                 {cs?.avg_pace_seconds_per_unit && cs?.distance_unit && (
-                  <div className="text-xs text-text-muted">
+                  <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
                     {formatPace(cs.avg_pace_seconds_per_unit, cs.distance_unit)}
-                  </div>
+                  </p>
                 )}
                 {cs?.rounds_completed != null && (
-                  <div className="text-xs text-text-muted">{cs.rounds_completed} rounds</div>
+                  <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                    {cs.rounds_completed} rounds
+                  </p>
                 )}
                 {cs?.rpe != null && (
-                  <div className="text-xs text-text-muted">RPE {cs.rpe}</div>
+                  <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                    RPE {cs.rpe}
+                  </p>
                 )}
               </>
             ) : (
               <>
-                <div className="text-sm font-medium text-text-secondary">{formatVolume(convertWeight(vol, 'lbs', unit))} {unit}</div>
-                {session.duration && <div className="text-xs text-text-muted">{formatDuration(session.duration)}</div>}
-                <div className="text-xs text-text-muted">{completedSets} sets</div>
+                <p className="font-judge font-bold text-[22px] text-white leading-none whitespace-nowrap">
+                  {volDisplay} <span className="text-[14px] text-[#8b8b8b]">{unit}</span>
+                </p>
+                {session.duration != null && (
+                  <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                    {formatDuration(session.duration)}
+                  </p>
+                )}
+                <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                  {completedSets} sets
+                </p>
               </>
             )}
           </div>
@@ -99,9 +144,11 @@ export default function SessionCard({ session }) {
         onClose={() => { setDetailOpen(false); setConfirmDelete(false) }}
         title={session.sessionName}
         footer={confirmDelete ? (
-          <div className="space-y-2">
-            <p className="text-sm text-text-secondary text-center">Delete this workout? This can't be undone.</p>
-            <div className="flex gap-3">
+          <div className="flex flex-col gap-[12px]">
+            <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] text-center">
+              Delete this workout? This can't be undone.
+            </p>
+            <div className="flex gap-[12px]">
               <PrimaryButton variant="secondary" onClick={() => setConfirmDelete(false)} disabled={deleting}>
                 Cancel
               </PrimaryButton>
@@ -113,76 +160,94 @@ export default function SessionCard({ session }) {
         ) : (
           <button
             onClick={() => setConfirmDelete(true)}
-            className="w-full py-2 text-danger text-sm font-medium hover:opacity-80 transition-opacity"
+            className="w-full font-commons font-bold text-[18px] text-[#c02727] tracking-[-0.36px] text-center py-[8px]"
           >
             Delete Workout
           </button>
         )}
       >
         {isConditioning ? (
-          <div className="space-y-3 text-sm">
-            <div className="flex flex-wrap gap-3 text-text-secondary">
-              <span>{formatDate(session.date)}</span>
+          <div className="flex flex-col gap-[16px]">
+            <div className="flex flex-wrap items-center gap-[12px]">
+              <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                {formatDate(session.date)}
+              </span>
               {session.duration != null && (
-                <span>{formatDurationHMS(session.duration)}</span>
+                <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                  {formatDurationHMS(session.duration)}
+                </span>
               )}
-              {cs?.modality && <span>{modalityLabel(cs.modality)}</span>}
+              {cs?.modality && (
+                <CategoryPill tag="conditioning" label={modalityLabel(cs.modality)} />
+              )}
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-[12px]">
               {cs?.distance_value != null && (
-                <div className="bg-bg-tertiary rounded-xl p-3">
-                  <div className="text-xs text-text-muted mb-1">Distance</div>
-                  <div className="text-text-primary font-semibold">
-                    {cs.distance_value} {cs.distance_unit}
-                  </div>
-                </div>
+                <StatTile label="DISTANCE" value={`${cs.distance_value} ${cs.distance_unit}`} />
               )}
               {cs?.avg_pace_seconds_per_unit && cs?.distance_unit && (
-                <div className="bg-bg-tertiary rounded-xl p-3">
-                  <div className="text-xs text-text-muted mb-1">Avg pace</div>
-                  <div className="text-text-primary font-semibold">
-                    {formatPace(cs.avg_pace_seconds_per_unit, cs.distance_unit)}
-                  </div>
-                </div>
+                <StatTile label="AVG PACE" value={formatPace(cs.avg_pace_seconds_per_unit, cs.distance_unit)} />
               )}
               {cs?.rounds_completed != null && (
-                <div className="bg-bg-tertiary rounded-xl p-3">
-                  <div className="text-xs text-text-muted mb-1">Rounds</div>
-                  <div className="text-text-primary font-semibold">{cs.rounds_completed}</div>
-                </div>
+                <StatTile label="ROUNDS" value={cs.rounds_completed} />
               )}
               {cs?.rpe != null && (
-                <div className="bg-bg-tertiary rounded-xl p-3">
-                  <div className="text-xs text-text-muted mb-1">RPE</div>
-                  <div className="text-text-primary font-semibold">{cs.rpe}</div>
-                </div>
+                <StatTile label="RPE" value={cs.rpe} />
               )}
             </div>
             {session.notes && (
-              <div className="text-text-secondary whitespace-pre-line pt-1">{session.notes}</div>
+              <p className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] whitespace-pre-line">
+                {session.notes}
+              </p>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex gap-4 text-sm text-text-secondary">
-              <span>{formatDate(session.date)}</span>
-              {session.duration && <span>{formatDuration(session.duration)}</span>}
-              <span>{formatVolume(convertWeight(vol, 'lbs', unit))} {unit}</span>
+          <div className="flex flex-col gap-[24px]">
+            <div className="flex flex-wrap items-center gap-[12px]">
+              <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                {formatDate(session.date)}
+              </span>
+              {session.duration != null && (
+                <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                  {formatDuration(session.duration)}
+                </span>
+              )}
+              <span className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px]">
+                {volDisplay} {unit}
+              </span>
             </div>
-            {(session.exercises || []).map((ex, i) => {
-              const exVol = totalVolume([ex])
-              return (
-                <div key={i}>
-                  <div className="font-semibold text-text-primary mb-1">{ex.name}</div>
-                  <div className="text-xs text-text-muted mb-1">{formatVolume(convertWeight(exVol, 'lbs', unit))} {unit} volume</div>
-                  {(ex.sets || []).map((s, j) => (
-                    <div key={j} className="text-sm text-text-secondary py-0.5">
-                      {j + 1}. {formatWeight(s.weight, unit)} × {s.reps} reps{s.rpe ? ` @ ${s.rpe} RPE` : ''}
+            <div className="flex flex-col gap-[16px]">
+              {(session.exercises || []).map((ex, i) => {
+                const exVol = totalVolume([ex])
+                const exVolDisplay = formatVolume(convertWeight(exVol, 'lbs', unit))
+                return (
+                  <div
+                    key={i}
+                    className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] p-[16px] flex flex-col gap-[8px]"
+                  >
+                    <div className="flex items-baseline justify-between gap-[8px]">
+                      <p className="font-commons font-semibold text-[18px] text-white tracking-[-0.5px] leading-[1.19]">
+                        {ex.name}
+                      </p>
+                      <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px] whitespace-nowrap">
+                        {exVolDisplay} {unit}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )
-            })}
+                    <div className="flex flex-col gap-[2px]">
+                      {(ex.sets || []).map((s, j) => (
+                        <p
+                          key={j}
+                          className="font-commons text-[16px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px]"
+                        >
+                          <span className="text-[rgba(255,255,255,0.4)]">{j + 1}.</span>{' '}
+                          {formatWeight(s.weight, unit)} × {s.reps} reps{s.rpe ? ` @ ${s.rpe} RPE` : ''}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
       </SlideUpSheet>
