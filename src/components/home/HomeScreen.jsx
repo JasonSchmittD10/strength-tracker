@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useActiveWorkout } from '@/contexts/ActiveWorkoutContext'
 import { ChevronRight, Repeat, X } from 'lucide-react'
 import { useSessions } from '@/hooks/useSessions'
 import { useTodaysSession } from '@/hooks/useTodaysSession'
@@ -79,6 +80,7 @@ function getThisWeekSessions(sessions) {
 
 export default function HomeScreen() {
   const navigate = useNavigate()
+  const { startWorkout } = useActiveWorkout()
   const [pickerOpen, setPickerOpen] = useState(false)
   const [swapSheetOpen, setSwapSheetOpen] = useState(false)
   const [confirmSkipOpen, setConfirmSkipOpen] = useState(false)
@@ -282,20 +284,34 @@ export default function HomeScreen() {
             daysThisWeek={thisWeekSessions.length}
             nextSessionName={nextAfterRest}
             onStart={() => {
-              const route = todaySessionObj?.type === 'conditioning' ? '/conditioning' : '/workout'
-              navigate(route, {
-                state: {
+              if (todaySessionObj?.type === 'conditioning') {
+                navigate('/conditioning', {
+                  state: {
+                    session: todaySessionObj,
+                    programId: program?.id,
+                    programConfigId: config?.id,
+                    scheduledDate: todayStr,
+                    wasSwapped: swapInProgress,
+                  },
+                })
+              } else {
+                const programSubtitle = program && macroPosition && !macroPosition.completed
+                  ? `${program.name} · Block ${macroPosition.blockNumber} · Week ${macroPosition.weekInBlock} · ${macroPosition.weekLabel}`
+                  : null
+                startWorkout({
+                  mode: 'program',
                   session: todaySessionObj,
                   programId: program?.id,
                   programConfigId: config?.id,
                   scheduledDate: todayStr,
                   wasSwapped: swapInProgress,
-                },
-              })
+                  programSubtitle,
+                })
+              }
             }}
             onViewRecap={() => navigate('/history')}
-            onLogRecovery={() => navigate('/workout', { state: { mode: 'custom', preset: 'recovery' } })}
-            onMobility={() => navigate('/workout', { state: { mode: 'custom', preset: 'mobility' } })}
+            onLogRecovery={() => startWorkout({ mode: 'custom', preset: 'recovery' })}
+            onMobility={() => startWorkout({ mode: 'custom', preset: 'mobility' })}
             onStartCustom={() => setPickerOpen(true)}
             onStartNewPlan={() => navigate('/program')}
           />

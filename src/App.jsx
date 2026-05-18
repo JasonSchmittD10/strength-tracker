@@ -20,13 +20,18 @@ import ConditioningSession from '@/components/ConditioningSession'
 import AccountScreen from '@/components/settings/AccountScreen'
 import PreferencesScreen from '@/components/settings/PreferencesScreen'
 import PrivacyScreen from '@/components/settings/PrivacyScreen'
+import MinimizedWorkoutBar from '@/components/workout/MinimizedWorkoutBar'
+import { ActiveWorkoutProvider, useActiveWorkout } from '@/contexts/ActiveWorkoutContext'
 
 function MainApp() {
+  const { isActive, isMinimized } = useActiveWorkout()
+  const showBar = isActive && isMinimized
   return (
     <div className="flex flex-col h-screen bg-bg-primary overflow-hidden">
-      <div className="flex-1 overflow-y-scroll overscroll-y-contain pb-[54px]">
+      <div className={`flex-1 overflow-y-scroll overscroll-y-contain ${showBar ? 'pb-[119px]' : 'pb-[54px]'}`}>
         <Outlet />
       </div>
+      {showBar && <MinimizedWorkoutBar />}
       <BottomNav />
     </div>
   )
@@ -50,7 +55,6 @@ const router = createHashRouter([
     ],
   },
   { path: '/groups/:groupId', element: <GroupDetailScreen /> },
-  { path: '/workout', element: <WorkoutScreen /> },
   { path: '/conditioning', element: <ConditioningSession /> },
   { path: '/build-workout', element: <BuildWorkoutScreen /> },
   { path: '/settings/account', element: <AccountScreen /> },
@@ -58,10 +62,28 @@ const router = createHashRouter([
   { path: '/settings/privacy', element: <PrivacyScreen /> },
 ])
 
+function AppShell() {
+  const { isActive, isMinimized } = useActiveWorkout()
+  return (
+    <>
+      <RouterProvider router={router} />
+      {isActive && (
+        <div className={isMinimized ? 'hidden' : 'fixed inset-0 z-50'}>
+          <WorkoutScreen />
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function App() {
   const { loading, session, recoveryMode, setRecoveryMode } = useAuth()
   if (loading) return <SplashScreen />
   if (recoveryMode) return <ResetPasswordScreen onDone={() => setRecoveryMode(false)} />
   if (!session) return <LoginScreen />
-  return <RouterProvider router={router} />
+  return (
+    <ActiveWorkoutProvider>
+      <AppShell />
+    </ActiveWorkoutProvider>
+  )
 }
