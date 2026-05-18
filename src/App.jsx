@@ -37,36 +37,11 @@ function MainApp() {
   )
 }
 
-const router = createHashRouter([
-  {
-    path: '/',
-    element: <MainApp />,
-    children: [
-      { index: true, element: <Navigate to="/home" replace /> },
-      { path: 'home', element: <HomeScreen /> },
-      { path: 'history', element: <HistoryTab /> },
-      { path: 'program', element: <ProgramTab /> },
-      { path: 'progress', element: <ProgressTab /> },
-      { path: 'groups', element: <GroupsTab /> },
-      { path: 'settings', element: <SettingsTab /> },
-      { path: 'program-selector', element: <ProgramSelector /> },
-      { path: 'program-detail/:programId', element: <ProgramDetailScreen /> },
-      { path: 'edit-schedule', element: <EditSchedule /> },
-    ],
-  },
-  { path: '/groups/:groupId', element: <GroupDetailScreen /> },
-  { path: '/conditioning', element: <ConditioningSession /> },
-  { path: '/build-workout', element: <BuildWorkoutScreen /> },
-  { path: '/settings/account', element: <AccountScreen /> },
-  { path: '/settings/preferences', element: <PreferencesScreen /> },
-  { path: '/settings/privacy', element: <PrivacyScreen /> },
-])
-
-function AppShell() {
+function RootLayout() {
   const { isActive, isMinimized } = useActiveWorkout()
   return (
     <>
-      <RouterProvider router={router} />
+      <Outlet />
       {isActive && (
         <div className={isMinimized ? 'hidden' : 'fixed inset-0 z-50'}>
           <WorkoutScreen />
@@ -76,6 +51,36 @@ function AppShell() {
   )
 }
 
+const router = createHashRouter([
+  {
+    element: <RootLayout />,
+    children: [
+      {
+        path: '/',
+        element: <MainApp />,
+        children: [
+          { index: true, element: <Navigate to="/home" replace /> },
+          { path: 'home', element: <HomeScreen /> },
+          { path: 'history', element: <HistoryTab /> },
+          { path: 'program', element: <ProgramTab /> },
+          { path: 'progress', element: <ProgressTab /> },
+          { path: 'groups', element: <GroupsTab /> },
+          { path: 'settings', element: <SettingsTab /> },
+          { path: 'program-selector', element: <ProgramSelector /> },
+          { path: 'program-detail/:programId', element: <ProgramDetailScreen /> },
+          { path: 'edit-schedule', element: <EditSchedule /> },
+        ],
+      },
+      { path: '/groups/:groupId', element: <GroupDetailScreen /> },
+      { path: '/conditioning', element: <ConditioningSession /> },
+      { path: '/build-workout', element: <BuildWorkoutScreen /> },
+      { path: '/settings/account', element: <AccountScreen /> },
+      { path: '/settings/preferences', element: <PreferencesScreen /> },
+      { path: '/settings/privacy', element: <PrivacyScreen /> },
+    ],
+  },
+])
+
 export default function App() {
   const { loading, session, recoveryMode, setRecoveryMode } = useAuth()
   if (loading) return <SplashScreen />
@@ -83,7 +88,7 @@ export default function App() {
   if (!session) return <LoginScreen />
   return (
     <ActiveWorkoutProvider>
-      <AppShell />
+      <RouterProvider router={router} />
     </ActiveWorkoutProvider>
   )
 }
