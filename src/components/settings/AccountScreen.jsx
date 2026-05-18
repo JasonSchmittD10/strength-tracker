@@ -1,29 +1,68 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Camera } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile'
 import { supabase } from '@/lib/supabase'
-import DestructiveButton from '@/components/shared/DestructiveButton'
+import TextField from '@/components/shared/TextField'
 import SettingsSubScreen from './SettingsSubScreen'
+
+const PASSWORD_PLACEHOLDER = '•••••••••'
 
 export default function AccountScreen() {
   const { user, signOut } = useAuth()
   const { data: profile } = useProfile()
   const { mutateAsync: updateProfile } = useUpdateProfile()
-  const [displayName, setDisplayName] = useState('')
-  const [editingName, setEditingName] = useState(false)
   const fileInputRef = useRef(null)
 
-  const name = profile?.display_name || user?.email?.split('@')[0] || '?'
-  const initial = name[0]?.toUpperCase() || '?'
+  const initialDisplayName = profile?.display_name ?? ''
+  const initialEmail = user?.email ?? ''
+  const initial = (initialDisplayName || initialEmail || '?')[0]?.toUpperCase() || '?'
 
-  async function saveName() {
-    if (!displayName.trim()) { setEditingName(false); return }
+  const [displayName, setDisplayName] = useState(initialDisplayName)
+  const [email, setEmail] = useState(initialEmail)
+  const [password, setPassword] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const [successMessage, setSuccessMessage] = useState(null)
+
+  // Keep local state in sync if profile/user load after mount.
+  useEffect(() => { setDisplayName(initialDisplayName) }, [initialDisplayName])
+  useEffect(() => { setEmail(initialEmail) }, [initialEmail])
+
+  const nameChanged = displayName.trim() !== initialDisplayName
+  const emailChanged = email.trim() !== initialEmail
+  const passwordChanged = password.length > 0
+  const hasChanges = nameChanged || emailChanged || passwordChanged
+
+  async function handleSave() {
+    if (!hasChanges || saving) return
+    setSaving(true)
+    setError(null)
+    setSuccessMessage(null)
     try {
-      await updateProfile({ display_name: displayName.trim() })
-      setEditingName(false)
+      const successes = []
+
+      if (nameChanged) {
+        await updateProfile({ display_name: displayName.trim() })
+        successes.push('Display name updated.')
+      }
+
+      if (emailChanged || passwordChanged) {
+        const payload = {}
+        if (emailChanged) payload.email = email.trim()
+        if (passwordChanged) payload.password = password
+        const { error: authError } = await supabase.auth.updateUser(payload)
+        if (authError) throw authError
+        if (emailChanged) successes.push('Check your new email to confirm the change.')
+        if (passwordChanged) successes.push('Password updated.')
+      }
+
+      setPassword('')
+      setSuccessMessage(successes.join(' '))
     } catch (e) {
-      // keep editing open on error
+      setError(e?.message ?? 'Failed to save changes. Please try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -39,14 +78,14 @@ export default function AccountScreen() {
         .from('avatars')
         .getPublicUrl(`${user.id}/avatar.jpg`)
       await updateProfile({ avatar_url: publicUrl })
-    } catch (e) {
-      console.warn('Avatar upload failed', e)
+    } catch (err) {
+      console.warn('Avatar upload failed', err)
     }
   }
 
   return (
     <SettingsSubScreen title="My Account">
-      <div className="flex flex-col gap-[24px] mt-[16px]">
+      <div className="flex flex-col gap-[24px] mt-[16px] pb-[120px]">
         <div className="flex justify-center">
           <button
             className="relative flex-shrink-0 group"
@@ -74,44 +113,61 @@ export default function AccountScreen() {
           />
         </div>
 
-        <div className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[8px] divide-y divide-[rgba(255,255,255,0.1)]">
-          <div className="px-[16px] py-[14px]">
-            <p className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px] uppercase mb-[6px]">
-              Display Name
-            </p>
-            {editingName ? (
-              <div className="flex gap-[8px] items-center">
-                <input
-                  autoFocus
-                  value={displayName}
-                  onChange={e => setDisplayName(e.target.value)}
-                  className="flex-1 bg-bg-tertiary rounded-[6px] px-[12px] py-[8px] font-commons text-[16px] text-white focus:outline-none focus:ring-1 focus:ring-accent"
-                  onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false) }}
-                />
-                <button onClick={saveName} className="font-commons font-bold text-[14px] text-accent px-[8px]">Save</button>
-                <button onClick={() => setEditingName(false)} className="font-commons text-[14px] text-[#8b8b8b] px-[4px]">✕</button>
-              </div>
-            ) : (
-              <button
-                onClick={() => { setDisplayName(name); setEditingName(true) }}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <span className="font-commons text-[16px] text-white tracking-[-0.2px]">{name}</span>
-                <span className="font-commons font-bold text-[14px] text-accent tracking-[-0.28px]">Edit</span>
-              </button>
-            )}
-          </div>
-          <div className="px-[16px] py-[14px]">
-            <p className="font-commons text-[12px] text-[#8b8b8b] tracking-[-0.2px] leading-[14px] uppercase mb-[6px]">
-              Email
-            </p>
-            <p className="font-commons text-[16px] text-white tracking-[-0.2px]">{user?.email}</p>
-          </div>
+        <div className="flex flex-col gap-[16px]">
+          <TextField
+            id="display-name"
+            label="Display Name"
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+            autoComplete="name"
+          />
+          <TextField
+            id="email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            autoComplete="email"
+          />
+          <TextField
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder={PASSWORD_PLACEHOLDER}
+            autoComplete="new-password"
+          />
         </div>
 
-        <DestructiveButton onClick={signOut}>
+        {error && (
+          <p className="font-commons text-[14px] text-danger text-center">{error}</p>
+        )}
+        {successMessage && (
+          <p className="font-commons text-[14px] text-success text-center">{successMessage}</p>
+        )}
+
+        <button
+          onClick={signOut}
+          className="font-commons font-bold text-[18px] text-[#c02727] tracking-[-0.36px] text-center"
+        >
           Sign Out
-        </DestructiveButton>
+        </button>
+      </div>
+
+      {/* Sticky Save Changes footer */}
+      <div className="fixed bottom-0 left-0 right-0 border-t border-[rgba(255,255,255,0.1)] bg-bg-primary pt-[16px] pb-[16px] px-[16px]">
+        <button
+          onClick={handleSave}
+          disabled={!hasChanges || saving}
+          className={`w-full h-[46px] rounded-[6px] font-commons font-bold text-[18px] tracking-[-0.36px] transition-colors ${
+            hasChanges && !saving
+              ? 'bg-accent text-black'
+              : 'bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.05)] text-[rgba(255,255,255,0.5)]'
+          }`}
+        >
+          {saving ? 'Saving…' : 'Save Changes'}
+        </button>
       </div>
     </SettingsSubScreen>
   )

@@ -8,6 +8,7 @@ import { formatWeight } from '@/lib/units'
 import accountIcon from '@/assets/icons/icon-settings-account.svg'
 import togglesIcon from '@/assets/icons/icon-settings-toggles.svg'
 import lockIcon from '@/assets/icons/icon-settings-lock.svg'
+import historyIcon from '@/assets/icons/icon-history.svg'
 import pkg from '../../../package.json'
 
 export default function SettingsTab() {
@@ -116,6 +117,16 @@ export default function SettingsTab() {
           )}
         </Section>
 
+        {/* History */}
+        <Section title="History">
+          <SettingsTile
+            icon={historyIcon}
+            title="View Workout History"
+            subtitle="See past workouts"
+            onClick={() => navigate('/history')}
+          />
+        </Section>
+
         {/* Settings tiles */}
         <Section title="Settings">
           <div className="flex flex-col gap-[8px]">
@@ -128,7 +139,7 @@ export default function SettingsTab() {
             <SettingsTile
               icon={togglesIcon}
               title="Preferences"
-              subtitle="Units, week start"
+              subtitle="Units, week start, theme"
               onClick={() => navigate('/settings/preferences')}
             />
             <SettingsTile
