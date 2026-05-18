@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useActiveWorkout } from '@/contexts/ActiveWorkoutContext'
 import { useEndProgram, useUpdateInputs } from '@/hooks/useProgramConfig'
 import { useTodaysSession } from '@/hooks/useTodaysSession'
 import { useProfile } from '@/hooks/useProfile'
@@ -50,6 +51,7 @@ function NextUpTile({ session, programId, onStart }) {
 // ─── On-program state ─────────────────────────────────────────────────────────
 function OnProgram({ program, config, resolution, macroPosition, completedToday }) {
   const navigate = useNavigate()
+  const { startWorkout } = useActiveWorkout()
   const endProgram = useEndProgram()
   const { mutateAsync: updateInputs, isPending: savingInputs } = useUpdateInputs()
   const { data: profile } = useProfile()
@@ -63,14 +65,27 @@ function OnProgram({ program, config, resolution, macroPosition, completedToday 
   const inputs = config?.inputs ?? {}
 
   function handleStart() {
-    const route = todaySession?.type === 'conditioning' ? '/conditioning' : '/workout'
-    navigate(route, {
-      state: {
-        session: todaySession,
-        programId: program.id,
-        programConfigId: config?.id,
-        scheduledDate: today,
-      },
+    if (todaySession?.type === 'conditioning') {
+      navigate('/conditioning', {
+        state: {
+          session: todaySession,
+          programId: program.id,
+          programConfigId: config?.id,
+          scheduledDate: today,
+        },
+      })
+      return
+    }
+    const programSubtitle = program && macroPosition && !macroPosition.completed
+      ? `${program.name} · Block ${macroPosition.blockNumber} · Week ${macroPosition.weekInBlock} · ${macroPosition.weekLabel}`
+      : null
+    startWorkout({
+      mode: 'program',
+      session: todaySession,
+      programId: program.id,
+      programConfigId: config?.id,
+      scheduledDate: today,
+      programSubtitle,
     })
   }
 

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useActiveWorkout } from '@/contexts/ActiveWorkoutContext'
 import PrimaryButton from '@/components/shared/PrimaryButton'
 import BuildWorkoutHeader from './BuildWorkoutHeader'
 import BuildWorkoutEmptyState from './BuildWorkoutEmptyState'
@@ -109,6 +110,7 @@ function BuildExerciseRow({ exercise, onRemove, onDragStart }) {
 
 export default function BuildWorkoutScreen() {
   const navigate = useNavigate()
+  const { startWorkout } = useActiveWorkout()
   const [exercises, setExercises] = useState([])
   const [searchOpen, setSearchOpen] = useState(false)
   const [dragState, setDragState] = useState(null)
@@ -234,7 +236,7 @@ export default function BuildWorkoutScreen() {
   }
 
   function handleStartWorkout() {
-    navigate('/workout', { state: { mode: 'custom', prebuiltExercises: exercises } })
+    startWorkout({ mode: 'custom', prebuiltExercises: exercises })
   }
 
   // ── Render ────────────────────────────────────────────────────────────────

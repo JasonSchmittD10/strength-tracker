@@ -1,20 +1,20 @@
-import { useNavigate } from 'react-router-dom'
 import { useWorkoutTemplates } from '@/hooks/useTemplates'
+import { useActiveWorkout } from '@/contexts/ActiveWorkoutContext'
 import { formatDate } from '@/lib/utils'
 import SlideUpSheet from '@/components/shared/SlideUpSheet'
 
 export default function TemplatePickerSheet({ open, onClose }) {
-  const navigate = useNavigate()
+  const { startWorkout } = useActiveWorkout()
   const { data: templates = [], isLoading } = useWorkoutTemplates()
 
   function handlePick(template) {
     onClose()
-    navigate('/workout', { state: { mode: 'template', template } })
+    startWorkout({ mode: 'template', template })
   }
 
   function handleStartEmpty() {
     onClose()
-    navigate('/workout', { state: { mode: 'custom' } })
+    startWorkout({ mode: 'custom' })
   }
 
   const footer = (

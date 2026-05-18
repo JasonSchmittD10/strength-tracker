@@ -1,7 +1,6 @@
 // src/components/workout/WorkoutScreen.jsx
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useLocation, useNavigate, useBlocker } from 'react-router-dom'
-import useElapsedTimer from '@/hooks/useElapsedTimer'
+import { useNavigate } from 'react-router-dom'
 import workoutIcon from '@/assets/icons/icon-workout.svg'
 import pauseIcon from '@/assets/icons/icon-pause.svg'
 import playIcon from '@/assets/icons/icon-play.svg'
@@ -22,28 +21,32 @@ import { totalVolume } from '@/lib/utils'
 import { resolveMacroPosition } from '@/lib/scheduling'
 import { getSetPrescription } from '@/lib/loadPrescription'
 import { resolveSetCount, resolveExerciseDisplay } from '@/lib/exerciseResolution'
-
-function formatElapsed(s) {
-  const m = Math.floor(s / 60), sec = s % 60
-  return `${m}:${String(sec).padStart(2, '0')}`
-}
+import { useActiveWorkout, EXERCISE_STORAGE_KEY } from '@/contexts/ActiveWorkoutContext'
+import { formatElapsed } from '@/lib/workoutDisplay'
 
 export default function WorkoutScreen() {
-  const { state } = useLocation()
   const navigate = useNavigate()
+  const {
+    params,
+    isMinimized,
+    isPaused,
+    elapsedSeconds: elapsed,
+    startedAtIso,
+    minimize,
+    endWorkout,
+    togglePause: ctxTogglePause,
+  } = useActiveWorkout()
 
-  const mode = state?.mode || (state?.session ? 'program' : 'custom')
-  const session = state?.session
-  const programId = state?.programId
-  const programConfigId = state?.programConfigId ?? null
-  const scheduledDate = state?.scheduledDate ?? null
-  const wasSwapped = state?.wasSwapped ?? false
-  const template = state?.template
-  const prebuiltExercises = state?.prebuiltExercises
+  const mode = params?.mode || (params?.session ? 'program' : 'custom')
+  const session = params?.session
+  const programId = params?.programId
+  const programConfigId = params?.programConfigId ?? null
+  const scheduledDate = params?.scheduledDate ?? null
+  const wasSwapped = params?.wasSwapped ?? false
+  const template = params?.template
+  const prebuiltExercises = params?.prebuiltExercises
 
-  const [isPaused, setIsPaused] = useState(false)
   const pausedRestRemainingRef = useRef(null)
-  const elapsed = useElapsedTimer(isPaused)
   const { data: allSessions = [] } = useSessions()
   const { mutateAsync: saveSession } = useSaveSession()
   const { mutateAsync: saveTemplate } = useSaveTemplate()
@@ -217,39 +220,60 @@ export default function WorkoutScreen() {
   const [builderName, setBuilderName] = useState('')
   const [builderSaving, setBuilderSaving] = useState(false)
   const [builderSaveError, setBuilderSaveError] = useState(null)
-  const allowNavRef = useRef(false)
   const { program, config: programConfig } = useProgramConfig()
   const macroPos = mode === 'program' && programConfig && program ? resolveMacroPosition(new Date(), programConfig, program) : null
   const programSubtitle = program && macroPos && !macroPos.completed
     ? `${program.name} · Block ${macroPos.blockNumber} · Week ${macroPos.weekInBlock} · ${macroPos.weekLabel}`
     : null
 
-  // Block swipe-back and browser back button during workout
-  // useRef so the flag is synchronously true before navigate() is called
-  const blocker = useBlocker(() => !allowNavRef.current)
+  // Suppress iOS swipe-back gesture only while the workout overlay is visible.
   useEffect(() => {
-    if (blocker.state === 'blocked') {
-      setConfirmBack(true)
-    }
-  }, [blocker.state])
-
-  // Suppress iOS swipe-back gesture at the CSS level (fires before JS can react)
-  useEffect(() => {
+    if (isMinimized) return
     document.body.style.overscrollBehaviorX = 'none'
     return () => { document.body.style.overscrollBehaviorX = '' }
-  }, [])
+  }, [isMinimized])
+
+  // Per-exercise state persistence keyed by startedAtIso, so a hard refresh
+  // can restore the exact state we were in.
+  const restoredRef = useRef(false)
+  useEffect(() => {
+    if (restoredRef.current || !startedAtIso) return
+    try {
+      const raw = localStorage.getItem(EXERCISE_STORAGE_KEY)
+      if (!raw) { restoredRef.current = true; return }
+      const saved = JSON.parse(raw)
+      if (saved?.startedAtIso !== startedAtIso) { restoredRef.current = true; return }
+      if (saved.customExercises) setCustomExercises(saved.customExercises)
+      if (saved.exerciseSets) setExerciseSets(saved.exerciseSets)
+      if (Array.isArray(saved.selectedExercises)) setSelectedExercises(new Set(saved.selectedExercises))
+      if (typeof saved.isSelectingSuperset === 'boolean') setIsSelectingSuperset(saved.isSelectingSuperset)
+    } catch {}
+    restoredRef.current = true
+  }, [startedAtIso])
+
+  useEffect(() => {
+    if (!restoredRef.current || !startedAtIso) return
+    try {
+      localStorage.setItem(EXERCISE_STORAGE_KEY, JSON.stringify({
+        startedAtIso,
+        customExercises,
+        exerciseSets,
+        selectedExercises: [...selectedExercises],
+        isSelectingSuperset,
+      }))
+    } catch {}
+  }, [startedAtIso, customExercises, exerciseSets, selectedExercises, isSelectingSuperset])
 
   const handleRestDismiss = useCallback(() => {
     setRestTimer(null)
     setRestTimerFullScreen(false)
   }, [])
-  const startedAt = useRef(new Date().toISOString())
 
   const hasCompletedSets = Object.values(exerciseSets).some(sets => sets.some(s => s.completed))
 
   function handleBack() {
     if (hasCompletedSets) setConfirmBack(true)
-    else navigate(-1)
+    else endWorkout()
   }
 
   function handleSetComplete(exIdx, setIdx) {
@@ -273,6 +297,7 @@ export default function WorkoutScreen() {
 
   function handleTogglePause() {
     if (!isPaused) {
+      // about to pause — suspend any running rest timer
       if (restTimer) {
         const endTime = restTimer.key + restTimer.duration * 1000
         const remaining = Math.max(0, Math.round((endTime - Date.now()) / 1000))
@@ -280,14 +305,14 @@ export default function WorkoutScreen() {
         setRestTimer(null)
         setRestTimerFullScreen(false)
       }
-      setIsPaused(true)
     } else {
+      // about to resume — restore suspended rest timer
       if (pausedRestRemainingRef.current !== null) {
         setRestTimer({ duration: pausedRestRemainingRef.current, key: Date.now() })
         pausedRestRemainingRef.current = null
       }
-      setIsPaused(false)
     }
+    ctxTogglePause()
   }
 
   function handleToggleSelect(i) {
@@ -397,7 +422,7 @@ export default function WorkoutScreen() {
         scheduled_date: scheduledDate ?? new Date().toISOString().split('T')[0],
         was_swapped: wasSwapped,
         session_type: 'resistance',
-        startedAt: startedAt.current,
+        startedAt: startedAtIso,
         completedAt: new Date().toISOString(),
         durationSeconds: elapsed,
         duration: elapsed,
@@ -416,14 +441,14 @@ export default function WorkoutScreen() {
       scheduled_date: null,
       was_swapped: false,
       session_type: 'resistance',
-      startedAt: startedAt.current,
+      startedAt: startedAtIso,
       completedAt: new Date().toISOString(),
       durationSeconds: elapsed,
       duration: elapsed,
       date: new Date().toISOString().split('T')[0],
       exercises,
     }
-  }, [mode, session, programId, programConfigId, scheduledDate, wasSwapped, elapsed, exerciseSets, activeExercises])
+  }, [mode, session, programId, programConfigId, scheduledDate, wasSwapped, elapsed, exerciseSets, activeExercises, startedAtIso])
 
   async function handleSaveBuilder() {
     if (activeExercises.length === 0) return
@@ -439,7 +464,7 @@ export default function WorkoutScreen() {
         restLabel: ex.restLabel ?? '90 sec',
       }))
       await saveTemplate({ name, exercises })
-      allowNavRef.current = true
+      endWorkout()
       navigate('/home')
     } catch (e) {
       setBuilderSaveError('Failed to save. Please try again.')
@@ -458,7 +483,6 @@ export default function WorkoutScreen() {
       const data = buildSessionData()
       data.totalVolume = totalVolume(data.exercises)
       await saveSession(data)
-      allowNavRef.current = true
     } catch (e) {
       console.error('Save session failed:', e)
       setSaveError(e?.message ?? 'Failed to save workout. Please try again.')
@@ -472,7 +496,7 @@ export default function WorkoutScreen() {
     return (
       <div className="flex items-center justify-center h-screen text-text-muted">
         No session selected.{' '}
-        <button onClick={() => navigate('/home')} className="ml-2 text-accent">Go home</button>
+        <button onClick={() => { endWorkout(); navigate('/home') }} className="ml-2 text-accent">Go home</button>
       </div>
     )
   }
@@ -523,13 +547,17 @@ export default function WorkoutScreen() {
     <div className="flex flex-col h-screen bg-bg-primary">
       {/* Static header */}
       <div className="flex-shrink-0 px-[16px] pb-[16px] pt-[12px] flex items-center justify-between bg-bg-primary border-b border-[rgba(255,255,255,0.1)]">
-        {/* Left: icon + session name + subtitle */}
+        {/* Left: minimize button + session name + subtitle */}
         <div className="flex items-center gap-[8px] flex-1 min-w-0">
-          <div className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex-shrink-0">
+          <button
+            onClick={minimize}
+            className="bg-[rgba(255,255,255,0.1)] rounded-[4px] p-[6px] flex-shrink-0 active:opacity-70"
+            aria-label="Minimize workout"
+          >
             <img src={workoutIcon} alt="" className="w-[20px] h-[20px]" />
-          </div>
+          </button>
           <div className="flex flex-col items-start min-w-0">
-            <span className="font-judge text-[16px] text-white leading-[1.2]">
+            <span className="font-judge font-bold text-[16px] text-white leading-[1.2]">
               {headerTitle}
             </span>
             {headerSubtitle && (
@@ -646,7 +674,7 @@ export default function WorkoutScreen() {
                 {builderSaving ? 'Saving…' : 'Save Template'}
               </button>
               <button
-                onClick={() => { allowNavRef.current = true; navigate(-1) }}
+                onClick={() => { endWorkout(); navigate(-1) }}
                 className="w-full font-commons font-bold text-[18px] text-[#c02727] text-center py-[12px]"
               >
                 Discard
@@ -732,7 +760,7 @@ export default function WorkoutScreen() {
       <WorkoutSummary
         open={summaryOpen}
         onClose={() => setSummaryOpen(false)}
-        onDone={() => { setSummaryOpen(false); navigate('/history') }}
+        onDone={() => { setSummaryOpen(false); endWorkout(); navigate('/history') }}
         session={currentSessionState}
         durationSeconds={elapsed}
         mode={mode}
@@ -779,8 +807,8 @@ export default function WorkoutScreen() {
             <h3 id="confirm-back-title" className="font-bold text-text-primary mb-2">Cancel workout?</h3>
             <p className="text-text-secondary text-sm mb-5">Your progress will be lost.</p>
             <div className="flex gap-3">
-              <PrimaryButton variant="secondary" onClick={() => { setConfirmBack(false); blocker.reset?.() }}>Keep going</PrimaryButton>
-              <DestructiveButton onClick={() => { allowNavRef.current = true; setConfirmBack(false); blocker.proceed?.() ?? navigate(-1) }}>Cancel Workout</DestructiveButton>
+              <PrimaryButton variant="secondary" onClick={() => setConfirmBack(false)}>Keep going</PrimaryButton>
+              <DestructiveButton onClick={() => { setConfirmBack(false); endWorkout() }}>Cancel Workout</DestructiveButton>
             </div>
           </div>
         </ModalOverlay>
