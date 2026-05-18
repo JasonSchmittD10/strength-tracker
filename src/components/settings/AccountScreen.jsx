@@ -107,7 +107,6 @@ export default function AccountScreen() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="user"
             className="hidden"
             onChange={handlePhotoUpload}
           />
