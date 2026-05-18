@@ -81,7 +81,6 @@ export default function WorkoutScreen() {
       return prebuiltExercises.map(ex => ({
         name: ex.name,
         sets: 3,
-        reps: '8–12',
         rest: 90,
         restLabel: '90 sec',
         supersetId: ex.supersetId ?? null,
@@ -348,7 +347,7 @@ export default function WorkoutScreen() {
     const newIdx = customExercises.length
     setCustomExercises(prev => [
       ...prev,
-      { name: exerciseName, sets: 3, reps: '8–12', rest: 90, restLabel: '90 sec', supersetId: null },
+      { name: exerciseName, sets: 3, rest: 90, restLabel: '90 sec', supersetId: null },
     ])
     setExerciseSets(prev => ({
       ...prev,
@@ -374,7 +373,7 @@ export default function WorkoutScreen() {
     const startIdx = customExercises.length
     setCustomExercises(prev => [
       ...prev,
-      ...exerciseNames.map(name => ({ name, sets: 3, reps: '8–12', rest: 90, restLabel: '90 sec', supersetId: id })),
+      ...exerciseNames.map(name => ({ name, sets: 3, rest: 90, restLabel: '90 sec', supersetId: id })),
     ])
     setExerciseSets(prev => {
       const next = { ...prev }
