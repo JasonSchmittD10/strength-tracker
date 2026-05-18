@@ -19,7 +19,7 @@ export default function MinimizedWorkoutBar() {
       tabIndex={0}
       onClick={expand}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); expand() } }}
-      className="fixed bottom-[54px] left-0 right-0 z-30 w-full h-[65px] bg-bg-primary flex items-center justify-between p-[16px] cursor-pointer active:opacity-80"
+      className="fixed bottom-[84px] left-0 right-0 z-30 w-full h-[65px] bg-bg-primary border-t border-[rgba(255,255,255,0.1)] flex items-center justify-between p-[16px] cursor-pointer active:opacity-80"
       aria-label="Resume workout"
     >
       <div className="flex items-center gap-[8px] min-w-0">
