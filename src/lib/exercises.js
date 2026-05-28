@@ -167,38 +167,3 @@ export async function resolveAllExerciseIds(rawNames) {
 
   return result
 }
-
-
-export async function migrateExerciseNames(supabase) {
-  console.log('[migrate] Loading all sessions...')
-  const { data: rows, error } = await supabase
-    .from('sessions')
-    .select('id, data')
-    .order('created_at', { ascending: false })
-
-  if (error) { console.error('[migrate] Load error', error); return }
-
-  let updated = 0, unchanged = 0
-  for (const row of rows) {
-    const s = row.data
-    if (!s?.exercises) { unchanged++; continue }
-
-    let changed = false
-    const normalizedExercises = s.exercises.map(ex => {
-      const canonical = normalizeExerciseName(ex.name)
-      if (canonical !== ex.name) { changed = true; return { ...ex, name: canonical } }
-      return ex
-    })
-
-    if (!changed) { unchanged++; continue }
-
-    const { error: patchErr } = await supabase
-      .from('sessions')
-      .update({ data: { ...s, exercises: normalizedExercises } })
-      .eq('id', row.id)
-
-    if (patchErr) console.error(`[migrate] PATCH failed for ${row.id}:`, patchErr)
-    else updated++
-  }
-  console.log(`[migrate] Done. ${updated} updated, ${unchanged} unchanged.`)
-}

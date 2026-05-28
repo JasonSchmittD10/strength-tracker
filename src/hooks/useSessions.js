@@ -286,12 +286,7 @@ export function useDeleteSession() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (id) => {
-      // Legacy `sessions.id` is bigint; new `workout_sessions.id` is uuid.
-      // Dispatch on id shape — sending a uuid-string to the bigint column
-      // throws a type error.
-      const isUuid = typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-      const table = isUuid ? 'workout_sessions' : 'sessions'
-      const { error } = await supabase.from(table).delete().eq('id', id)
+      const { error } = await supabase.from('workout_sessions').delete().eq('id', id)
       if (error) throw error
     },
     onSuccess: () => {
