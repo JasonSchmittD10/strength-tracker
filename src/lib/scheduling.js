@@ -208,8 +208,8 @@ export function resolveScheduledSession(date, config, program, overrides = [], o
 // ─── DB helpers ────────────────────────────────────────────────────────────
 
 // Counts completed sessions logged against the given config (rotation programs only).
-// Reads from both the legacy `sessions` (JSONB) and the new `workout_sessions`
-// (program metadata in `notes` as JSON) during the cutover transition.
+// Program metadata (including program_session_id) is stored as JSON in
+// workout_sessions.notes; a non-null program_session_id marks a program-driven session.
 export async function countCompletedSessions(userId, programConfigId, supabaseClient) {
   if (!userId || !programConfigId) return 0
   const client = supabaseClient ?? (await import('@/lib/supabase')).supabase
@@ -220,32 +220,20 @@ export async function countCompletedSessions(userId, programConfigId, supabaseCl
     .maybeSingle()
   if (cfgErr || !cfg) return 0
 
-  // Legacy sessions table: filter via JSONB selectors.
-  const { count: legacyCount, error: legacyErr } = await client
-    .from('sessions')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .gte('data->>date', cfg.started_at)
-    .not('data->>program_session_id', 'is', null)
-  if (legacyErr) return 0
-
-  // New normalized table: program metadata is JSON in notes; parse in JS.
-  const { data: newRows, error: newErr } = await client
+  const { data: rows, error } = await client
     .from('workout_sessions')
     .select('notes')
     .eq('user_id', userId)
     .gte('session_date', cfg.started_at)
-  if (newErr) return legacyCount ?? 0
+  if (error) return 0
 
-  const newCount = (newRows ?? []).reduce((n, r) => {
+  return (rows ?? []).reduce((n, r) => {
     if (!r.notes) return n
     try {
       const meta = JSON.parse(r.notes)
       return meta?.program_session_id != null ? n + 1 : n
     } catch { return n }
   }, 0)
-
-  return (legacyCount ?? 0) + newCount
 }
 
 // Loads any per-date overrides for the given config in a date range. Phase 4
