@@ -1,8 +1,8 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { formatDate, formatDuration, formatVolume, totalVolume } from '@/lib/utils'
 import { useUnitPreference } from '@/hooks/useProfile'
 import { useDeleteSession } from '@/hooks/useSessions'
-import { useActiveWorkout } from '@/contexts/ActiveWorkoutContext'
 import { formatWeight, convertWeight } from '@/lib/units'
 import {
   formatDuration as formatDurationHMS,
@@ -47,9 +47,8 @@ function StatTile({ label, value }) {
 export default function SessionCard({ session }) {
   const [detailOpen, setDetailOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [confirmReplace, setConfirmReplace] = useState(false)
   const { mutateAsync: deleteSession, isPending: deleting } = useDeleteSession()
-  const { startWorkout, isActive: workoutActive } = useActiveWorkout()
+  const navigate = useNavigate()
   const unit = useUnitPreference()
 
   const isConditioning = session.session_type === 'conditioning'
@@ -58,7 +57,6 @@ export default function SessionCard({ session }) {
   function closeSheet() {
     setDetailOpen(false)
     setConfirmDelete(false)
-    setConfirmReplace(false)
   }
 
   async function handleDelete() {
@@ -67,8 +65,12 @@ export default function SessionCard({ session }) {
     setConfirmDelete(false)
   }
 
-  function startReusedWorkout() {
-    const prebuiltExercises = (session.exercises || []).map(ex => ({
+  function handleUseWorkout() {
+    // Pre-load the builder with this session's exercises so the user can edit
+    // before starting. prefillSets carries set counts + weights/reps through
+    // the builder into the workout.
+    const prefillExercises = (session.exercises || []).map((ex, i) => ({
+      id: `reuse-${session._id}-${i}`,
       name: ex.name,
       supersetId: ex.supersetId ?? null,
       prefillSets: (ex.sets || []).map(s => ({
@@ -76,18 +78,9 @@ export default function SessionCard({ session }) {
         reps: s.reps ?? '',
       })),
     }))
-    if (!prebuiltExercises.length) return
+    if (!prefillExercises.length) return
     closeSheet()
-    startWorkout({ mode: 'custom', prebuiltExercises })
-  }
-
-  function handleUseWorkout() {
-    // Starting a workout replaces any in-progress one — guard against losing it.
-    if (workoutActive) {
-      setConfirmReplace(true)
-      return
-    }
-    startReusedWorkout()
+    navigate('/build-workout', { state: { prefillExercises } })
   }
 
   const vol = totalVolume(session.exercises || [])
@@ -187,20 +180,6 @@ export default function SessionCard({ session }) {
               <DestructiveButton onClick={handleDelete} disabled={deleting}>
                 {deleting ? 'Deleting…' : 'Delete'}
               </DestructiveButton>
-            </div>
-          </div>
-        ) : confirmReplace ? (
-          <div className="flex flex-col gap-[12px]">
-            <p className="font-commons text-[14px] text-[#8b8b8b] tracking-[-0.2px] leading-[18px] text-center">
-              You have a workout in progress. Starting this one will discard it.
-            </p>
-            <div className="flex gap-[12px]">
-              <PrimaryButton variant="secondary" onClick={() => setConfirmReplace(false)}>
-                Keep Current
-              </PrimaryButton>
-              <PrimaryButton onClick={startReusedWorkout}>
-                Start New
-              </PrimaryButton>
             </div>
           </div>
         ) : (

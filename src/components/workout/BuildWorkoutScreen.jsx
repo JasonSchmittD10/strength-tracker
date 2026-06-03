@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useActiveWorkout } from '@/contexts/ActiveWorkoutContext'
 import PrimaryButton from '@/components/shared/PrimaryButton'
 import BuildWorkoutHeader from './BuildWorkoutHeader'
@@ -110,8 +110,12 @@ function BuildExerciseRow({ exercise, onRemove, onDragStart }) {
 
 export default function BuildWorkoutScreen() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { startWorkout } = useActiveWorkout()
-  const [exercises, setExercises] = useState([])
+  // Pre-load exercises when arriving from "Use This Workout" (reusing a past
+  // session). The build UI ignores extra fields like prefillSets but carries
+  // them through to startWorkout so set counts / weights pre-fill the workout.
+  const [exercises, setExercises] = useState(() => location.state?.prefillExercises ?? [])
   const [searchOpen, setSearchOpen] = useState(false)
   const [dragState, setDragState] = useState(null)
   // dragState: { fromGroupIndex, startY, currentY }
