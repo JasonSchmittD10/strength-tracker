@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { formatDate, formatDuration, formatVolume, totalVolume } from '@/lib/utils'
 import { useUnitPreference } from '@/hooks/useProfile'
 import { useDeleteSession } from '@/hooks/useSessions'
+import { useActiveWorkout } from '@/contexts/ActiveWorkoutContext'
 import { formatWeight, convertWeight } from '@/lib/units'
 import {
   formatDuration as formatDurationHMS,
@@ -47,6 +48,7 @@ export default function SessionCard({ session }) {
   const [detailOpen, setDetailOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const { mutateAsync: deleteSession, isPending: deleting } = useDeleteSession()
+  const { startWorkout } = useActiveWorkout()
   const unit = useUnitPreference()
 
   const isConditioning = session.session_type === 'conditioning'
@@ -56,6 +58,21 @@ export default function SessionCard({ session }) {
     await deleteSession(session._id)
     setDetailOpen(false)
     setConfirmDelete(false)
+  }
+
+  function handleUseWorkout() {
+    const prebuiltExercises = (session.exercises || []).map(ex => ({
+      name: ex.name,
+      supersetId: ex.supersetId ?? null,
+      prefillSets: (ex.sets || []).map(s => ({
+        weight: s.weight ?? '',
+        reps: s.reps ?? '',
+      })),
+    }))
+    if (!prebuiltExercises.length) return
+    setDetailOpen(false)
+    setConfirmDelete(false)
+    startWorkout({ mode: 'custom', prebuiltExercises })
   }
 
   const vol = totalVolume(session.exercises || [])
@@ -158,12 +175,19 @@ export default function SessionCard({ session }) {
             </div>
           </div>
         ) : (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="w-full font-commons font-bold text-[18px] text-[#c02727] tracking-[-0.36px] text-center py-[8px]"
-          >
-            Delete Workout
-          </button>
+          <div className="flex flex-col gap-[8px]">
+            {!isConditioning && (session.exercises || []).length > 0 && (
+              <PrimaryButton onClick={handleUseWorkout}>
+                Use This Workout
+              </PrimaryButton>
+            )}
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="w-full font-commons font-bold text-[18px] text-[#c02727] tracking-[-0.36px] text-center py-[8px]"
+            >
+              Delete Workout
+            </button>
+          </div>
         )}
       >
         {isConditioning ? (

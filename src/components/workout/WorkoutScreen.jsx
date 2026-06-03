@@ -80,7 +80,7 @@ export default function WorkoutScreen() {
     if (prebuiltExercises?.length) {
       return prebuiltExercises.map(ex => ({
         name: ex.name,
-        sets: 3,
+        sets: ex.prefillSets?.length || 3,
         rest: 90,
         restLabel: '90 sec',
         supersetId: ex.supersetId ?? null,
@@ -146,10 +146,18 @@ export default function WorkoutScreen() {
     }
     if (prebuiltExercises?.length) {
       return Object.fromEntries(
-        prebuiltExercises.map((_, i) => [
-          i,
-          Array.from({ length: 3 }, () => ({ weight: '', reps: '', rpe: '', completed: false })),
-        ])
+        prebuiltExercises.map((ex, i) => {
+          const prefill = ex.prefillSets
+          if (prefill?.length) {
+            return [i, prefill.map(s => ({
+              weight: s.weight ?? '',
+              reps: s.reps ?? '',
+              rpe: '',
+              completed: false,
+            }))]
+          }
+          return [i, Array.from({ length: 3 }, () => ({ weight: '', reps: '', rpe: '', completed: false }))]
+        })
       )
     }
     return {}
